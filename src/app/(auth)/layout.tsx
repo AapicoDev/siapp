@@ -1,13 +1,13 @@
 import "../globals.css";
 import { Inter } from "next/font/google";
-import Header from "../../components/Header";
 import ThemeProviderWrapper from "../../components/ThemeProviderWrapper";
+import PageWrapper from "@/components/pagewrapper";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "vCard Generator by Powermap",
-  description: "Generate vCards with QR codes",
+  title: "SIAPP Data Management",
+  description: "SIAPP Data Management",
 };
 
 export default function RootLayout({
@@ -16,9 +16,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ThemeProviderWrapper>
-      <Header />
-        <main className='flex-grow pb-16'>{children}</main>
-    </ThemeProviderWrapper>
+    // <ThemeProviderWrapper>
+      <main className="grid w-full h-full" >
+        <PageWrapper>
+          {children}
+        </PageWrapper>
+      </main>
+    // </ThemeProviderWrapper>
   );
 }

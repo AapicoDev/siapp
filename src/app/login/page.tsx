@@ -2,7 +2,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Homepage from "../(auth)/homepage/page";
+import Homepage from "../(auth)/dashboard/page";
 //import { login } from "../appwrite";
 import {
   Box,
@@ -18,9 +18,10 @@ import {
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import Header from "../../components/Header";
+import Sidebar from "@/components/Sidebar";
 
 export default function Login() {
-  const [loggedInUser, setLoggedInUser] = useState(true);
+  const [loggedInUser, setLoggedInUser] = useState(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
@@ -44,7 +45,7 @@ export default function Login() {
   if (loggedInUser) {
     return (
       <div className='container mx-auto p-4 flex flex-col items-center justify-center'>
-        <Header />
+        <Sidebar/>
         <Homepage />
       </div>
     );

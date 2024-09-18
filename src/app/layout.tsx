@@ -4,6 +4,15 @@ import localFont from "next/font/local";
 import "./globals.css";
 import ThemeProviderWrapper from "../components/ThemeProviderWrapper";
 import { Inter } from "next/font/google";
+import Sidebar from "@/components/Sidebar";
+import { Kanit } from '@next/font/google';
+
+// Configure Kanit font
+const kanit = Kanit({
+  subsets: ['latin'],
+  weight: ['400', '500', '700'], // Define the weights you want to use
+  variable: '--font-kanit', // Optional: define a CSS variable
+});
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -30,14 +39,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang='en'>
-      <head>
-        <link rel='manifest' href='/manifest.json' />
-        <link rel='apple-touch-icon' href='/icons/icon-192x192.png' />
-        <meta name='theme-color' content='#000000' />
-      </head>
-      <body className={`${inter.className} flex flex-col min-h-screen`}>
+      <body className={`${kanit.className} flex items-start justify-between`}>
+          <Sidebar />
           <ThemeProviderWrapper>
-            <main className='flex-grow pb-16 h-screen'>{children}</main>
+            {children}
           </ThemeProviderWrapper>
       </body>
     </html>
