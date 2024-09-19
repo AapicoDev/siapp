@@ -5,8 +5,6 @@ import Header from "@/components/Header";
 
 export default function Dashboard() {
   return (
-    <div className="p-2">
-      Dashboard
-    </div>
+    <div className="flex h-screen items-center justify-center">Dashboard</div>
   );
 }

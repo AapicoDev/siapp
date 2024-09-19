@@ -38,12 +38,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang='en'>
+    <html lang="en">
       <body className={`${kanit.className} flex items-start justify-between`}>
-          <Sidebar />
-          <ThemeProviderWrapper>
-            {children}
-          </ThemeProviderWrapper>
+        <ThemeProviderWrapper>{children}</ThemeProviderWrapper>
       </body>
     </html>
   );

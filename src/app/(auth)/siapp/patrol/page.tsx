@@ -2,8 +2,6 @@
 
 export default function Patrol() {
   return (
-    <div className="p-2">
-      Patrol
-    </div>
+    <div className="flex h-screen items-center justify-center">Patrol</div>
   );
 }

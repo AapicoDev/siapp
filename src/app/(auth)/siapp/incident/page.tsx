@@ -2,8 +2,6 @@
 
 export default function Incident() {
   return (
-    <div className="p-2">
-      Incident
-    </div>
+    <div className="flex h-screen items-center justify-center">Incident</div>
   );
 }
