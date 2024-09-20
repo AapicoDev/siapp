@@ -17,6 +17,7 @@ import { GoDotFill } from "react-icons/go";
 import { Collapse, Typography } from "@mui/material";
 import "../styles/sidebar.css"
 import { account } from "../app/appwrite"; // Import account from Appwrite
+import styles from '../app/styles.module.css'
 
 export default function Sidebar() {
   const [subSIAPPOpen, setSubSIAPPOpen] = useState(false);
@@ -62,12 +63,24 @@ export default function Sidebar() {
   const toggleSubmenu = (menu: any) => {
     if (menu === "SIAPP") {
       setSubSIAPPOpen(!subSIAPPOpen);
+      setSubReportOpen(false);
+      setSubMaterDataOpen(false);
+      setSubUserOpen(false);
     } else if (menu === "Report") {
       setSubReportOpen(!subReportOpen);
+      setSubSIAPPOpen(false);
+      setSubMaterDataOpen(false);
+      setSubUserOpen(false);
     } else if (menu === "Master Data") {
       setSubMaterDataOpen(!subMaterDataOpen);
+      setSubReportOpen(false);
+      setSubSIAPPOpen(false);
+      setSubUserOpen(false);
     } else if (menu === "User") {
       setSubUserOpen(!subUserOpen);
+      setSubReportOpen(false);
+      setSubSIAPPOpen(false);
+      setSubMaterDataOpen(false);
     }
   };
 
@@ -90,7 +103,7 @@ export default function Sidebar() {
           iconSelected: <Routing size={24} variant="Bold" />,
           submenu: true,
           submenuItems: [
-            { title: "Patrol", path: "/siapp/patrol", icon: <GoDotFill /> },
+            { title: "Patrol", path: "/siapp/patrol", icon: <GoDotFill />},
             { title: "Incident", path: "/siapp/incident", icon: <GoDotFill /> },
             { title: "Manpower", path: "#", icon: <GoDotFill /> },
             { title: "Daily summary report", path: "#", icon: <GoDotFill /> },
@@ -144,11 +157,7 @@ export default function Sidebar() {
             { title: "QR Error Reason", path: "#", icon: <GoDotFill /> },
             { title: "Department Structure", path: "#", icon: <GoDotFill /> },
             { title: "Report Header", path: "#", icon: <GoDotFill /> },
-            {
-              title: "Manage Sync Employee Department Mapping",
-              path: "#",
-              icon: <GoDotFill size={26} />,
-            },
+            { title: "Manage Sync Employee Department Mapping", path: "#", icon: <GoDotFill />,},
           ],
         },
         {
@@ -172,9 +181,9 @@ export default function Sidebar() {
               key={optionkey}
               className={`${
                 pathName.includes(option.pathname)
-                  ? "font-bold menuSelected"
-                  : ""
-              } py-2 flex gap-2 pl-2`}
+                  ? `font-bold ${styles.sidebarSelectedText}`
+                  : `${styles.sidebarText}`
+              } py-2 flex gap-2 pl-2 hover:bg-[#EBF4F6] transition-colors duration-100 ease-in-out`}
             >
               {pathName.includes(option.pathname)
                 ? option.iconSelected
@@ -207,11 +216,15 @@ export default function Sidebar() {
                         key={submenukey}
                         className={`${
                           pathName === submenu?.path
-                            ? "bg-accent border-r-8 font-bold"
-                            : ""
-                        } gap-2 px-7 py-3 leading-5 flex1`}
+                            ? `bg-accent border-r-8 font-bold ${styles.menuselected}`
+                            : `${styles.sidebarText}`
+                        } gap-2 px-7 py-3 leading-5 flex1 hover:bg-[#EBF4F6] transition-colors duration-100 ease-in-out`}
                       >
-                        {submenu?.icon}
+                        <div className={`${
+                          pathName === submenu?.path ? `${styles.selectedDot}`
+                            : `${styles.dot}` }`}>
+                          {submenu?.icon}
+                        </div>
                         {submenu?.title}
                       </CommandItem>
                     </Link>
@@ -234,11 +247,15 @@ export default function Sidebar() {
                         key={submenukey}
                         className={`${
                           pathName === submenu?.path
-                            ? "bg-accent border-r-8 font-bold"
-                            : ""
-                        } gap-2 px-7 py-3 leading-5 flex1`}
+                            ? `bg-accent border-r-8 font-bold ${styles.menuselected}`
+                            : `${styles.sidebarText}`
+                        } gap-2 px-7 py-3 leading-5 flex1 hover:bg-[#EBF4F6] transition-colors duration-100 ease-in-out`}
                       >
-                        {submenu?.icon}
+                        <div className={`${
+                          pathName === submenu?.path ? `${styles.selectedDot}`
+                            : `${styles.dot}` }`}>
+                          {submenu?.icon}
+                        </div>
                         {submenu?.title}
                       </CommandItem>
                     </Link>
@@ -261,11 +278,15 @@ export default function Sidebar() {
                         key={submenukey}
                         className={`${
                           pathName === submenu?.path
-                            ? "bg-accent border-r-8 font-bold"
-                            : ""
-                        } gap-2 px-7 py-3 leading-5 flex1`}
+                            ? `bg-accent border-r-8 font-bold ${styles.menuselected}`
+                            : `${styles.sidebarText}`
+                        } gap-2 px-7 py-3 leading-5 flex1 hover:bg-[#EBF4F6] transition-colors duration-100 ease-in-out`}
                       >
-                        {submenu?.icon}
+                        <div className={`${
+                          pathName === submenu?.path ? `${styles.selectedDot}`
+                            : `${styles.dot}` }`}>
+                          {submenu?.icon}
+                        </div>
                         {submenu?.title}
                       </CommandItem>
                     </Link>
@@ -288,11 +309,15 @@ export default function Sidebar() {
                         key={submenukey}
                         className={`${
                           pathName === submenu?.path
-                            ? "bg-accent border-r-8 font-bold"
-                            : ""
-                        } gap-2 px-7 py-3 leading-5 flex1`}
+                            ? `bg-accent border-r-8 font-bold ${styles.menuselected}`
+                            : `${styles.sidebarText}`
+                        } gap-2 px-7 py-3 leading-5 flex1 hover:bg-[#EBF4F6] transition-colors duration-100 ease-in-out`}
                       >
-                        {submenu?.icon}
+                        <div className={`${
+                          pathName === submenu?.path ? `${styles.selectedDot}`
+                            : `${styles.dot}` }`}>
+                          {submenu?.icon}
+                        </div>
                         {submenu?.title}
                       </CommandItem>
                     </Link>
@@ -308,8 +333,10 @@ export default function Sidebar() {
         <CommandItem
           key={optionkey}
           className={`${
-            pathName === option?.path ? "bg-accent border-r-8 font-bold" : ""
-          } py-2 flex gap-2 pl-2`}
+            pathName === option?.path ? 
+              `${styles.menuselected}` :
+              `${styles.sidebarText}`
+          } py-2 flex gap-2 pl-2 hover:bg-[#EBF4F6] transition-colors duration-100 ease-in-out`}
         >
           {pathName === option?.path ? option.iconSelected : option.icon}
           {option.text}
@@ -324,7 +351,7 @@ export default function Sidebar() {
         <Logo />
       </div>
       <div>
-        <Command className="min-h-[1280px]">
+        <Command>
           <CommandList style={{ overflow: "visible" }}>
             {menuList.map((menu: any, menukey: number) => (
               <CommandGroup key={menukey} style={{ overflow: "visible" }}>

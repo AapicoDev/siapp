@@ -1,0 +1,23 @@
+.sidebarText{
+    color: #2C5079;
+    background-color: white;
+}
+
+.sidebarSelectedText{
+    color: #1D7A9B;
+}
+
+.selectedDot{
+    color: #37b7C3;
+}
+
+.dot{
+    color: #D9F0EC;
+}
+
+.menuselected{
+    border-right: 8px solid #37b7C3;
+    background-color: #EBF4F6;
+    color: #1D7A9B;
+    font-weight: bold;
+}

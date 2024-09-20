@@ -90,3 +90,8 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+.custom-placeholder::placeholder {
+  color: #999; /* Change this to your desired placeholder color */
+  opacity: 1;  /* Ensure the placeholder color is not transparent */
+}

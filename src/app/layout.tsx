@@ -5,7 +5,7 @@ import "./globals.css";
 import ThemeProviderWrapper from "../components/ThemeProviderWrapper";
 import { Inter } from "next/font/google";
 import Sidebar from "@/components/Sidebar";
-import { Kanit } from '@next/font/google';
+import { Kanit } from 'next/font/google';
 
 // Configure Kanit font
 const kanit = Kanit({
@@ -38,7 +38,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className={kanit.className}>
       <body className={`${kanit.className} flex items-start justify-between`}>
         <ThemeProviderWrapper>{children}</ThemeProviderWrapper>
       </body>
