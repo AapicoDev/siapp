@@ -21,10 +21,10 @@ const Navbar = ({ menu, submenu }: any) => {
       <div className="mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex-shrink-0 flex items-center">
-            <div className="bg-[#37B7c3] text-white text-xs font-bold px-2 py-1 rounded-lg mr-2">
+            <div className="bg-[#37B7c3] text-white text-xs font-medium px-2 py-1 rounded-lg mr-2">
               {menu}
             </div>
-            <span className="text-gray-900 text-xl font-semibold">{submenu}</span>
+            <span className="text-[#2C5079] text-2xl font-semibold">{submenu}</span>
           </div>
           <div className="flex items-center space-x-2 ">
             <Input

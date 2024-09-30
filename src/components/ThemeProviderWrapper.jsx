@@ -23,18 +23,18 @@ const theme = createTheme({
     MuiTableCell: {
       styleOverrides: {
         root: {
-          color: '#2C5079',
-          borderBottom: 'none',
-          padding: '10px 10px 10px 20px'
+          color: "#2C5079",
+          borderBottom: "none",
+          padding: "10px 10px 10px 20px",
         },
       },
     },
     MuiCheckbox: {
       styleOverrides: {
         root: {
-          color: '#C7D4D7', // Default color
-          '&.Mui-checked': {
-            color: '#1D7A9B', // Customize the checked color
+          color: "#C7D4D7", // Default color
+          "&.Mui-checked": {
+            color: "#1D7A9B", // Customize the checked color
           },
         },
       },
@@ -42,7 +42,7 @@ const theme = createTheme({
     MuiSvgIcon: {
       styleOverrides: {
         root: {
-          fontSize: '3rem', // Customize the size of the check sign
+          fontSize: "3rem", // Customize the size of the check sign
         },
       },
     },

@@ -1,5 +1,5 @@
 "use client";
-import { Box, Table, TableBody, TableCell, TableContainer, TableFooter, TableHead, TableRow, TextField, Typography } from "@mui/material/";
+import { Box, FormControl, Table, TableBody, TableCell, TableContainer, TableFooter, TableHead, TableRow, TextField, Typography } from "@mui/material/";
 import SegmentTable from "@/components/materData/SegmentTable";
 import Navbar from "@/components/Navbar";
 import LabelTextField from "@/components/ui/LabelTextField";
@@ -10,7 +10,7 @@ import { Edit2 } from "iconsax-react";
 import { Input } from "@/components/ui/input";
 
 type RowData = {
-  segment: string;
+  group: string;
   description: string;
   department: number;
   customer: number;
@@ -20,29 +20,35 @@ type RowData = {
 //   row: RowData[]
 // }
 
-export default function Segment() {
+export default function Group() {
 
   const rows: RowData[] = [
     {
-      segment: "Building",
-      description: "กลุ่มอาคาร",
+      group: "General Guard",
+      description: "ฝ่ายรักษาความปลอดภัยและบริการ",
       department: 6,
       customer: 5,
     },
     {
-      segment: "Energy",
-      description: "กลุ่มพลังงาน",
+      group: "Cleaning",
+      description: "ฝ่ายบริการงานรักษาความสะอาด",
       department: 1,
       customer: 1,
     },
     {
-      segment: "Education",
-      description: "กลุ่มการศึกษา",
+      group: "IPM",
+      description: "ฝ่ายบริการจัดการอาคารสถานที่",
       department: 4,
       customer: 3,
     },
     {
-      segment: "Hospitality",
+      group: "Cargo",
+      description: "ฝ่ายปฏิบัติการภาคพื้นคลังสินค้า และไปรษณีย์ภัณฑ์",
+      department: 1,
+      customer: 1,
+    },
+    {
+      group: "Airline",
       description: "กลุ่มการแพทย์",
       department: 1,
       customer: 1,
@@ -93,7 +99,7 @@ export default function Segment() {
 
   return (
     <div>
-      <Navbar menu={'Master Data'} submenu={'Segment'} />
+      <Navbar menu={'Master Data'} submenu={'Group'} />
       {/* <Box>
     <Input
               type="text"
@@ -124,8 +130,9 @@ export default function Segment() {
                 justifyContent="space-between"
                 className="space-x-4 p-4"
               >
+                <form className="space-x-4" >
                 <LabelTextField
-                  label={"Segment"}
+                  label={"Group"}
                   placeholder={"Type here..."}
                 />
                 <TextField
@@ -157,6 +164,7 @@ export default function Segment() {
                 <Button className="w-24 bg-[#37B7C3] hover:bg-[#D9F0EC] hover:text-[#1D7A9B]">
                   Search
                 </Button>
+                </form>
               </Box>
             </Box>
           </Box>
@@ -173,10 +181,10 @@ export default function Segment() {
             <Table>
               <TableHead>
                 <TableRow sx={{ borderBottom: "1px solid #C7D4D7" }}>
-                <TableCell align="left" className="w-[5%]">
+                  <TableCell align="left" className="w-[5%]">
                     <Checkbox2 />
                   </TableCell>
-                  <TableCell align="center" className="w-[19%]">Segment</TableCell>
+                  <TableCell align="center" className="w-[19%]">Group</TableCell>
                   <TableCell align="center" className="w-[24%]">Description</TableCell>
                   <TableCell align="center" className="w-[19%]">Department</TableCell>
                   <TableCell align="center" className="w-[19%]">Customer</TableCell>
@@ -204,12 +212,12 @@ export default function Segment() {
                           type="text"
                           style={{ borderRadius: "10px", textAlign: "center" }}
                           className="border-[#4C9BF5] bg-white p-4 min-w-fit justify-between"
-                          value={row.segment}
+                          value={row.group}
                           // onChange={(e) => handleInputChange(index, 'segment', e.target.value)}
                           onChange={handleChange}
                         />
                       ) : (
-                        `${row.segment}`
+                        `${row.group}`
                       )}
                     </TableCell>
                     <TableCell align="center">
@@ -281,8 +289,8 @@ export default function Segment() {
                       <Button
                         style={{ marginLeft: "auto", fontWeight: "bold" }}
                         className="w-48 enabled:bg-gradient-to-r from-[#00336C] to-[#37B7C3] hover:from-[#F66262] hover:to-[#FFD0D0] 
-                                 hover:text-[#00336C] disabled:bg-[#83A2AD]"
-                                 disabled={true}
+                                hover:text-[#00336C] disabled:bg-[#83A2AD]"
+                        disabled={false}
                       >
                         Delete
                       </Button>

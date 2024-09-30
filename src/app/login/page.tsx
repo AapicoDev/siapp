@@ -19,6 +19,7 @@ import {
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import Header from "../../components/Header";
 import Sidebar from "@/components/Sidebar";
+import Image from "next/image";
 
 export default function Login() {
   const [loggedInUser, setLoggedInUser] = useState(null);

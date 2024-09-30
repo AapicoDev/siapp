@@ -10,7 +10,7 @@ import { Edit2 } from "iconsax-react";
 import { Input } from "@/components/ui/input";
 
 type RowData = {
-  segment: string;
+    zone: string;
   description: string;
   department: number;
   customer: number;
@@ -20,30 +20,30 @@ type RowData = {
 //   row: RowData[]
 // }
 
-export default function Segment() {
+export default function Zone() {
 
   const rows: RowData[] = [
     {
-      segment: "Building",
-      description: "กลุ่มอาคาร",
+      zone: "BMR",
+      description: "กรุงเทพมหานครและปริมณฑล",
       department: 6,
       customer: 5,
     },
     {
-      segment: "Energy",
-      description: "กลุ่มพลังงาน",
+        zone: "RONE",
+      description: "ภาคตะวันออกเฉียงเหนือ",
       department: 1,
       customer: 1,
     },
     {
-      segment: "Education",
-      description: "กลุ่มการศึกษา",
+        zone: "SVN",
+      description: "สนามบินสุวรรณภูมิ",
       department: 4,
       customer: 3,
     },
     {
-      segment: "Hospitality",
-      description: "กลุ่มการแพทย์",
+        zone: "DMK",
+      description: "สนามบินดอนเมือง",
       department: 1,
       customer: 1,
     },
@@ -93,7 +93,7 @@ export default function Segment() {
 
   return (
     <div>
-      <Navbar menu={'Master Data'} submenu={'Segment'} />
+      <Navbar menu={'Master Data'} submenu={'Zone'} />
       {/* <Box>
     <Input
               type="text"
@@ -125,7 +125,7 @@ export default function Segment() {
                 className="space-x-4 p-4"
               >
                 <LabelTextField
-                  label={"Segment"}
+                  label={"Zone"}
                   placeholder={"Type here..."}
                 />
                 <TextField
@@ -176,7 +176,7 @@ export default function Segment() {
                 <TableCell align="left" className="w-[5%]">
                     <Checkbox2 />
                   </TableCell>
-                  <TableCell align="center" className="w-[19%]">Segment</TableCell>
+                  <TableCell align="center" className="w-[19%]">Zone</TableCell>
                   <TableCell align="center" className="w-[24%]">Description</TableCell>
                   <TableCell align="center" className="w-[19%]">Department</TableCell>
                   <TableCell align="center" className="w-[19%]">Customer</TableCell>
@@ -204,12 +204,12 @@ export default function Segment() {
                           type="text"
                           style={{ borderRadius: "10px", textAlign: "center" }}
                           className="border-[#4C9BF5] bg-white p-4 min-w-fit justify-between"
-                          value={row.segment}
+                          value={row.zone}
                           // onChange={(e) => handleInputChange(index, 'segment', e.target.value)}
                           onChange={handleChange}
                         />
                       ) : (
-                        `${row.segment}`
+                        `${row.zone}`
                       )}
                     </TableCell>
                     <TableCell align="center">

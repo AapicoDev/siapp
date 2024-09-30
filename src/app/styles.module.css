@@ -21,3 +21,8 @@
     color: #1D7A9B;
     font-weight: bold;
 }
+
+.table td {
+    padding-left: 0;
+    padding-right: 0;
+}

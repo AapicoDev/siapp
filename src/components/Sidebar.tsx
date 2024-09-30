@@ -76,7 +76,7 @@ export default function Sidebar() {
       setSubReportOpen(false);
       setSubSIAPPOpen(false);
       setSubUserOpen(false);
-    } else if (menu === "User") {
+    } else if (menu === "Users") {
       setSubUserOpen(!subUserOpen);
       setSubReportOpen(false);
       setSubSIAPPOpen(false);
@@ -125,8 +125,8 @@ export default function Sidebar() {
         },
         {
           path: "#",
-          text: "User",
-          pathname: "user",
+          text: "Users",
+          pathname: "users",
           icon: <UserSquare size={22} />,
           iconSelected: <UserSquare size={24} variant="Bold" />,
           submenu: true,
@@ -148,15 +148,30 @@ export default function Sidebar() {
               path: "/masterData/segment",
               icon: <GoDotFill />,
             },
-            { title: "Group", path: "#", icon: <GoDotFill /> },
-            { title: "Zone", path: "#", icon: <GoDotFill /> },
-            { title: "Department", path: "#", icon: <GoDotFill /> },
-            { title: "Customer", path: "#", icon: <GoDotFill /> },
+            {
+              title: "Group",
+              path: "/masterData/group",
+              icon: <GoDotFill />,
+            },
+            {
+              title: "Zone",
+              path: "/masterData/zone",
+              icon: <GoDotFill />,
+            },
+            {
+              title: "Department",
+              path: "/masterData/department",
+              icon: <GoDotFill />,
+            },
+            {
+              title: "Customer",
+              path: "/masterData/customer",
+              icon: <GoDotFill />,
+            },
             { title: "Patrol", path: "#", icon: <GoDotFill /> },
-            { title: "Incident Type", path: "#", icon: <GoDotFill /> },
+            { title: "Check List", path: "#", icon: <GoDotFill /> },
             { title: "QR Error Reason", path: "#", icon: <GoDotFill /> },
             { title: "Department Structure", path: "#", icon: <GoDotFill /> },
-            { title: "Report Header", path: "#", icon: <GoDotFill /> },
             { title: "Manage Sync Employee Department Mapping", path: "#", icon: <GoDotFill />,},
           ],
         },
@@ -195,7 +210,7 @@ export default function Sidebar() {
                   (subSIAPPOpen && option.text === "SIAPP") ||
                   (subReportOpen && option.text === "Report") ||
                   (subMaterDataOpen && option.text === "Master Data") ||
-                  (subUserOpen && option.text === "User")
+                  (subUserOpen && option.text === "Users")
                     ? "rotate-180 mt-2"
                     : "mb-2"
                 } ml-auto stroke-2 text-xs`}
@@ -265,7 +280,7 @@ export default function Sidebar() {
             </Collapse>
           )}
 
-          {option.text === "User" && (
+          {option.text === "Users" && (
             <Collapse in={subUserOpen} timeout={"auto"} unmountOnExit>
               <CommandList
                 style={{ overflow: "visible" }}
