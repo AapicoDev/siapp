@@ -18,7 +18,7 @@ import {
 import { Checkbox as Checkbox2 } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import LabelTextField from "../ui/LabelTextField";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/buttons/button";
 import { Edit2 } from "iconsax-react";
 import { useState } from "react";
 

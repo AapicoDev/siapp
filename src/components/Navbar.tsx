@@ -5,16 +5,24 @@ import ProfileDropdown from "./ProfileDropdown";
 import { Profile } from "iconsax-react";
 import NotificationDropDown from "./NotificationDropDown";
 import SettingDropdown from "./SettingDropDown";
-import { Input } from "@/components/ui/input"
+import { Input } from "@/components/ui/textboxs/input"
+import { SearchTextbox } from "./ui/textboxs/searchTextbox";
 
 const Navbar = ({ menu, submenu }: any) => {
   const router = useRouter();
   const [isDisplaySearhBox, setIsDisplaySearhBox] = useState('none');
+  const [searchValue, setSearchValue] = useState("");
+
   useEffect(() => {
     if(submenu==='Segment'){
       setIsDisplaySearhBox("");
     }
   }, []);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setSearchValue(value);
+  };
   
   return (
     <nav className="bg-[#EBF4F6] w-full">
@@ -35,6 +43,7 @@ const Navbar = ({ menu, submenu }: any) => {
                       borderRadius: "10px",}}
               className="border-none bg-white p-4 mr-2 min-w-80 custom-placeholder"
             />
+            {/* <SearchTextbox style={{display: `${isDisplaySearhBox}`}} name="searchNav" inputType="type" placeHolder="Search..." handleChange={handleChange} /> */}
             {/* <button className="p-2 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 bg-white">
               <span className="sr-only">View settings</span>
               <Setting2 variant="Bold"/>

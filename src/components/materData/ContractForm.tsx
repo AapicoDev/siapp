@@ -11,15 +11,19 @@ import {
   SelectChangeEvent,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ui/textboxs/input";
 import { Switch } from "@/components/ui/switch";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/buttons/button";
 import { Trash } from "iconsax-react";
 import { ChangeEvent, useEffect, useState } from "react";
 import { VscRefresh } from "react-icons/vsc";
 import { DatePicker } from "../ui/datePicker";
 import { DatePickerWithRange } from "../ui/datePickerWithRange";
 import { GoArrowUpRight } from "react-icons/go";
+import { DeleteBtnFooter } from "../ui/buttons/deleteBtnFooter";
+import { SaveBtnFooter } from "../ui/buttons/saveBtnFooter";
+import { SubmitBtn } from "../ui/buttons/submitBtn";
+import { CancelBtn } from "../ui/buttons/cancelBtn";
 
 type RowData = {
   hrCode: string;
@@ -168,6 +172,18 @@ const ContractForm = ({ selectedCustomer, closeModal, customeraAeas }: any) => {
   const handleUndo = () => {
     //setFormData(editCustomer)
     setAreas(customeraAeas);
+  };
+
+  const handleDelete = () => {
+    
+  };
+
+  const handleSave = () => {
+    
+  };
+
+  const handleSubmit = () => {
+    
   };
 
   function handleCloseContractForm() {
@@ -456,7 +472,7 @@ const ContractForm = ({ selectedCustomer, closeModal, customeraAeas }: any) => {
                 key={area.id}
                 className="flex w-full bg-[#EBF4F6] rounded-lg justify-items-center align-middle justify-between mb-3"
               >
-                <Box className="flex w-full justify-center">
+                {/* <Box className="flex w-full justify-center">
                   <Typography
                     textAlign="left"
                     className="text-[14px] text-[#2C5079] pt-5"
@@ -470,15 +486,15 @@ const ContractForm = ({ selectedCustomer, closeModal, customeraAeas }: any) => {
                     placeholder="Type here..."
                     className="max-w-80 border-solid border-[#1D7A9B] rounded-[10px] bg-white p-4 m-3 placeholder:text-[#83A2AD]"
                   />
-                </Box>
-                <Box className="flex align-middle ml-2 justify-around">
+                </Box> */}
+                {/* <Box className="flex align-middle ml-2 justify-around">
                   <Button
                     onClick={() => removeArea(area.id)}
                     className="bg-[#F66262] rounded-r-lg rounded-l-none w-14 h-full"
                   >
                     <Trash color="white" />
                   </Button>
-                </Box>
+                </Box> */}
               </Box>
             ))}
 
@@ -493,18 +509,8 @@ const ContractForm = ({ selectedCustomer, closeModal, customeraAeas }: any) => {
         {/* Footer */}
         {!isEdit && (
           <Box className="flex w-full justify-center px-6 space-x-4 border-t-2 pt-4 pb-4">
-            <Button
-              className="w-28 h-11 bg-white text-[#83A2AD] border-[1px] border-[#83A2AD] hover:text-white hover:bg-[#83A2AD]"
-              onClick={handleCloseContractForm}
-            >
-              Cancel
-            </Button>
-            <Button
-              className="w-28 h-11 enabled:bg-gradient-to-r from-[#00336C] to-[#37B7C3] hover:from-[#2BA441] hover:to-[#A7E5A6] 
-                               disabled:bg-[#83A2AD]"
-            >
-              Submit
-            </Button>
+            <CancelBtn onCancelBtnClick={handleCloseContractForm}/>
+            <SubmitBtn onSubmitBtnClick={handleSubmit} />
           </Box>
         )}
 
@@ -521,15 +527,8 @@ const ContractForm = ({ selectedCustomer, closeModal, customeraAeas }: any) => {
               Undo all changes
             </Button>
             <Box className="space-x-4">
-              <Button className="w-32 h-11 bg-white text-[#F66262] border-[1px] border-[#F66262] hover:text-white hover:bg-[#F66262]">
-                Delete
-              </Button>
-              <Button
-                className="w-32 h-11 enabled:bg-gradient-to-r from-[#00336C] to-[#37B7C3] hover:from-[#2BA441] hover:to-[#A7E5A6] 
-                               disabled:bg-[#83A2AD]"
-              >
-                Save
-              </Button>
+            <DeleteBtnFooter onDeleteBtnFooterClick={handleDelete} disable={false} />
+            <SaveBtnFooter onSaveBtnFooterClick={handleSave} />
             </Box>
           </Box>
         )}

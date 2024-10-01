@@ -13,9 +13,9 @@ import {
   Grid,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ui/textboxs/input";
 import { Switch } from "@/components/ui/switch";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/buttons/button";
 import { CallCalling, Trash } from "iconsax-react";
 import { ChangeEvent, useEffect, useState } from "react";
 import { VscRefresh } from "react-icons/vsc";

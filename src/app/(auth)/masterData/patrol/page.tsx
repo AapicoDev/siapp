@@ -35,6 +35,9 @@ import ContractForm from "@/components/materData/ContractForm";
 import { AddButton } from "@/components/ui/buttons/addButton";
 import { ViewButton } from "@/components/ui/buttons/viewButton";
 import { DeleteButton } from "@/components/ui/buttons/deleteButton";
+import { GoArrowUpRight } from "react-icons/go";
+import { TableContract } from "@/components/materData/TableContract";
+import { mock } from "node:test";
 
 type RowData = {
   hrCode: string;
@@ -229,20 +232,26 @@ const mockContract = [
   {
     custId: 1, 
     id: "0001",
-    startDate: "",
-    endDate: "",
+    startDate: "13/08/2024",
+    endDate: "31/12/2024",
+    attachment: "MUIC_contract2024_13.pdf",
+    isActive: true
   },
   {
     custId: 2, 
     id: "0002",
-    startDate: "",
-    endDate: "",
+    startDate: "01/05/2024",
+    endDate: "31/12/2024",
+    attachment: "contract2024_11.pdf",
+    isActive: true
   },
   {
     custId: 3, 
     id: "0003",
-    startDate: "",
-    endDate: "",
+    startDate: "01/04/2024",
+    endDate: "31/12/2024",
+    attachment: "contract2024_27.pdf",
+    isActive: false
   }
 ]
 
@@ -256,9 +265,29 @@ const initialArea: AreaData[] = [
   },
 ];
 
-export default function Contract() {
+const mockRandom = [
+    {
+        reason: "ตรวจระเบียบเครื่องแต่งกายตาม Standard",
+        totalCheckList: 4
+    },
+    {
+        reason: "ตรวจอุปกรณ์ตามสัญญา TOR",
+        totalCheckList: 2
+    },
+    {
+        reason: "ตรวจความเสี่ยงภายในหน่วยงาน",
+        totalCheckList: 2
+    },
+    {
+        reason: "เข้าพบลูกค้า อัพเดทข้อมูล/รับทราบปัญหาต่าง ๆ",
+        totalCheckList: 2
+    }
+]
+
+export default function Patrol() {
   const [editMode, setEditMode] = useState(Array(rows.length).fill(false)); // Array to track edit state for each row
   const [rowData, setRowData] = useState(rows); // Local state for row data
+  const [contractData, setContractData] = useState(mockContract); // Local state for row data
   const [areas, setAreas] = useState<AreaData[]>([
     { id: 1, custId: null, name: "" },
   ]);
@@ -271,7 +300,7 @@ export default function Contract() {
   const [openViewQR, setOpenViewQR] = useState<boolean>(false); 
   const [openAddContract, setOpenAddContract] = useState<boolean>(false);
   const [openEditContract, setOpenEditContract] = useState<boolean>(false); 
-  const pathName = usePathname();
+  const [isCheckpointPage, setIsCheckpointPage] = useState<boolean>(true); 
   const [selected, setSelected] = useState<selectedDelete[]>(
     rows.map((row) => ({
       isSelected: false, // Default value for `selected`
@@ -403,11 +432,17 @@ export default function Contract() {
     setOpenAddContract(true);
   };
 
-  
+  const handleSelectCustomerPage = (checked: boolean) => {
+    if (checked) setIsCheckpointPage(true);
+  };
+
+  const handleSelectContractPage = (checked: boolean) => {
+    if (checked) setIsCheckpointPage(false);
+  };
 
   return (
     <div>
-      <Navbar menu={"Master Data"} submenu={"Customer"} />
+      <Navbar menu={"Master Data"} submenu={"Patrol"} />
       <Box className="px-2">
         {/* Main Content */}
         <Box px={2} pb={2}>
@@ -421,19 +456,22 @@ export default function Contract() {
                 >
                   <Checkbox
                     className="bg-[#EBF4F6] border-none"
-                    checked={pathName === "/masterData/customer"}
+                    checked={isCheckpointPage}
+                    onCheckedChange={handleSelectCustomerPage}
                   />
                   <Typography className="py-1 px-2 text-[#1D7A9B] font-bold">
-                    Customer
+                    Check Point
                   </Typography>
                 </Box>
                 <Box
                   sx={{ borderRadius: "10px" }}
                   className="justify-center flex p-1 bg-white"
                 >
-                  <Checkbox className="bg-[#EBF4F6] border-none" />
+                  <Checkbox className="bg-[#EBF4F6] border-none" 
+                    checked={!isCheckpointPage}
+                    onCheckedChange={handleSelectContractPage}/>
                   <Typography className="py-1 px-2 text-[#1D7A9B] font-bold">
-                    Contract
+                    Random
                   </Typography>
                 </Box>
               </Box>
@@ -458,7 +496,7 @@ export default function Contract() {
             </Box>
           </Box>
 
-          <TableContainer
+          {isCheckpointPage && (<TableContainer
             className="h-screen bg-white"
             sx={{
               display: "flex",
@@ -474,32 +512,25 @@ export default function Contract() {
                   className={`${styles.table}`}
                 >
                   <TableCell align="left" className="w-[4%]">
-                    <Checkbox
+                    <Checkbox className="mt-1 mb-2"
                       checked={isSelectedAll}
                       onCheckedChange={handleCheckAll}
                     />
                   </TableCell>
-                  <TableCell align="center" className="w-[14%]">
-                    HR Code
-                  </TableCell>
-                  <TableCell align="center" className="w-[18%]">
+                  <TableCell align="center" className="w-[26%]">
                     Customer
                   </TableCell>
-                  <TableCell align="center" className="w-[20%]">
-                    Department
+                  <TableCell align="center" className="w-[26%]">
+                    Area
                   </TableCell>
-                  <TableCell align="center" className="w-[14%]">
-                    Segment
+                  <TableCell align="center" className="w-[15%]">
+                    Total Round
                   </TableCell>
-                  <TableCell align="center" className="w-[12%]">
-                    Zone
+                  <TableCell align="center" className="w-[15%]">
+                    Total Checkpoint
                   </TableCell>
-                  {/* Edit button col */}
-                  <TableCell align="center" className="w-[9%]">
+                  <TableCell align="center" className="w-[18%]">
                     QR Code
-                  </TableCell>
-                  <TableCell align="center" className="w-[9%]">
-                    Contract
                   </TableCell>
                 </TableRow>
               </TableHead>
@@ -526,7 +557,7 @@ export default function Contract() {
                     }}
                   >
                     <TableCell align="left">
-                      <Checkbox
+                      <Checkbox className="mt-1 mb-2"
                         checked={selected[index].isSelected}
                         onClick={(event) => {
                           event.stopPropagation(); // Prevent row click
@@ -535,32 +566,24 @@ export default function Contract() {
                       />
                     </TableCell>
 
-                    {/* HR Code */}
-                    <TableCell align="center">{row.hrCode}</TableCell>
-
                     {/* Customer */}
                     <TableCell align="center">{row.customerName}</TableCell>
 
-                    {/* Department */}
+                    {/* Area */}
                     <TableCell align="center">
                       {
-                        departments.find((d) => d.did === row.departmentId)
-                          ?.desc
+                        mockArea.find((a) => a.custId === row.customerId)?.name
                       }
                     </TableCell>
 
-                    {/* Segment */}
+                    {/* Total Round */}
                     <TableCell align="center">
-                      {row.segmentId === null
-                        ? "-"
-                        : segments.find((s) => s.smid === row.segmentId)?.desc}
+                      {row.chkPtTotal}
                     </TableCell>
 
-                    {/* Zone */}
+                    {/* Total Checkpoint */}
                     <TableCell align="center">
-                      {row.zoneId === null
-                        ? "-"
-                        : zones.find((z) => z.zid === row.zoneId)?.desc}
+                      {row.chkPtTotal}
                     </TableCell>
 
                     {/* ViewQR */}
@@ -583,19 +606,87 @@ export default function Contract() {
                         </Button>
                       )}
                     </TableCell>
-                    {/* Contract */}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>)}
+
+           
+          {!isCheckpointPage && (<TableContainer
+            className="h-screen bg-white"
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              borderRadius: "15px 15px 0px 0px",
+              boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
+            }}
+          >
+            <Table>
+              <TableHead>
+                <TableRow
+                  sx={{ borderBottom: "1px solid #C7D4D7" }}
+                  className={`${styles.table}`}
+                >
+                  <TableCell align="left" className="w-[10%]">
+                    <Checkbox className="mt-1 mb-2"
+                      checked={isSelectedAll}
+                      onCheckedChange={handleCheckAll}
+                    />
+                  </TableCell>
+                  <TableCell align="center" className="w-[50%]">
+                    Random Patrol Reason
+                  </TableCell>
+                  <TableCell align="center" className="w-[40%]">
+                    Total Check List
+                  </TableCell>
+                </TableRow>
+              </TableHead>
+
+              {/* Allow the TableBody to grow and fill vertical space */}
+              <TableBody sx={{ flexGrow: 1 }}>
+                {mockRandom.map((row, index) => (
+                  <TableRow
+                    // onClick={() => handleRowClick(row)} // Row click handler
+                    key={index}
+                    className={
+                      editMode[index]
+                        ? `bg-[#D8EAFF]`
+                        : `${index % 2 === 1 ? `bg-inherit` : `bg-[#EBF4F6]`}`
+                    }
+                    sx={{
+                      cursor: "pointer",
+                      "& .MuiTableCell-root": {
+                        padding: "10px 20px 10px 20px", // Customize border color
+                      },
+                      "&:hover": {
+                        backgroundColor: "#DCE9EB", // Optional: Change background color on hover
+                      },
+                    }}
+                  >
+                    <TableCell align="left">
+                      <Checkbox className="mt-1 mb-2"
+                        checked={selected[index].isSelected}
+                        onClick={(event) => {
+                          event.stopPropagation(); // Prevent row click
+                          handleSelected(index);
+                        }}
+                      />
+                    </TableCell>
+
+                    {/* Customer */}
+                    <TableCell align="center">{row.reason}</TableCell>
+
+                    {/* Total Check List */}
                     <TableCell align="center">
-                      {row.contractTotal === 0 ? (
-                        <AddButton onAddBtnClick={handleAddBtnOnClick}/>
-                      ) : (
-                        <ViewButton onViewBtnClick={handleEditContract} row={row} />
-                      )}
+                      {row.totalCheckList}
                     </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
-          </TableContainer>
+          </TableContainer>)}
+        
 
           {/* TableFooter*/}
           <TableContainer

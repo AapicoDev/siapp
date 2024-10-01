@@ -11,13 +11,17 @@ import {
   SelectChangeEvent,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ui/textboxs/input";
 import { Switch } from "@/components/ui/switch";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/buttons/button";
 import { Trash } from "iconsax-react";
 import { ChangeEvent, useEffect, useState } from "react";
 import { VscRefresh } from "react-icons/vsc";
-import { Selector } from "../ui/selector";
+import { Selector } from "../ui/selectors/selector";
+import { Textbox } from "../ui/textboxs/textbox";
+import { AddButton } from "../ui/buttons/addButton";
+import { DeleteBtnFooter } from "../ui/buttons/deleteBtnFooter";
+import { SaveBtnFooter } from "../ui/buttons/saveBtnFooter";
 
 type RowData = {
   hrCode: string;
@@ -127,10 +131,6 @@ const CustomerForm = ({ editCustomer, closeModal, customeraAeas }: any) => {
     console.log("formData", formData)
   };
 
-  function fncHandleSelectChange(e: SelectChangeEvent){
-    handleSelectChange(e);
-  }
-
   const addArea = () => {
     setAreas([...areas, { id: areas.length + 1, name: '', }]);
   };
@@ -160,6 +160,14 @@ const CustomerForm = ({ editCustomer, closeModal, customeraAeas }: any) => {
   const handleUndo = () => {
     setFormData(editCustomer)
     setAreas(customeraAeas)
+  };
+
+  const handleDelete = () => {
+    
+  };
+
+  const handleSave = () => {
+    
   };
 
   function handleCloseCustomerForm() {
@@ -198,7 +206,7 @@ const CustomerForm = ({ editCustomer, closeModal, customeraAeas }: any) => {
           <Box className="flex w-full space-x-5 pt-4">
             {/* Segment */}
             <Box className="w-1/2">
-              <FormControl focused className="w-full">
+              {/* <FormControl focused className="w-full">
                 <Typography
                   textAlign="left"
                   className="text-[14px] pb-1 text-[#2C5079] font-bold"
@@ -253,135 +261,24 @@ const CustomerForm = ({ editCustomer, closeModal, customeraAeas }: any) => {
                     </MenuItem>
                   ))}
                 </Select>
-              </FormControl>
-              {/* <Selector selectorLabel={"Segment"} itemSource={segments} handleChange={fncHandleSelectChange} selected={formData.segmentId} selectorTargetName={"segmentId"}/> */}
+              </FormControl> */}
+              <Selector selectorLabel={"Segment"} itemSource={segments} handleChange={handleSelectChange} selectedVal={formData.segmentId} name={"segmentId"}/>
             </Box>
 
             {/* Group */}
             <Box className="w-1/2">
-              <FormControl focused className="w-full">
-              <Typography
-                textAlign="left"
-                className="text-[14px] pb-1 text-[#2C5079] font-bold"
-              >
-                Group
-              </Typography>
-                <InputLabel className="font-bold text-[#2C5079] w-full"></InputLabel>
-                <Select
-                  name="groupId"
-                  size="small"
-                  displayEmpty
-                  value={formData?.groupId || ""}
-                  onChange={handleSelectChange}
-                  renderValue={(value) =>
-                    value === ""
-                      ? "Select"
-                      : groups.find(
-                          (group) => group.id === formData?.groupId
-                        )?.desc
-                  }
-                  className={`${
-                    formData?.groupId === undefined
-                      ? `text-[#83A2AD]`
-                      : "text-[#2C5079]"
-                  }`}
-                  inputProps={{ "aria-label": "Without label" }}
-                  sx={{
-                    height: "40px",
-                    width: "100%",
-                    borderRadius: "10px",
-                    "& .MuiOutlinedInput-notchedOutline": {
-                      border: "1px solid #1D7A9B", // Customize border color
-                    },
-                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                      border: "1px solid #1D7A9B", // Customize border color on focus
-                    },
-                    "&:hover .MuiOutlinedInput-notchedOutline": {
-                      border: "1px solid #1D7A9B", // Hover border color
-                    },
-                    "& .MuiSelect-icon": {
-                      color: "#83A2AD", // Customize arrow icon color
-                    },
-                  }}
-                >
-                  {groups.map((group) => (
-                    <MenuItem
-                      key={group.id}
-                      value={group.id}
-                      className="text-sm text-[#2C5079]"
-                    >
-                      {group.desc}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              {/* <Selector selectorLabel={"Group"} itemSource={groups} handleChange={fncHandleSelectChange} selected={formData.groupId} selectorTargetName={"groupId"}/> */}
+              <Selector selectorLabel={"Group"} itemSource={groups} handleChange={handleSelectChange} selectedVal={formData.groupId} name={"groupId"}/>
             </Box>
           </Box>
 
           <Box className="flex w-full space-x-5 pt-3">
             {/* Zone */}
             <Box className="w-1/2">
-              <FormControl focused className="w-full">
-              <Typography
-                textAlign="left"
-                className="text-[14px] pb-1 text-[#2C5079] font-bold"
-              >
-                Zone
-              </Typography>
-                <InputLabel className="font-bold text-[#2C5079] w-full"></InputLabel>
-                <Select
-                  name="zoneId"
-                  size="small"
-                  displayEmpty
-                  value={formData?.zoneId || ""}
-                  onChange={handleSelectChange}
-                  renderValue={(value) =>
-                    value === ""
-                      ? "Select"
-                      : zones.find((zone) => zone.id === formData?.zoneId)
-                          ?.desc
-                  }
-                  className={`${
-                    formData?.zoneId === undefined
-                      ? `text-[#83A2AD]`
-                      : "text-[#2C5079]"
-                  }`}
-                  inputProps={{ "aria-label": "Without label" }}
-                  sx={{
-                    height: "40px",
-                    width: "100%",
-                    borderRadius: "10px",
-                    "& .MuiOutlinedInput-notchedOutline": {
-                      border: "1px solid #1D7A9B", // Customize border color
-                    },
-                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                      border: "1px solid #1D7A9B", // Customize border color on focus
-                    },
-                    "&:hover .MuiOutlinedInput-notchedOutline": {
-                      border: "1px solid #1D7A9B", // Hover border color
-                    },
-                    "& .MuiSelect-icon": {
-                      color: "#83A2AD", // Customize arrow icon color
-                    },
-                  }}
-                >
-                  {zones.map((zone) => (
-                    <MenuItem
-                      key={zone.id}
-                      value={zone.id}
-                      className="text-sm text-[#2C5079]"
-                    >
-                      {zone.desc}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              {/* <Selector selectorLabel={"Zone"} itemSource={zones} handleChange={fncHandleSelectChange} selected={formData.zoneId} selectorTargetName={"zoneId"}/> */}
+              <Selector selectorLabel={"Zone"} itemSource={zones} handleChange={handleSelectChange} selectedVal={formData.zoneId} name={"zoneId"}/>
             </Box>
 
             <Box className="w-1/2">
-              <Typography
+              {/* <Typography
                 textAlign="left"
                 className="text-[14px] pb-1 text-[#2C5079] font-bold"
               >
@@ -394,42 +291,17 @@ const CustomerForm = ({ editCustomer, closeModal, customeraAeas }: any) => {
                 value={formData?.customerName}
                 onChange={handleChange}
                 name="customerName"
-              />
+              /> */}
+              <Textbox header="Customer" name="customerName" inputType="text" placeHolder="Type here..." value={formData?.customerName} handleChange={handleChange}/>
             </Box>
           </Box>
 
           <Box className="flex w-full space-x-5 pt-3">
             <Box className="w-[40%]">
-              <Typography
-                textAlign="left"
-                className="text-[14px] pb-1 text-[#2C5079] font-bold"
-              >
-                HR Code
-              </Typography>
-              <Input
-                type="text"
-                placeholder="Type here..."
-                className="border-solid border-[#1D7A9B] rounded-[10px] bg-white p-4 mr-2 placeholder:text-[#83A2AD] text-[#2C5079]"
-                value={formData?.hrCode}
-                onChange={handleChange}
-                name="hrCode"
-              />
+              <Textbox header="HR Code" name="hrCode" inputType="text" placeHolder="Type here..." value={formData?.hrCode} handleChange={handleChange}/>
             </Box>
             <Box className="w-[40%]">
-              <Typography
-                textAlign="left"
-                className="text-[14px] pb-1 text-[#2C5079] font-bold"
-              >
-                Code
-              </Typography>
-              <Input
-                type="text"
-                placeholder="Type here..."
-                className="border-solid border-[#1D7A9B] rounded-[10px] bg-white p-4 mr-2 placeholder:text-[#83A2AD] text-[#2C5079]"
-                value={formData?.code}
-                onChange={handleChange}
-                name="code"
-              />
+              <Textbox header="Code" name="code" inputType="text" placeHolder="Type here..." value={formData?.code} handleChange={handleChange}/>
             </Box>
             <Box className="w-[20%]">
               <Typography
@@ -495,12 +367,7 @@ const CustomerForm = ({ editCustomer, closeModal, customeraAeas }: any) => {
           ))}
 
           <Box className="justify-start flex w-full">
-            <Button
-              onClick={addArea}
-              className="w-[84px] bg-[#1D7A9B] hover:bg-[#D9F0EC] hover:text-[#1D7A9B] pr-2"
-            >
-              + Add
-            </Button>
+            <AddButton onAddBtnClick={addArea} />
           </Box>
 
           <Box className="w-full justify-between items-center pt-5">
@@ -540,15 +407,8 @@ const CustomerForm = ({ editCustomer, closeModal, customeraAeas }: any) => {
               Undo all changes
             </Button>
             <Box className="space-x-4">
-              <Button className="w-32 h-11 bg-white text-[#F66262] border-[1px] border-[#F66262] hover:text-white hover:bg-[#F66262]">
-                Delete
-              </Button>
-              <Button
-                className="w-32 h-11 enabled:bg-gradient-to-r from-[#00336C] to-[#37B7C3] hover:from-[#2BA441] hover:to-[#A7E5A6]
-                               disabled:bg-[#83A2AD]"
-              >
-                Save
-              </Button>
+              <DeleteBtnFooter onDeleteBtnFooterClick={handleDelete} disable={false} />
+              <SaveBtnFooter onSaveBtnFooterClick={handleSave} />
             </Box>
           </Box>
         )}

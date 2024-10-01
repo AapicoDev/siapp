@@ -21,10 +21,10 @@ import {
 } from "@mui/material/";
 import CloseIcon from "@mui/icons-material/Close";
 import Navbar from "@/components/Navbar";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/buttons/button";
 import { useEffect, useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ui/textboxs/input";
 import styles from "../../../styles.module.css";
 import { Filter } from "iconsax-react";
 import { usePathname } from "next/navigation";
@@ -32,6 +32,11 @@ import CustomerForm from "@/components/materData/CustomerForm";
 import { Switch } from "@/components/ui/switch";
 import ViewQrCode from "@/components/materData/ViewQrCode";
 import ContractForm from "@/components/materData/ContractForm";
+import { AddButton } from "@/components/ui/buttons/addButton";
+import { ViewButton } from "@/components/ui/buttons/viewButton";
+import { DeleteButton } from "@/components/ui/buttons/deleteButton";
+import { GoArrowUpRight } from "react-icons/go";
+import { TableContract } from "@/components/materData/TableContract";
 
 type RowData = {
   hrCode: string;
@@ -226,20 +231,26 @@ const mockContract = [
   {
     custId: 1, 
     id: "0001",
-    startDate: "",
-    endDate: "",
+    startDate: "13/08/2024",
+    endDate: "31/12/2024",
+    attachment: "MUIC_contract2024_13.pdf",
+    isActive: true
   },
   {
     custId: 2, 
     id: "0002",
-    startDate: "",
-    endDate: "",
+    startDate: "01/05/2024",
+    endDate: "31/12/2024",
+    attachment: "contract2024_11.pdf",
+    isActive: true
   },
   {
     custId: 3, 
     id: "0003",
-    startDate: "",
-    endDate: "",
+    startDate: "01/04/2024",
+    endDate: "31/12/2024",
+    attachment: "contract2024_27.pdf",
+    isActive: false
   }
 ]
 
@@ -256,6 +267,7 @@ const initialArea: AreaData[] = [
 export default function Customer() {
   const [editMode, setEditMode] = useState(Array(rows.length).fill(false)); // Array to track edit state for each row
   const [rowData, setRowData] = useState(rows); // Local state for row data
+  const [contractData, setContractData] = useState(mockContract); // Local state for row data
   const [areas, setAreas] = useState<AreaData[]>([
     { id: 1, custId: null, name: "" },
   ]);
@@ -268,6 +280,7 @@ export default function Customer() {
   const [openViewQR, setOpenViewQR] = useState<boolean>(false); 
   const [openAddContract, setOpenAddContract] = useState<boolean>(false);
   const [openEditContract, setOpenEditContract] = useState<boolean>(false); 
+  const [isCustomerPage, setIsCustomerPage] = useState<boolean>(true); 
   const pathName = usePathname();
   const [selected, setSelected] = useState<selectedDelete[]>(
     rows.map((row) => ({
@@ -314,6 +327,10 @@ export default function Customer() {
     setShowAddCustModal(true);
   };
 
+  const handleDeleteCust = () => {
+    
+  };
+
   const setToggleFilter = () => {
     console.log("openFilterModal =", openFilterModal);
     setOpenFilterModal(!openFilterModal);
@@ -357,6 +374,7 @@ export default function Customer() {
   }
 
   const handleEditContract = (selecectedRow: any) => {
+    console.log("row =", selecectedRow)
     setSelectedRow(selecectedRow);
     setOpenEditContract(true)
   }
@@ -390,6 +408,19 @@ export default function Customer() {
     setSelected(selectedAll);
   };
 
+  const handleAddBtnOnClick = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+    e.stopPropagation();
+    setOpenAddContract(true);
+  };
+
+  const handleSelectCustomerPage = (checked: boolean) => {
+    if (checked) setIsCustomerPage(true);
+  };
+
+  const handleSelectContractPage = (checked: boolean) => {
+    if (checked) setIsCustomerPage(false);
+  };
+
   return (
     <div>
       <Navbar menu={"Master Data"} submenu={"Customer"} />
@@ -406,7 +437,8 @@ export default function Customer() {
                 >
                   <Checkbox
                     className="bg-[#EBF4F6] border-none"
-                    checked={pathName === "/masterData/customer"}
+                    checked={isCustomerPage}
+                    onCheckedChange={handleSelectCustomerPage}
                   />
                   <Typography className="py-1 px-2 text-[#1D7A9B] font-bold">
                     Customer
@@ -416,7 +448,9 @@ export default function Customer() {
                   sx={{ borderRadius: "10px" }}
                   className="justify-center flex p-1 bg-white"
                 >
-                  <Checkbox className="bg-[#EBF4F6] border-none" />
+                  <Checkbox className="bg-[#EBF4F6] border-none" 
+                    checked={!isCustomerPage}
+                    onCheckedChange={handleSelectContractPage}/>
                   <Typography className="py-1 px-2 text-[#1D7A9B] font-bold">
                     Contract
                   </Typography>
@@ -443,7 +477,7 @@ export default function Customer() {
             </Box>
           </Box>
 
-          <TableContainer
+          {isCustomerPage && (<TableContainer
             className="h-screen bg-white"
             sx={{
               display: "flex",
@@ -571,29 +605,131 @@ export default function Customer() {
                     {/* Contract */}
                     <TableCell align="center">
                       {row.contractTotal === 0 ? (
-                        <Button
-                          className="w-[84px] bg-[#1D7A9B] hover:bg-[#F1F4F4] hover:text-[#1D7A9B]" //hover:border-[1px] hover:border-[#1D7A9B]
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            setOpenAddContract(true);
-                          }}
-                        >
-                          + Add
-                        </Button>
+                        <AddButton onAddBtnClick={handleAddBtnOnClick}/>
                       ) : (
-                        <Button
-                          style={{
-                            border: "1px solid #37B7C3",
-                            fontWeight: "bold",
-                          }}
-                          className="w-[84px] text-[#37B7C3] bg-white hover:bg-[#37B7C3] hover:text-white"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            handleEditContract(row)
-                          }}
-                        >
-                          View
-                        </Button>
+                        <ViewButton onViewBtnClick={handleEditContract} row={row} />
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>)}
+
+          {/* {!isCustomerPage && (
+             <TableContainer 
+            className="h-screen bg-white"
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              borderRadius: "15px 15px 0px 0px",
+              boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
+            }}
+          >
+            <Table>
+              <TableHead>
+                <TableRow
+                  sx={{ borderBottom: "1px solid #C7D4D7" }}
+                  className={`${styles.table}`}
+                >
+                  <TableCell align="left" className="w-[4%]">
+                    <Checkbox className="mt-1 mb-2"
+                      checked={isSelectedAll}
+                      onCheckedChange={handleCheckAll}
+                    />
+                  </TableCell>
+                  <TableCell align="center" className="w-[14%]">
+                    Contract No
+                  </TableCell>
+                  <TableCell align="center" className="w-[18%]">
+                    Start Date
+                  </TableCell>
+                  <TableCell align="center" className="w-[20%]">
+                    End Date
+                  </TableCell>
+                  <TableCell align="center" className="w-[14%]">
+                    Customer
+                  </TableCell>
+                  <TableCell align="center" className="w-[12%]">
+                    Attachment
+                  </TableCell>
+                  <TableCell align="center" className="w-[9%]">
+                    Status
+                  </TableCell>
+                </TableRow>
+              </TableHead>
+
+              <TableBody sx={{ flexGrow: 1 }}>
+                {contractData.map((row, index) => (
+                  <TableRow
+                    //onClick={() => handleRowClick(row)} // Row click handler
+                    key={index}
+                    className={
+                      editMode[index]
+                        ? `bg-[#D8EAFF]`
+                        : `${index % 2 === 1 ? `bg-inherit` : `bg-[#EBF4F6]`}`
+                    }
+                    sx={{
+                      cursor: "pointer",
+                      "& .MuiTableCell-root": {
+                        padding: "10px 20px 10px 20px", // Customize border color
+                      },
+                      "&:hover": {
+                        backgroundColor: "#DCE9EB", // Optional: Change background color on hover
+                      },
+                    }}
+                  >
+                    <TableCell align="left">
+                      <Checkbox
+                        checked={selected[index].isSelected}
+                        onClick={(event) => {
+                          event.stopPropagation(); // Prevent row click
+                          handleSelected(index);
+                        }}
+                      />
+                    </TableCell>
+
+
+                    <TableCell align="center">{row.id}</TableCell>
+
+
+                    <TableCell align="center">{row.startDate}</TableCell>
+
+
+                    <TableCell align="center">{row.endDate}</TableCell>
+
+
+                    <TableCell align="center">
+                      {
+                        rowData.find((d) => d.customerId === row.custId)
+                          ?.customerName
+                      }
+                    </TableCell>
+
+
+                    <TableCell align="center">
+                      <Box
+                        className="justify-between flex p-1 bg-white max-w-[220px] border-[1px] border-[#4C9BF5] cursor-pointer rounded-lg"
+                      >
+                       <Box className="w-[90%] text-left">
+                          <Typography className="py-1 px-2 text-[#2C5079]">
+                            {row.attachment}
+                          </Typography>
+                        </Box>
+                        <GoArrowUpRight size={24} color="#4C9BF5" style={{ marginTop: 5 }}/>
+                      </Box>
+                    </TableCell>
+
+
+                    <TableCell align="center">
+                      {row.isActive ? (
+                        <Box className="justify-center flex p-1 bg-[#86DC89] max-w-[220px] cursor-pointer rounded-lg">
+                          <Typography className="py-1 px-2 text-[white]">Active</Typography>
+                        </Box>
+                      ) : (
+                        <Box className="justify-center flex p-1 bg-[#83A2AD] max-w-[220px] cursor-pointer rounded-lg">
+                          <Typography className="py-1 px-2 text-[white]">Inactive</Typography>
+                        </Box>
                       )}
                     </TableCell>
                   </TableRow>
@@ -601,6 +737,13 @@ export default function Customer() {
               </TableBody>
             </Table>
           </TableContainer>
+        )}   */}
+           
+         {!isCustomerPage && (
+          <TableContract contractData={mockContract} custData={rowData} isSelectedAll={isSelectedAll} handlecheckAll={handleCheckAll}
+                         editMode={editMode} selected={selected} handleSelected={handleSelected}/>
+         )}
+        
 
           {/* TableFooter*/}
           <TableContainer
@@ -624,13 +767,7 @@ export default function Customer() {
                     >
                       <Typography>Total: {totalItems} items</Typography>
                       <Box>
-                        <Button
-                          style={{ marginLeft: "auto", fontWeight: "bold" }}
-                          className="mr-3 w-48 bg-[#F66262] hover:text-[#00336C] hover:bg-[#FFD0D0] disabled:bg-[#83A2AD]"
-                          disabled={!selected.some((item) => item.isSelected)}
-                        >
-                          Delete
-                        </Button>
+                        <DeleteButton onDeleteBtnClick={handleDeleteCust} disable={!selected.some((item) => item.isSelected)}/>
                         <Button
                           style={{ marginLeft: "auto", fontWeight: "bold" }}
                           className="w-48 enabled:bg-gradient-to-r from-[#00336C] to-[#37B7C3] hover:from-[#4C9BF5] hover:to-[#D8EAFF] 

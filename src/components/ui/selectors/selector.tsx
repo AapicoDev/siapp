@@ -4,15 +4,18 @@ import * as React from "react";
 import { FormControl, InputLabel, MenuItem, Select, SelectChangeEvent, Typography } from "@mui/material";
 import { useState } from "react";
 
-export function Selector({selectorLabel, itemSource, handleChange, selected, selectorTargetName,}:any) {
-  const [label, setLabel] = useState(selectorLabel);
-  const [selectedId, setSelectedId] = useState(selected);
-  const [sourceList, setSourceList] = useState<any[]>(itemSource);
-  const targetName = selectorTargetName;
+interface SelectorProps {
+  selectorLabel: any;
+  itemSource: any[];
+  selectedVal: any;
+  name: any;
+  handleChange: any;
+}
 
-  function handleSectionChange(e: SelectChangeEvent){
-    console.log("e in selector = ", e)
-    setSelectedId(e.target.value)
+export function Selector({selectorLabel, itemSource, selectedVal, handleChange, name,}: SelectorProps) {
+  const [sourceList, setSourceList] = useState<any[]>(itemSource);
+
+  function handleSelectionChange(e: SelectChangeEvent){
     handleChange(e);
   }
 
@@ -22,22 +25,22 @@ export function Selector({selectorLabel, itemSource, handleChange, selected, sel
         textAlign="left"
         className="text-[14px] pb-1 text-[#2C5079] font-bold"
       >
-        {label}
+        {selectorLabel}
       </Typography>
       <InputLabel className="font-bold text-[#2C5079] w-full"></InputLabel>
       <Select
-        name={targetName}
+        name={name}
         size="small"
         displayEmpty
-        value={selectedId || ""}
-        onChange={(e) => handleSectionChange(e)}
+        value={selectedVal || ""}
+        onChange={(e) => handleSelectionChange(e)}
         renderValue={(value) =>
           value === ""
             ? "Select"
-            : sourceList.find((s) => s.id === selectedId)?.desc
+            : sourceList.find((s) => s.id === selectedVal)?.desc
         }
         className={`${
-            selectedId === undefined
+          selectedVal === undefined
             ? `text-[#83A2AD]`
             : "text-[#2C5079]"
         }`}

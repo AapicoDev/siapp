@@ -1,14 +1,27 @@
 "use client";
 
 import { TextField } from "@mui/material";
+import { ChangeEvent } from "react";
 
-export default function LabelTextField({ label, placeholder }: any) {
+interface LabelTextFieldProps {
+  label: any;
+  placeholder: any;
+  inputVal: any;
+  setInputVal: (value: any) => void;
+}
+
+export default function LabelTextField({ label, placeholder, inputVal, setInputVal }: LabelTextFieldProps) {
+
+  const handleChange = (e :ChangeEvent<{value: unknown}>) => {
+    setInputVal(e.target.value);
+  }
+
   return (
     <>
       <TextField
         label={label}
         size="small"
-        className="min-w-64"
+        className="w-full"
         focused
         sx={{
           "& .MuiOutlinedInput-root": {
@@ -19,7 +32,8 @@ export default function LabelTextField({ label, placeholder }: any) {
           },
           "& .MuiInputLabel-root.Mui-focused": {
             color: "#2C5079", // Label color when focused
-            fontWeight: 'bold'
+            fontWeight: 'bold',
+            fontSize: "16px"
           },
           "& .MuiOutlinedInput-input::placeholder": {
             color: "#83A2AD", // Customize placeholder text color
@@ -28,6 +42,8 @@ export default function LabelTextField({ label, placeholder }: any) {
           fontFamily:"Kanit"
         }}
         placeholder={placeholder}
+        onChange={handleChange}
+        value={inputVal}
       />
     </>
   );
