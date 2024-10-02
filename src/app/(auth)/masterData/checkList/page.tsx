@@ -15,46 +15,47 @@ import { EditButton } from "@/components/ui/buttons/editButton";
 import { SaveButton } from "@/components/ui/buttons/saveButton";
 import { DeleteButton } from "@/components/ui/buttons/deleteButton";
 import { Checkbox as Checkbox3 } from "@/components/ui/checkbox3"
+import { Textbox } from "@/components/ui/textboxs/textbox";
 
-type RowData = {
+type ChkListData = {
   id: number;
-  segment: string;
-  description: string;
-  department: number;
-  customer: number;
+  name: string;
+  abnormalStatus: string;
+  normalStatus: string;
+  attachPhoto: any;
 };
 
 
 export default function CheckList() {
 
-  const rows: RowData[] = [
+  const rows: ChkListData[] = [
     {
       id: 1,
-      segment: "Building",
-      description: "กลุ่มอาคาร",
-      department: 6,
-      customer: 5,
+      name: "แสงสว่าง",
+      abnormalStatus: "เพียงพอ",
+      normalStatus: "ไม่เพียงพอ",
+      attachPhoto: 1
     },
     {
       id: 2,
-      segment: "Energy",
-      description: "กลุ่มพลังงาน",
-      department: 1,
-      customer: 1,
+      name: "สิ่งกีดขวาง",
+      abnormalStatus: "ไม่พบ",
+      normalStatus: "พบ",
+      attachPhoto: 1
     },
     {
       id: 3,
-      segment: "Education",
-      description: "กลุ่มการศึกษา",
-      department: 4,
-      customer: 3,
+      name: "วัตถุอันตราย",
+      abnormalStatus: "ไม่พบ",
+      normalStatus: "พบ",
+      attachPhoto: 2
     },
     {
       id: 4,
-      segment: "Hospitality",
-      description: "กลุ่มการแพทย์",
-      department: 1,
-      customer: 1,
+      name: "อุปกรณ์ชำรุด",
+      abnormalStatus: "ไม่พบ",
+      normalStatus: "พบ",
+      attachPhoto: 2
     },
   ];
 
@@ -65,6 +66,7 @@ export default function CheckList() {
   const [addCheckList, setAddCheckList] = useState("");
   const [addNormmalStatus, setAddNormalStatus] = useState("");
   const [addAbnormmalStatus, setAddAbnormalStatus] = useState("");
+  const [photoAmt, setPhotoAmt] = useState<number>();
 
   // Handle Edit button click
   const handleEdit = (index: any) => {
@@ -93,10 +95,10 @@ export default function CheckList() {
   };
 
   // Handle input changes in edit mode
-  const handleInputChange = <T extends keyof RowData>(
+  const handleInputChange = <T extends keyof ChkListData>(
     index: number,
     field: T,
-    value: RowData[T]
+    value: ChkListData[T]
   ) => {
     const newRowData = [...rowData];
     newRowData[index][field] = value;
@@ -104,8 +106,9 @@ export default function CheckList() {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type } = e.target;
-    setRowData((prevData) => ({ ...prevData, [name]: value }));
+    const { name, value } = e.target;
+    //setRowData((prevData) => ({ ...prevData, [name]: value }));
+    setPhotoAmt(value as unknown as number);
   };
 
   return (
@@ -116,15 +119,14 @@ export default function CheckList() {
         <Box flex={1} px={2} pb={2}>
           {/* Sub Header */}
           <Box mb={2} className="w-full flex justify-center">
-            <Box justifyContent="center">
-              <Box
+            <Box
                 sx={{
                   bgcolor: "white",
                   borderRadius: "10px",
                   boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
                 }}
                 justifyContent="space-between"
-                className="space-x-4 p-4 flex w-full"
+                className="space-x-4 p-4 flex w-fit"
               >
                 <LabelTextField
                   label={"Check List"}
@@ -145,20 +147,16 @@ export default function CheckList() {
                   setInputVal={setAddAbnormalStatus}
                 />
 
+                <Box className="w-full h-full flex space-x-2">
                 <Checkbox3 className="w-9 h-9 mt-1"/>
-
-                <Box className="min-w-[108px] h-full">
-                <Typography className="text-center mt-2">Attach photos</Typography>
-                </Box>
-                <Box className="min-w-[98px] h-full text-center align-middle">
-                <Typography className="text-center border-[1px] rounded-lg h-10">Amount...</Typography>
+                <Typography className="mt-3 text-[#2C5079] text-[15px] w-[220px]">Attach photos</Typography>
+                <Textbox name="attachPhotoAmt" inputType="number" placeHolder="Amount.." value={photoAmt} handleChange={handleChange}/>
                 </Box>
 
-                <Box className="space-x-4 w-full flex">
+                <Box className="space-x-4 w-fit flex">
                   <AddButton onAddBtnClick={handleAdd}/>
                   <SearchButton onSearchBtnClick={handleSearch}/>
                 </Box>
-              </Box>
             </Box>
           </Box>
 
@@ -177,10 +175,10 @@ export default function CheckList() {
                 <TableCell align="left" className="w-[5%]">
                     <Checkbox2 className="mt-1 mb-2"/>
                   </TableCell>
-                  <TableCell align="center" className="w-[19%]">Segment</TableCell>
-                  <TableCell align="center" className="w-[24%]">Description</TableCell>
-                  <TableCell align="center" className="w-[19%]">Department</TableCell>
-                  <TableCell align="center" className="w-[19%]">Customer</TableCell>
+                  <TableCell align="center" className="w-[19%]">Check List</TableCell>
+                  <TableCell align="center" className="w-[24%]">Status: Normal</TableCell>
+                  <TableCell align="center" className="w-[19%]">Status: Abnormal</TableCell>
+                  <TableCell align="center" className="w-[19%]">Attach photos</TableCell>
                   <TableCell align="center" className="w-[14%]"></TableCell>
                 </TableRow>
               </TableHead>
@@ -204,11 +202,11 @@ export default function CheckList() {
                         <Input
                           type="text"
                           className={`${styles.textBoxCell}`}
-                          value={row.segment}
-                          onChange={(e) => handleInputChange(index, 'segment', e.target.value)}
+                          value={row.name}
+                          onChange={(e) => handleInputChange(index, 'name', e.target.value)}
                         />
                       ) : (
-                        `${row.segment}`
+                        `${row.name}`
                       )}
                     </TableCell>
                     <TableCell align="center">
@@ -216,15 +214,37 @@ export default function CheckList() {
                         <Input
                           type="text"
                           className={`${styles.textBoxCell}`}
-                          value={row.description}
-                          onChange={(e) => handleInputChange(index, 'description', e.target.value)}
+                          value={row.normalStatus}
+                          onChange={(e) => handleInputChange(index, 'normalStatus', e.target.value)}
                         />
                       ) : (
-                        `${row.description}`
+                        `${row.normalStatus}`
                       )}
                     </TableCell>
-                    <TableCell align="center">{row.department}</TableCell>
-                    <TableCell align="center">{row.customer}</TableCell>
+                    <TableCell align="center">
+                      {editMode[index] ? (
+                        <Input
+                          type="text"
+                          className={`${styles.textBoxCell}`}
+                          value={row.abnormalStatus}
+                          onChange={(e) => handleInputChange(index, 'abnormalStatus', e.target.value)}
+                        />
+                      ) : (
+                        `${row.abnormalStatus}`
+                      )}
+                    </TableCell>
+                    <TableCell align="center">
+                      {editMode[index] ? (
+                        <Input
+                          type="text"
+                          className={`${styles.textBoxCell}`}
+                          value={row.attachPhoto}
+                          onChange={(e) => handleInputChange(index, 'attachPhoto', e.target.value)}
+                        />
+                      ) : (
+                        `${row.attachPhoto}`
+                      )}
+                    </TableCell>
                     <TableCell align="center">
                       {editMode[index] ? (
                         <SaveButton onSaveBtnClick={handleSave} index={index}/>

@@ -1,0 +1,200 @@
+{
+    "customers": [
+        {
+            "hrCode": "404-73-031-00",
+            "id": 1,
+            "departmentId": 1,
+            "groupId": 1,
+            "segmentId": 2,
+            "zoneId": 1,
+            "chkPtTotal": null,
+            "contractTotal": "View",
+            "code": "404-73-031-00",
+            "isActive": true,
+            "customerName": "วิทยาลัยนานาชาติ มหาวิทยาลัยมหิดล"
+        },
+        {
+            "hrCode": "401-13-035-00",
+            "id": 2,
+            "groupId": 1,
+            "departmentId": 2,
+            "segmentId": 4,
+            "zoneId": 4,
+            "chkPtTotal": null,
+            "contractTotal": "View",
+            "code": "401-13-035-00",
+            "isActive": true,
+            "customerName": "เรนวูด ปาร์ค"
+        },
+        {
+            "hrCode": "405-20-048-00",
+            "id": 3,
+            "groupId": 3,
+            "departmentId": 3,
+            "segmentId": 3,
+            "zoneId": 2,
+            "chkPtTotal": null,
+            "contractTotal": "12345",
+            "code": "405-20-048-00",
+            "isActive": true,
+            "customerName": "บริษัท สยามคอมเพรสเซอร์ อุตสาหกรรม จำกัด"
+        },
+        {
+            "hrCode": "601-10-077-00",
+            "id": 4,
+            "departmentId": 4,
+            "segmentId": null,
+            "groupId": 2,
+            "zoneId": 3,
+            "chkPtTotal": null,
+            "contractTotal": null,
+            "code": "601-10-077-00",
+            "isActive": false,
+            "customerName": "สายการบิน แควนตัสแอร์เวย์"
+        }
+    ],
+    "areas": [
+        {
+            "id": 1,
+            "custId": 1,
+            "name": "อาคาร1"
+        },
+        {
+            "id": 2,
+            "custId": 1,
+            "name": "อาคารใหญ่"
+        },
+        {
+            "id": 3,
+            "custId": 2,
+            "name": "อาคาร2"
+        }
+        ,
+        {
+            "id": 4,
+            "custId": 2,
+            "name": "อาคาร3"
+        }
+    ],
+    "checkpoints": [
+        {
+            "id": 1,
+            "areaId": 1,
+            "chkPtName": "จุดที่ 1"
+        },
+        {
+            "id": 2,
+            "areaId": 1,
+            "chkPtName": "จุดที่ 2"
+        },
+        {
+            "id": 3,
+            "areaId": 2,
+            "chkPtName": "หน้าประตู"
+        },
+        {
+            "id": 4,
+            "areaId": 3,
+            "chkPtName": "หน้าตึก"
+        }
+    ],
+    "patrolStatus": [
+        {
+            "id": 1,
+            "desc": "ตามกำหนด"
+        },
+        {
+            "id": 2,
+            "desc": "ขาดจุด"
+        },
+        {
+            "id": 3,
+            "desc": "ยกเลิก"
+        },
+        {
+            "id": 4,
+            "desc": "สาย"
+        }
+    ],
+    "segments": [
+        {
+            "id": 1,
+            "desc": "Building"
+        },
+        {
+            "id": 2,
+            "desc": "Education"
+        },
+        {
+            "id": 3,
+            "desc": "Industrial"
+        },
+        {
+            "id": 4,
+            "desc": "Resident"
+        }
+    ],
+    "groups": [
+        {
+            "id": 1,
+            "desc": "General Guard"
+        },
+        {
+            "id": 2,
+            "desc": "Cargo"
+        },
+        {
+            "id": 3,
+            "desc": "Cleaning"
+        }
+    ],
+    "zones": [
+        {
+            "id": 1,
+            "desc": "BMR"
+        },
+        {
+            "id": 2,
+            "desc": "RO1"
+        },
+        {
+            "id": 3,
+            "desc": "SVN"
+        },
+        {
+            "id": 4,
+            "desc": "RO2"
+        }
+    ],
+
+    "incidentTypes": [
+        {
+            "id": 1,
+            "desc": "อุบัติเหตุ (Accident)",
+            "correctiveAction": "อธิบายวิธีรับมือเมื่อเกิดเหตุการณ์ประเภทนี้",
+            "contact": "ระบุว่าต้องไปติดต่อใครเพื่อประสานงาน & ใส่เบอร์/ช่องทางติดต่อ"
+
+        },
+        {
+            "id": 2,
+            "desc": "พบบุคคลต้องสงสัย (Suspicious person)",
+            "correctiveAction": "อธิบายวิธีรับมือเมื่อเกิดเหตุการณ์ประเภทนี้",
+            "contact": "ระบุว่าต้องไปติดต่อใครเพื่อประสานงาน & ใส่เบอร์/ช่องทางติดต่อ"
+
+        },
+        {
+            "id": 3,
+            "desc": "ตรวจสอบวินัย (Discipline)",
+            "correctiveAction": "อธิบายวิธีรับมือเมื่อเกิดเหตุการณ์ประเภทนี้",
+            "contact": "ระบุว่าต้องไปติดต่อใครเพื่อประสานงาน & ใส่เบอร์/ช่องทางติดต่อ"
+
+        },
+        {
+            "id": 4,
+            "desc": "ทรัพย์สินสูญหาย (Lost Property)",
+            "correctiveAction": "อธิบายวิธีรับมือเมื่อเกิดเหตุการณ์ประเภทนี้",
+            "contact": "ระบุว่าต้องไปติดต่อใครเพื่อประสานงาน & ใส่เบอร์/ช่องทางติดต่อ"
+
+        }
+    ]
+}

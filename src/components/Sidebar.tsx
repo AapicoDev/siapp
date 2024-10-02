@@ -105,9 +105,9 @@ export default function Sidebar() {
           submenuItems: [
             { title: "Patrol", path: "/siapp/patrol", icon: <GoDotFill />},
             { title: "Incident", path: "/siapp/incident", icon: <GoDotFill /> },
-            { title: "Manpower", path: "#", icon: <GoDotFill /> },
-            { title: "Daily summary report", path: "#", icon: <GoDotFill /> },
-            { title: "Monitoring report", path: "#", icon: <GoDotFill /> },
+            { title: "Manpower", path: "/siapp/manpower", icon: <GoDotFill /> },
+            { title: "Daily summary report", path: "/siapp/dailySummaryReport", icon: <GoDotFill /> },
+            { title: "Monitoring report", path: "/siapp/monitoringReport", icon: <GoDotFill /> },
           ],
         },
         {
@@ -118,9 +118,9 @@ export default function Sidebar() {
           iconSelected: <ClipboardText size={24} variant="Bold" />,
           submenu: true,
           submenuItems: [
-            { title: "Daily", path: "#", icon: <GoDotFill /> },
-            { title: "Monthly", path: "#", icon: <GoDotFill /> },
-            { title: "Minutes of meeting", path: "#", icon: <GoDotFill /> },
+            { title: "Daily", path: "/report/dailyReport", icon: <GoDotFill /> },
+            { title: "Monthly", path: "/report/MonthlyReport", icon: <GoDotFill /> },
+            { title: "Minutes of meeting", path: "/report/minutesOfMeeting", icon: <GoDotFill /> },
           ],
         },
         {
@@ -131,8 +131,8 @@ export default function Sidebar() {
           iconSelected: <UserSquare size={24} variant="Bold" />,
           submenu: true,
           submenuItems: [
-            { title: "Users", path: "#", icon: <GoDotFill /> },
-            { title: "Role & Permission", path: "#", icon: <GoDotFill /> },
+            { title: "Users", path: "/users/usersPage", icon: <GoDotFill /> },
+            { title: "Role & Permission", path: "/users/roleAndPermission", icon: <GoDotFill /> },
           ],
         },
         {
@@ -177,12 +177,12 @@ export default function Sidebar() {
             { title: "QR Error Reason", 
               path: "/masterData/qrErrorReason", 
               icon: <GoDotFill /> },
-            { title: "Department Structure", path: "#", icon: <GoDotFill /> },
-            { title: "Manage Sync Employee Department Mapping", path: "#", icon: <GoDotFill />,},
+            { title: "Department Structure", path: "/masterData/departmentStructure", icon: <GoDotFill /> },
+            { title: "Manage Sync Employee Department Mapping", path: "/masterData/manageSync", icon: <GoDotFill />,},
           ],
         },
         {
-          path: "#",
+          path: "/configuration/configPage",
           text: "Configuration",
           pathname: "configuration",
           icon: <Setting3 size={22} />,

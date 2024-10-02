@@ -38,6 +38,7 @@ export default function LabelTextField({ label, placeholder, inputVal, setInputV
           "& .MuiOutlinedInput-input::placeholder": {
             color: "#83A2AD", // Customize placeholder text color
             opacity: 1, // Ensure full opacity for the placeholder
+            fontSize: "14px"
           },
           fontFamily:"Kanit"
         }}

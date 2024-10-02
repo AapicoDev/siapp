@@ -2,10 +2,16 @@
 
 import * as React from "react";
 import { Typography } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/textboxs/input";
 
 export function Textbox({ header,inputType, placeHolder, handleChange, value, name }: any) {
+
+  const [isHeader, setHeader] = useState(true);
+
+  useEffect(() => {
+    if (header === undefined) setHeader(false)
+  });
   
   function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
     handleChange(e);
@@ -13,12 +19,14 @@ export function Textbox({ header,inputType, placeHolder, handleChange, value, na
 
   return (
     <>
+    {isHeader && (
       <Typography
         textAlign="left"
         className="text-[14px] pb-1 text-[#2C5079] font-bold"
       >
         {header}
-      </Typography>
+      </Typography>)}
+      
       <Input
         type={inputType}
         placeholder={placeHolder}

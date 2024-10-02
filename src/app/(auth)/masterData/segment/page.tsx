@@ -23,6 +23,11 @@ type RowData = {
   customer: number;
 };
 
+type selectedDelete = {
+  isSelected: boolean;
+  segId: number;
+};
+
 // interface SegmentTableProps {
 //   row: RowData[]
 // }
@@ -66,6 +71,13 @@ export default function Segment() {
   const [rowData, setRowData] = useState(rows); // Local state for row data
   const [addSegmentVal, setAddSegmentVal] = useState("");
   const [addSegmentDescVal, setAddSegmentDescVal] = useState("");
+  const [selected, setSelected] = useState<selectedDelete[]>(
+    rows.map((row) => ({
+      isSelected: false,
+      segId: row.id, 
+    }))
+  );
+  const [isSelectedAll, setIsSelectedAll] = useState(false);
 
   // Handle Edit button click
   const handleEdit = (index: any) => {
@@ -94,6 +106,28 @@ export default function Segment() {
 
   const handleDelete = () => {
     
+  };
+
+  const handleSelected = (index: number) => {
+    const newSelected = [...selected];
+    newSelected[index].isSelected = !selected[index].isSelected;
+    setSelected(newSelected);
+    const isCheckAll = !selected.some((item) => item.isSelected === false);
+    if (isCheckAll) {
+      setIsSelectedAll(true);
+    } else {
+      setIsSelectedAll(false);
+    }
+    console.log("isCheckAll", isCheckAll);
+  };
+
+  const handleCheckAll = (checked: boolean) => {
+    setIsSelectedAll(checked);
+    const selectedAll = [...selected];
+    selectedAll.forEach((element) => {
+      element.isSelected = checked;
+    });
+    setSelected(selectedAll);
   };
 
   // Handle input changes in edit mode
@@ -168,7 +202,9 @@ export default function Segment() {
               <TableHead>
                 <TableRow sx={{ borderBottom: "1px solid #C7D4D7" }}>
                 <TableCell align="left" className="w-[5%]">
-                    <Checkbox2 className="mt-1 mb-2"/>
+                    <Checkbox2 className="mt-1 mb-2"
+                               checked={isSelectedAll}
+                               onCheckedChange={handleCheckAll} />
                   </TableCell>
                   <TableCell align="center" className="w-[19%]">Segment</TableCell>
                   <TableCell align="center" className="w-[24%]">Description</TableCell>
@@ -190,7 +226,12 @@ export default function Segment() {
                     }
                   >
                     <TableCell align="left">
-                      <Checkbox2 />
+                      <Checkbox2 
+                        checked={selected[index].isSelected}
+                        onClick={(event) => {
+                        event.stopPropagation(); // Prevent row click
+                        handleSelected(index);
+                      }}/>
                     </TableCell>
                     <TableCell align="center" className="max-w-48">
                       {editMode[index] ? (
@@ -252,7 +293,7 @@ export default function Segment() {
                       }}
                     >
                       <Typography>Total: {totalItems} items</Typography>
-                      <DeleteButton onDeleteBtnClick={handleDelete} disable={true}/>
+                      <DeleteButton onDeleteBtnClick={handleDelete} disable={!selected.some((item) => item.isSelected)}/>
                     </Box>
                   </TableCell>
                 </TableRow>
