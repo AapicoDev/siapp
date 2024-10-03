@@ -105,7 +105,7 @@ export default function Login() {
               onClick={async (e) => {
                 e.preventDefault();
                 console.log("click");
-                let loginResult = await login(email, password);
+                const loginResult = await login(email, password);
                 if (loginResult) {
                   router.push("dashboard");
                 } else {
