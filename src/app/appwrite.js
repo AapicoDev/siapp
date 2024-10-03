@@ -3,8 +3,8 @@ import { Client, Account, Databases, Storage, ID } from 'appwrite';
 export const client = new Client();
 
 client
-    .setEndpoint('https://cloud.appwrite.io/v1') //https://apigw.aapico.com/v1
-    .setProject('66ced9640012cff87117'); // Replace with your project ID
+    .setEndpoint('https://baas.powermap.live/v1') //https://apigw.aapico.com/v1
+    .setProject('66fcfea30036daf8a759'); // Replace with your project ID
 
 const databases = new Databases(client);
 export { databases };
@@ -21,6 +21,7 @@ export const login = async (email, password) => {
         return await account.get();
     } catch (error) {
         throw new Error("Login failed: " + error.message);
+        return null;
     }
 };
 
