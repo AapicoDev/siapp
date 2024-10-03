@@ -16,8 +16,8 @@ import {
   Button as Botton2,
 } from "@mui/material";
 import { Checkbox as Checkbox2 } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import LabelTextField from "../ui/LabelTextField";
+import { Input } from "@/components/ui/textboxs/input";
+import LabelTextField from "../ui/textboxs/LabelTextField";
 import { Button } from "@/components/ui/buttons/button";
 import { Edit2 } from "iconsax-react";
 import { useState } from "react";
@@ -138,6 +138,10 @@ const SegmentTable = () => {
                 <LabelTextField
                   label={"Segment"}
                   placeholder={"Type here..."}
+                  inputVal={undefined}
+                  setInputVal={function (value: any): void {
+                    throw new Error("Function not implemented.");
+                  }}
                 />
                 <TextField
                   label="Description"

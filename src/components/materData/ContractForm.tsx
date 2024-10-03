@@ -477,7 +477,7 @@ const ContractForm = ({ selectedCustomer, closeModal, customeraAeas }: any) => {
                     textAlign="left"
                     className="text-[14px] text-[#2C5079] pt-5"
                   >
-                    Area's Name :
+                    Area&apos;s Name :
                   </Typography>
                   <Input
                     value={area.name}
@@ -509,7 +509,7 @@ const ContractForm = ({ selectedCustomer, closeModal, customeraAeas }: any) => {
         {/* Footer */}
         {!isEdit && (
           <Box className="flex w-full justify-center px-6 space-x-4 border-t-2 pt-4 pb-4">
-            <CancelBtn onCancelBtnClick={handleCloseContractForm}/>
+            <CancelBtn onCancelBtnClick={handleCloseContractForm} />
             <SubmitBtn onSubmitBtnClick={handleSubmit} />
           </Box>
         )}
@@ -527,8 +527,11 @@ const ContractForm = ({ selectedCustomer, closeModal, customeraAeas }: any) => {
               Undo all changes
             </Button>
             <Box className="space-x-4">
-            <DeleteBtnFooter onDeleteBtnFooterClick={handleDelete} disable={false} />
-            <SaveBtnFooter onSaveBtnFooterClick={handleSave} />
+              <DeleteBtnFooter
+                onDeleteBtnFooterClick={handleDelete}
+                disable={false}
+              />
+              <SaveBtnFooter onSaveBtnFooterClick={handleSave} />
             </Box>
           </Box>
         )}
