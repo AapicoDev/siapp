@@ -19,10 +19,9 @@ export default function RootLayout({
 }) {
   return (
     // <ThemeProviderWrapper>
-    <main className="flex w-full h-screen overflow-hidden">
+    <main className="flex w-full h-[1280] overflow-hidden">
       <Sidebar />
       <PageWrapper>
-        <Navbar />
         {children}
       </PageWrapper>
     </main>

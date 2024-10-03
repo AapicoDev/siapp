@@ -1,0 +1,38 @@
+.sidebarText{
+    color: #2C5079;
+    background-color: white;
+}
+
+.sidebarSelectedText{
+    color: #1D7A9B;
+}
+
+.selectedDot{
+    color: #37b7C3;
+}
+
+.dot{
+    color: #D9F0EC;
+}
+
+.menuselected{
+    border-right: 8px solid #37b7C3;
+    background-color: #EBF4F6;
+    color: #1D7A9B;
+    font-weight: bold;
+}
+
+.table td {
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.textBoxCell{
+    border-radius: 10px;
+    border-color: #4C9BF5;
+    text-align: center;
+    background-color: white;
+    padding: 4;
+    min-width: fit-content;
+    justify-content: space-between;
+}

@@ -17,6 +17,7 @@ import { GoDotFill } from "react-icons/go";
 import { Collapse, Typography } from "@mui/material";
 import "../styles/sidebar.css"
 import { account } from "../app/appwrite"; // Import account from Appwrite
+import styles from '../app/styles.module.css'
 
 export default function Sidebar() {
   const [subSIAPPOpen, setSubSIAPPOpen] = useState(false);
@@ -62,12 +63,24 @@ export default function Sidebar() {
   const toggleSubmenu = (menu: any) => {
     if (menu === "SIAPP") {
       setSubSIAPPOpen(!subSIAPPOpen);
+      setSubReportOpen(false);
+      setSubMaterDataOpen(false);
+      setSubUserOpen(false);
     } else if (menu === "Report") {
       setSubReportOpen(!subReportOpen);
+      setSubSIAPPOpen(false);
+      setSubMaterDataOpen(false);
+      setSubUserOpen(false);
     } else if (menu === "Master Data") {
       setSubMaterDataOpen(!subMaterDataOpen);
-    } else if (menu === "User") {
+      setSubReportOpen(false);
+      setSubSIAPPOpen(false);
+      setSubUserOpen(false);
+    } else if (menu === "Users") {
       setSubUserOpen(!subUserOpen);
+      setSubReportOpen(false);
+      setSubSIAPPOpen(false);
+      setSubMaterDataOpen(false);
     }
   };
 
@@ -90,11 +103,11 @@ export default function Sidebar() {
           iconSelected: <Routing size={24} variant="Bold" />,
           submenu: true,
           submenuItems: [
-            { title: "Patrol", path: "/siapp/patrol", icon: <GoDotFill /> },
+            { title: "Patrol", path: "/siapp/patrol", icon: <GoDotFill />},
             { title: "Incident", path: "/siapp/incident", icon: <GoDotFill /> },
-            { title: "Manpower", path: "#", icon: <GoDotFill /> },
-            { title: "Daily summary report", path: "#", icon: <GoDotFill /> },
-            { title: "Monitoring report", path: "#", icon: <GoDotFill /> },
+            { title: "Manpower", path: "/siapp/manpower", icon: <GoDotFill /> },
+            { title: "Daily summary report", path: "/siapp/dailySummaryReport", icon: <GoDotFill /> },
+            { title: "Monitoring report", path: "/siapp/monitoringReport", icon: <GoDotFill /> },
           ],
         },
         {
@@ -105,21 +118,21 @@ export default function Sidebar() {
           iconSelected: <ClipboardText size={24} variant="Bold" />,
           submenu: true,
           submenuItems: [
-            { title: "Daily", path: "#", icon: <GoDotFill /> },
-            { title: "Monthly", path: "#", icon: <GoDotFill /> },
-            { title: "Minutes of meeting", path: "#", icon: <GoDotFill /> },
+            { title: "Daily", path: "/report/dailyReport", icon: <GoDotFill /> },
+            { title: "Monthly", path: "/report/MonthlyReport", icon: <GoDotFill /> },
+            { title: "Minutes of meeting", path: "/report/minutesOfMeeting", icon: <GoDotFill /> },
           ],
         },
         {
           path: "#",
-          text: "User",
-          pathname: "user",
+          text: "Users",
+          pathname: "users",
           icon: <UserSquare size={22} />,
           iconSelected: <UserSquare size={24} variant="Bold" />,
           submenu: true,
           submenuItems: [
-            { title: "Users", path: "#", icon: <GoDotFill /> },
-            { title: "Role & Permission", path: "#", icon: <GoDotFill /> },
+            { title: "Users", path: "/users/usersPage", icon: <GoDotFill /> },
+            { title: "Role & Permission", path: "/users/roleAndPermission", icon: <GoDotFill /> },
           ],
         },
         {
@@ -135,24 +148,41 @@ export default function Sidebar() {
               path: "/masterData/segment",
               icon: <GoDotFill />,
             },
-            { title: "Group", path: "#", icon: <GoDotFill /> },
-            { title: "Zone", path: "#", icon: <GoDotFill /> },
-            { title: "Department", path: "#", icon: <GoDotFill /> },
-            { title: "Customer", path: "#", icon: <GoDotFill /> },
-            { title: "Patrol", path: "#", icon: <GoDotFill /> },
-            { title: "Incident Type", path: "#", icon: <GoDotFill /> },
-            { title: "QR Error Reason", path: "#", icon: <GoDotFill /> },
-            { title: "Department Structure", path: "#", icon: <GoDotFill /> },
-            { title: "Report Header", path: "#", icon: <GoDotFill /> },
             {
-              title: "Manage Sync Employee Department Mapping",
-              path: "#",
-              icon: <GoDotFill size={26} />,
+              title: "Group",
+              path: "/masterData/group",
+              icon: <GoDotFill />,
             },
+            {
+              title: "Zone",
+              path: "/masterData/zone",
+              icon: <GoDotFill />,
+            },
+            {
+              title: "Department",
+              path: "/masterData/department",
+              icon: <GoDotFill />,
+            },
+            {
+              title: "Customer",
+              path: "/masterData/customer",
+              icon: <GoDotFill />,
+            },
+            { title: "Patrol", 
+              path: "/masterData/patrol", 
+              icon: <GoDotFill /> },
+            { title: "Check List", 
+              path: "/masterData/checkList",
+              icon: <GoDotFill /> },
+            { title: "QR Error Reason", 
+              path: "/masterData/qrErrorReason", 
+              icon: <GoDotFill /> },
+            { title: "Department Structure", path: "/masterData/departmentStructure", icon: <GoDotFill /> },
+            { title: "Manage Sync Employee Department Mapping", path: "/masterData/manageSync", icon: <GoDotFill />,},
           ],
         },
         {
-          path: "#",
+          path: "/configuration/configPage",
           text: "Configuration",
           pathname: "configuration",
           icon: <Setting3 size={22} />,
@@ -172,9 +202,9 @@ export default function Sidebar() {
               key={optionkey}
               className={`${
                 pathName.includes(option.pathname)
-                  ? "font-bold menuSelected"
-                  : ""
-              } py-2 flex gap-2 pl-2`}
+                  ? `font-bold ${styles.sidebarSelectedText}`
+                  : `${styles.sidebarText}`
+              } py-2 flex gap-2 pl-2 hover:bg-[#EBF4F6] transition-colors duration-100 ease-in-out`}
             >
               {pathName.includes(option.pathname)
                 ? option.iconSelected
@@ -186,7 +216,7 @@ export default function Sidebar() {
                   (subSIAPPOpen && option.text === "SIAPP") ||
                   (subReportOpen && option.text === "Report") ||
                   (subMaterDataOpen && option.text === "Master Data") ||
-                  (subUserOpen && option.text === "User")
+                  (subUserOpen && option.text === "Users")
                     ? "rotate-180 mt-2"
                     : "mb-2"
                 } ml-auto stroke-2 text-xs`}
@@ -207,11 +237,15 @@ export default function Sidebar() {
                         key={submenukey}
                         className={`${
                           pathName === submenu?.path
-                            ? "bg-accent border-r-8 font-bold"
-                            : ""
-                        } gap-2 px-7 py-3 leading-5 flex1`}
+                            ? `bg-accent border-r-8 font-bold ${styles.menuselected}`
+                            : `${styles.sidebarText}`
+                        } gap-2 px-7 py-3 leading-5 flex1 hover:bg-[#EBF4F6] transition-colors duration-100 ease-in-out`}
                       >
-                        {submenu?.icon}
+                        <div className={`${
+                          pathName === submenu?.path ? `${styles.selectedDot}`
+                            : `${styles.dot}` }`}>
+                          {submenu?.icon}
+                        </div>
                         {submenu?.title}
                       </CommandItem>
                     </Link>
@@ -234,11 +268,15 @@ export default function Sidebar() {
                         key={submenukey}
                         className={`${
                           pathName === submenu?.path
-                            ? "bg-accent border-r-8 font-bold"
-                            : ""
-                        } gap-2 px-7 py-3 leading-5 flex1`}
+                            ? `bg-accent border-r-8 font-bold ${styles.menuselected}`
+                            : `${styles.sidebarText}`
+                        } gap-2 px-7 py-3 leading-5 flex1 hover:bg-[#EBF4F6] transition-colors duration-100 ease-in-out`}
                       >
-                        {submenu?.icon}
+                        <div className={`${
+                          pathName === submenu?.path ? `${styles.selectedDot}`
+                            : `${styles.dot}` }`}>
+                          {submenu?.icon}
+                        </div>
                         {submenu?.title}
                       </CommandItem>
                     </Link>
@@ -248,7 +286,7 @@ export default function Sidebar() {
             </Collapse>
           )}
 
-          {option.text === "User" && (
+          {option.text === "Users" && (
             <Collapse in={subUserOpen} timeout={"auto"} unmountOnExit>
               <CommandList
                 style={{ overflow: "visible" }}
@@ -261,11 +299,15 @@ export default function Sidebar() {
                         key={submenukey}
                         className={`${
                           pathName === submenu?.path
-                            ? "bg-accent border-r-8 font-bold"
-                            : ""
-                        } gap-2 px-7 py-3 leading-5 flex1`}
+                            ? `bg-accent border-r-8 font-bold ${styles.menuselected}`
+                            : `${styles.sidebarText}`
+                        } gap-2 px-7 py-3 leading-5 flex1 hover:bg-[#EBF4F6] transition-colors duration-100 ease-in-out`}
                       >
-                        {submenu?.icon}
+                        <div className={`${
+                          pathName === submenu?.path ? `${styles.selectedDot}`
+                            : `${styles.dot}` }`}>
+                          {submenu?.icon}
+                        </div>
                         {submenu?.title}
                       </CommandItem>
                     </Link>
@@ -288,11 +330,15 @@ export default function Sidebar() {
                         key={submenukey}
                         className={`${
                           pathName === submenu?.path
-                            ? "bg-accent border-r-8 font-bold"
-                            : ""
-                        } gap-2 px-7 py-3 leading-5 flex1`}
+                            ? `bg-accent border-r-8 font-bold ${styles.menuselected}`
+                            : `${styles.sidebarText}`
+                        } gap-2 px-7 py-3 leading-5 flex1 hover:bg-[#EBF4F6] transition-colors duration-100 ease-in-out`}
                       >
-                        {submenu?.icon}
+                        <div className={`${
+                          pathName === submenu?.path ? `${styles.selectedDot}`
+                            : `${styles.dot}` }`}>
+                          {submenu?.icon}
+                        </div>
                         {submenu?.title}
                       </CommandItem>
                     </Link>
@@ -308,8 +354,10 @@ export default function Sidebar() {
         <CommandItem
           key={optionkey}
           className={`${
-            pathName === option?.path ? "bg-accent border-r-8 font-bold" : ""
-          } py-2 flex gap-2 pl-2`}
+            pathName === option?.path ? 
+              `${styles.menuselected}` :
+              `${styles.sidebarText}`
+          } py-2 flex gap-2 pl-2 hover:bg-[#EBF4F6] transition-colors duration-100 ease-in-out`}
         >
           {pathName === option?.path ? option.iconSelected : option.icon}
           {option.text}
@@ -324,7 +372,7 @@ export default function Sidebar() {
         <Logo />
       </div>
       <div>
-        <Command className="min-h-[1280px]">
+        <Command>
           <CommandList style={{ overflow: "visible" }}>
             {menuList.map((menu: any, menukey: number) => (
               <CommandGroup key={menukey} style={{ overflow: "visible" }}>
