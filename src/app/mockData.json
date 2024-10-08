@@ -1,200 +1,459 @@
 {
-    "customers": [
-        {
-            "hrCode": "404-73-031-00",
-            "id": 1,
-            "departmentId": 1,
-            "groupId": 1,
-            "segmentId": 2,
-            "zoneId": 1,
-            "chkPtTotal": null,
-            "contractTotal": "View",
-            "code": "404-73-031-00",
-            "isActive": true,
-            "customerName": "วิทยาลัยนานาชาติ มหาวิทยาลัยมหิดล"
-        },
-        {
-            "hrCode": "401-13-035-00",
-            "id": 2,
-            "groupId": 1,
-            "departmentId": 2,
-            "segmentId": 4,
-            "zoneId": 4,
-            "chkPtTotal": null,
-            "contractTotal": "View",
-            "code": "401-13-035-00",
-            "isActive": true,
-            "customerName": "เรนวูด ปาร์ค"
-        },
-        {
-            "hrCode": "405-20-048-00",
-            "id": 3,
-            "groupId": 3,
-            "departmentId": 3,
-            "segmentId": 3,
-            "zoneId": 2,
-            "chkPtTotal": null,
-            "contractTotal": "12345",
-            "code": "405-20-048-00",
-            "isActive": true,
-            "customerName": "บริษัท สยามคอมเพรสเซอร์ อุตสาหกรรม จำกัด"
-        },
-        {
-            "hrCode": "601-10-077-00",
-            "id": 4,
-            "departmentId": 4,
-            "segmentId": null,
-            "groupId": 2,
-            "zoneId": 3,
-            "chkPtTotal": null,
-            "contractTotal": null,
-            "code": "601-10-077-00",
-            "isActive": false,
-            "customerName": "สายการบิน แควนตัสแอร์เวย์"
-        }
-    ],
-    "areas": [
-        {
-            "id": 1,
-            "custId": 1,
-            "name": "อาคาร1"
-        },
-        {
-            "id": 2,
-            "custId": 1,
-            "name": "อาคารใหญ่"
-        },
-        {
-            "id": 3,
-            "custId": 2,
-            "name": "อาคาร2"
-        }
-        ,
-        {
-            "id": 4,
-            "custId": 2,
-            "name": "อาคาร3"
-        }
-    ],
-    "checkpoints": [
-        {
-            "id": 1,
-            "areaId": 1,
-            "chkPtName": "จุดที่ 1"
-        },
-        {
-            "id": 2,
-            "areaId": 1,
-            "chkPtName": "จุดที่ 2"
-        },
-        {
-            "id": 3,
-            "areaId": 2,
-            "chkPtName": "หน้าประตู"
-        },
-        {
-            "id": 4,
-            "areaId": 3,
-            "chkPtName": "หน้าตึก"
-        }
-    ],
-    "patrolStatus": [
-        {
-            "id": 1,
-            "desc": "ตามกำหนด"
-        },
-        {
-            "id": 2,
-            "desc": "ขาดจุด"
-        },
-        {
-            "id": 3,
-            "desc": "ยกเลิก"
-        },
-        {
-            "id": 4,
-            "desc": "สาย"
-        }
-    ],
-    "segments": [
-        {
-            "id": 1,
-            "desc": "Building"
-        },
-        {
-            "id": 2,
-            "desc": "Education"
-        },
-        {
-            "id": 3,
-            "desc": "Industrial"
-        },
-        {
-            "id": 4,
-            "desc": "Resident"
-        }
-    ],
-    "groups": [
-        {
-            "id": 1,
-            "desc": "General Guard"
-        },
-        {
-            "id": 2,
-            "desc": "Cargo"
-        },
-        {
-            "id": 3,
-            "desc": "Cleaning"
-        }
-    ],
-    "zones": [
-        {
-            "id": 1,
-            "desc": "BMR"
-        },
-        {
-            "id": 2,
-            "desc": "RO1"
-        },
-        {
-            "id": 3,
-            "desc": "SVN"
-        },
-        {
-            "id": 4,
-            "desc": "RO2"
-        }
-    ],
+  "customers": [
+    {
+      "hrCode": "404-73-031-00",
+      "id": 1,
+      "departmentId": 1,
+      "groupId": 1,
+      "segmentId": 2,
+      "zoneId": 1,
+      "chkPtTotal": null,
+      "contractTotal": "View",
+      "code": "404-73-031-00",
+      "isActive": true,
+      "customerName": "วิทยาลัยนานาชาติ มหาวิทยาลัยมหิดล"
+    },
+    {
+      "hrCode": "401-13-035-00",
+      "id": 2,
+      "groupId": 1,
+      "departmentId": 2,
+      "segmentId": 4,
+      "zoneId": 4,
+      "chkPtTotal": null,
+      "contractTotal": "View",
+      "code": "401-13-035-00",
+      "isActive": true,
+      "customerName": "เรนวูด ปาร์ค"
+    },
+    {
+      "hrCode": "405-20-048-00",
+      "id": 3,
+      "groupId": 3,
+      "departmentId": 3,
+      "segmentId": 3,
+      "zoneId": 2,
+      "chkPtTotal": null,
+      "contractTotal": "12345",
+      "code": "405-20-048-00",
+      "isActive": true,
+      "customerName": "บริษัท สยามคอมเพรสเซอร์ อุตสาหกรรม จำกัด"
+    },
+    {
+      "hrCode": "601-10-077-00",
+      "id": 4,
+      "departmentId": 4,
+      "segmentId": null,
+      "groupId": 2,
+      "zoneId": 3,
+      "chkPtTotal": null,
+      "contractTotal": null,
+      "code": "601-10-077-00",
+      "isActive": false,
+      "customerName": "สายการบิน แควนตัสแอร์เวย์"
+    }
+  ],
+  "departments": [
+    {
+      "id": 1,
+      "desc": "วิทยาลัยนานาชาติ มหาวิทยาลัยมหิดล"
+    },
+    {
+      "id": 2,
+      "desc": "เรนวูด ปาร์ค"
+    },
+    {
+      "id": 3,
+      "desc": "บริษัท สยามคอมเพรสเซอร์ อุตสาหกรรม จำกัด"
+    },
+    {
+      "id": 4,
+      "desc": "สายการบิน แควนตัสแอร์เวย์"
+    }
+  ],
+  "areas": [
+    {
+      "id": 1,
+      "custId": 1,
+      "name": "อาคาร1"
+    },
+    {
+      "id": 2,
+      "custId": 1,
+      "name": "อาคารใหญ่"
+    },
+    {
+      "id": 3,
+      "custId": 2,
+      "name": "อาคาร2"
+    },
+    {
+      "id": 4,
+      "custId": 2,
+      "name": "อาคาร3"
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": 1,
+      "areaId": 1,
+      "chkPtName": "จุดที่ 1"
+    },
+    {
+      "id": 2,
+      "areaId": 1,
+      "chkPtName": "จุดที่ 2"
+    },
+    {
+      "id": 3,
+      "areaId": 2,
+      "chkPtName": "หน้าประตู"
+    },
+    {
+      "id": 4,
+      "areaId": 3,
+      "chkPtName": "หน้าตึก"
+    }
+  ],
+  "patrolStatus": [
+    {
+      "id": 1,
+      "desc": "ตามกำหนด"
+    },
+    {
+      "id": 2,
+      "desc": "ขาดจุด"
+    },
+    {
+      "id": 3,
+      "desc": "ยกเลิก"
+    },
+    {
+      "id": 4,
+      "desc": "สาย"
+    }
+  ],
+  "segments": [
+    {
+      "id": 1,
+      "desc": "Building"
+    },
+    {
+      "id": 2,
+      "desc": "Education"
+    },
+    {
+      "id": 3,
+      "desc": "Industrial"
+    },
+    {
+      "id": 4,
+      "desc": "Resident"
+    }
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "desc": "General Guard"
+    },
+    {
+      "id": 2,
+      "desc": "Cargo"
+    },
+    {
+      "id": 3,
+      "desc": "Cleaning"
+    }
+  ],
+  "zones": [
+    {
+      "id": 1,
+      "desc": "BMR"
+    },
+    {
+      "id": 2,
+      "desc": "RO1"
+    },
+    {
+      "id": 3,
+      "desc": "SVN"
+    },
+    {
+      "id": 4,
+      "desc": "RO2"
+    }
+  ],
 
-    "incidentTypes": [
-        {
-            "id": 1,
-            "desc": "อุบัติเหตุ (Accident)",
-            "correctiveAction": "อธิบายวิธีรับมือเมื่อเกิดเหตุการณ์ประเภทนี้",
-            "contact": "ระบุว่าต้องไปติดต่อใครเพื่อประสานงาน & ใส่เบอร์/ช่องทางติดต่อ"
-
-        },
-        {
-            "id": 2,
-            "desc": "พบบุคคลต้องสงสัย (Suspicious person)",
-            "correctiveAction": "อธิบายวิธีรับมือเมื่อเกิดเหตุการณ์ประเภทนี้",
-            "contact": "ระบุว่าต้องไปติดต่อใครเพื่อประสานงาน & ใส่เบอร์/ช่องทางติดต่อ"
-
-        },
-        {
-            "id": 3,
-            "desc": "ตรวจสอบวินัย (Discipline)",
-            "correctiveAction": "อธิบายวิธีรับมือเมื่อเกิดเหตุการณ์ประเภทนี้",
-            "contact": "ระบุว่าต้องไปติดต่อใครเพื่อประสานงาน & ใส่เบอร์/ช่องทางติดต่อ"
-
-        },
-        {
-            "id": 4,
-            "desc": "ทรัพย์สินสูญหาย (Lost Property)",
-            "correctiveAction": "อธิบายวิธีรับมือเมื่อเกิดเหตุการณ์ประเภทนี้",
-            "contact": "ระบุว่าต้องไปติดต่อใครเพื่อประสานงาน & ใส่เบอร์/ช่องทางติดต่อ"
-
-        }
-    ]
+  "incidentTypes": [
+    {
+      "id": 1,
+      "desc": "อุบัติเหตุ (Accident)",
+      "correctiveAction": "อธิบายวิธีรับมือเมื่อเกิดเหตุการณ์ประเภทนี้",
+      "contact": "ระบุว่าต้องไปติดต่อใครเพื่อประสานงาน & ใส่เบอร์/ช่องทางติดต่อ"
+    },
+    {
+      "id": 2,
+      "desc": "พบบุคคลต้องสงสัย (Suspicious person)",
+      "correctiveAction": "อธิบายวิธีรับมือเมื่อเกิดเหตุการณ์ประเภทนี้",
+      "contact": "ระบุว่าต้องไปติดต่อใครเพื่อประสานงาน & ใส่เบอร์/ช่องทางติดต่อ"
+    },
+    {
+      "id": 3,
+      "desc": "ตรวจสอบวินัย (Discipline)",
+      "correctiveAction": "อธิบายวิธีรับมือเมื่อเกิดเหตุการณ์ประเภทนี้",
+      "contact": "ระบุว่าต้องไปติดต่อใครเพื่อประสานงาน & ใส่เบอร์/ช่องทางติดต่อ"
+    },
+    {
+      "id": 4,
+      "desc": "ทรัพย์สินสูญหาย (Lost Property)",
+      "correctiveAction": "อธิบายวิธีรับมือเมื่อเกิดเหตุการณ์ประเภทนี้",
+      "contact": "ระบุว่าต้องไปติดต่อใครเพื่อประสานงาน & ใส่เบอร์/ช่องทางติดต่อ"
+    }
+  ],
+  "roles": [
+    {
+      "id": 1,
+      "desc": "QR Site Manager",
+      "permissions": [1, 2, 3, 4, 5]
+    },
+    {
+      "id": 2,
+      "desc": "Administrator",
+      "permissions": [1, 2, 3, 4, 5, 6, 7]
+    },
+    {
+      "id": 3,
+      "desc": "CCC",
+      "permissions": [1, 2, 3]
+    },
+    {
+      "id": 4,
+      "desc": "Developer",
+      "permissions": [1, 2, 3, 4, 5, 6]
+    }
+  ],
+  "activeStatus": [
+    {
+      "id": 1,
+      "desc": "Active"
+    },
+    {
+      "id": 2,
+      "desc": "Inactive"
+    }
+  ],
+  "employees": [
+    {
+      "empId": "12345678",
+      "fname": "สมมติ1",
+      "lname": "สมมติ1"
+    },
+    {
+      "empId": "12345679",
+      "fname": "สมมติ2",
+      "lname": "สมมติ2"
+    },
+    {
+      "empId": "12345680",
+      "fname": "สมมติ3",
+      "lname": "สมมติ3"
+    },
+    {
+      "empId": "12345681",
+      "fname": "สมมติ4",
+      "lname": "สมมติ4"
+    }
+  ],
+  "permissions": [
+    {
+      "id": 1,
+      "desc": "Manage Daily Report"
+    },
+    {
+      "id": 2,
+      "desc": "Manage Incident"
+    },
+    {
+      "id": 3,
+      "desc": "Manage Monthly Report"
+    },
+    {
+      "id": 4,
+      "desc": "View Daily Report"
+    },
+    {
+      "id": 5,
+      "desc": "Manage Daily Report"
+    },
+    {
+      "id": 6,
+      "desc": "Manage Incident"
+    },
+    {
+      "id": 7,
+      "desc": "Manage Monthly Report"
+    }
+  ],
+  "dailyReports": [
+    {
+      "id": 1,
+      "reportNo": "9036",
+      "date": "27/08/2024",
+      "topic": "สรุปรายงานประจำวัน",
+      "customerId": 1,
+      "organization": "ปตท. สำนักงานพระขโนง",
+      "departmentId": 1,
+      "attachment": "file_daily_repert.pdf"
+    },
+    {
+      "id": 2,
+      "reportNo": "1234",
+      "date": "dd/mm/yyyy",
+      "topic": "Topic of daily report",
+      "customerId": 2,
+      "organization": "Organization’s name",
+      "departmentId": 2,
+      "attachment": "file_daily_repert.pdf"
+    },
+    {
+      "id": 3,
+      "reportNo": "2-09203231",
+      "date": "dd/mm/yyyy",
+      "topic": "Topic of daily report",
+      "customerId": 3,
+      "organization": "Organization’s name",
+      "departmentId": 3,
+      "attachment": "file_daily_repert.pdf"
+    },
+    {
+      "id": 2,
+      "reportNo": "90248293820",
+      "date": "dd/mm/yyyy",
+      "topic": "Topic of daily report",
+      "customerId": 4,
+      "organization": "Organization’s name",
+      "departmentId": 4,
+      "attachment": "file_daily_repert.pdf"
+    }
+  ],
+  "monthlyReports": [
+    {
+      "id": 1,
+      "reportNo": "9036",
+      "month": 1,
+      "year": "2024",
+      "topic": "สรุปรายงานประจำวัน",
+      "departmentId": 1,
+      "attachment": "file_monthly_report.pdf"
+    },
+    {
+      "id": 2,
+      "reportNo": "1234",
+      "month": 2,
+      "year": "2022",
+      "topic": "สรุปรายงานประจำวัน",
+      "departmentId": 1,
+      "attachment": "file_monthly_report.pdf"
+    },
+    {
+      "id": 3,
+      "reportNo": "2-09203231",
+      "month": 3,
+      "year": "2024",
+      "topic": "สรุปรายงานประจำวัน",
+      "departmentId": 1,
+      "attachment": "file_monthly_report.pdf"
+    },
+    {
+      "id": 4,
+      "reportNo": "90248293820",
+      "month": 4,
+      "year": "2024",
+      "topic": "สรุปรายงานประจำวัน",
+      "departmentId": 1,
+      "attachment": "file_monthly_report.pdf"
+    }
+  ],
+  "months": [
+    {
+      "id": 1,
+      "desc": "Jan",
+      "fullDesc": "January"
+    },
+    {
+        "id": 2,
+        "desc": "Feb",
+        "fullDesc": "Febuary"
+      },
+      {
+        "id": 3,
+        "desc": "Mar",
+        "fullDesc": "March"
+      },
+      {
+        "id": 4,
+        "desc": "Apr",
+        "fullDesc": "April"
+      },
+      {
+        "id": 5,
+        "desc": "May",
+        "fullDesc": "May"
+      },
+      {
+        "id": 6,
+        "desc": "Jun",
+        "fullDesc": "June"
+      }
+  ],
+  "MOMReports": [
+    {
+      "id": 1,
+      "reportNo": "9036",
+      "date": "27/08/2024",
+      "startTime": "14:00",
+      "finishTime": "15:00",
+      "topic": "สรุปรายงานประจำวัน",
+      "customerId": 1,
+      "organization": "ปตท. สำนักงานพระขโนง",
+      "departmentId": 1,
+      "attachment": "file_daily_repert.pdf"
+    },
+    {
+      "id": 2,
+      "reportNo": "1234",
+      "date": "dd/mm/yyyy",
+      "startTime": "11:00",
+      "finishTime": "12:00",
+      "topic": "Topic of daily report",
+      "customerId": 2,
+      "organization": "Organization’s name",
+      "departmentId": 2,
+      "attachment": "file_daily_repert.pdf"
+    },
+    {
+      "id": 3,
+      "reportNo": "2-09203231",
+      "date": "dd/mm/yyyy",
+      "startTime": "00:00",
+      "finishTime": "01:00",
+      "topic": "Topic of daily report",
+      "customerId": 3,
+      "organization": "Organization’s name",
+      "departmentId": 3,
+      "attachment": "file_daily_repert.pdf"
+    },
+    {
+      "id": 2,
+      "reportNo": "90248293820",
+      "date": "dd/mm/yyyy",
+      "startTime": "09:30",
+      "finishTime": "12:00",
+      "topic": "Topic of daily report",
+      "customerId": 4,
+      "organization": "Organization’s name",
+      "departmentId": 4,
+      "attachment": "file_daily_repert.pdf"
+    }
+  ]
 }

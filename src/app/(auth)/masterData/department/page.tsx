@@ -26,7 +26,7 @@ import LabelTextField from "@/components/ui/textboxs/LabelTextField";
 import { LabelSelector } from "@/components/ui/selectors/labelSelector";
 import { AddButton } from "@/components/ui/buttons/addButton";
 import { SearchButton } from "@/components/ui/buttons/searchButton";
-import styles from "../../../styles.module.css"
+import styles from "../../../styles.module.css";
 import { EditButton } from "@/components/ui/buttons/editButton";
 import { SaveButton } from "@/components/ui/buttons/saveButton";
 import { DeleteButton } from "@/components/ui/buttons/deleteButton";
@@ -139,27 +139,25 @@ export default function Department() {
     const newEditMode = [...editMode];
     newEditMode[index] = false; // Disable edit mode after saving
     setEditMode(newEditMode);
-    console.log("rowData =", rowData)
+    console.log("rowData =", rowData);
     // Optionally save changes to the server or state
   };
 
   const handleAdd = () => {
-    console.log("AddDeptVal = ",addDeptVal);
-    console.log("AddDeptCodeVal = ",addDeptCodeVal);
-    console.log("addsegmentVal = ",selectedAddSegment);
-    console.log("addGroupVal = ",selectedAddGroup);
-    console.log("addZoneVal = ",selectedAddZone);
+    console.log("AddDeptVal = ", addDeptVal);
+    console.log("AddDeptCodeVal = ", addDeptCodeVal);
+    console.log("addsegmentVal = ", selectedAddSegment);
+    console.log("addGroupVal = ", selectedAddGroup);
+    console.log("addZoneVal = ", selectedAddZone);
   };
 
   const handleSearch = () => {
-    console.log("AddDeptVal = ",addDeptVal);
-    console.log("AddDeptCodeVal = ",addDeptCodeVal);
-    console.log("addsegmentVal = ",selectedAddSegment);
+    console.log("AddDeptVal = ", addDeptVal);
+    console.log("AddDeptCodeVal = ", addDeptCodeVal);
+    console.log("addsegmentVal = ", selectedAddSegment);
   };
 
-  const handleDelete = () => {
-    
-  };
+  const handleDelete = () => {};
 
   const handleInputChange = <T extends keyof RowData>(
     index: number,
@@ -171,23 +169,38 @@ export default function Department() {
     setRowData(newRowData);
   };
 
-  const handleEditSegmentChange = (dataDepartmentCode: string, selectedSegmentId: any) => {
+  const handleEditSegmentChange = (
+    dataDepartmentCode: string,
+    selectedSegmentId: any
+  ) => {
     const updatedSegmentData = rowData.map((item) =>
-      item.departmentCode ===  dataDepartmentCode ? { ...item, segmentId: selectedSegmentId } : item
+      item.departmentCode === dataDepartmentCode
+        ? { ...item, segmentId: selectedSegmentId }
+        : item
     );
     setRowData(updatedSegmentData);
   };
 
-  const handleEditGroupChange = ( dataDepartmentCode: string, selectedGroupId: any) => {
+  const handleEditGroupChange = (
+    dataDepartmentCode: string,
+    selectedGroupId: any
+  ) => {
     const updatedGroupData = rowData.map((item) =>
-      item.departmentCode ===  dataDepartmentCode ? { ...item, groupId: selectedGroupId } : item
+      item.departmentCode === dataDepartmentCode
+        ? { ...item, groupId: selectedGroupId }
+        : item
     );
     setRowData(updatedGroupData);
   };
 
-  const handleEditZoneChange = ( dataDepartmentCode: string, selectedZoneId: any) => {
+  const handleEditZoneChange = (
+    dataDepartmentCode: string,
+    selectedZoneId: any
+  ) => {
     const updatedZoneData = rowData.map((item) =>
-      item.departmentCode ===  dataDepartmentCode ? { ...item, zoneId: selectedZoneId } : item
+      item.departmentCode === dataDepartmentCode
+        ? { ...item, zoneId: selectedZoneId }
+        : item
     );
     setRowData(updatedZoneData);
   };
@@ -197,17 +210,12 @@ export default function Department() {
     setRowData((prevData) => ({ ...prevData, [name]: value }));
   };
 
-  // function fncHandleChange(e: SelectChangeEvent, selectorName: any){
-  //   console.log("e = ", e);
-  //   handleSelectChange(e, selectorName);
-  // };
-
   // const handleSelectChange = (e: SelectChangeEvent,selectorName: any ) => {
   //   const { name, value } = e.target;
   //   if(selectorName.includes("Segment")){
   //     setSelectedAddSegment(value);
   //   }
-    
+
   //   console.log("selectedAddSegment = ", selectedAddSegment)
   // };
 
@@ -217,19 +225,18 @@ export default function Department() {
       <Box className="px-2">
         {/* Main Content */}
         <Box px={2} pb={2}>
-
           {/* Sub Header */}
-          <Box mb={2} className="w-full">
-            <Box justifyContent="center">
-              <Box
-                sx={{
-                  bgcolor: "white",
-                  borderRadius: "10px",
-                  boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
-                }}
-                justifyContent="space-between"
-                className="space-x-4 p-4 flex w-full"
-              >
+          <Box mb={2} className="w-full flex justify-center">
+            <Box
+              sx={{
+                bgcolor: "white",
+                borderRadius: "10px",
+                boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
+              }}
+              justifyContent="space-between"
+              className="space-x-4 p-4 flex w-full"
+            >
+              <Box className="flex w-full space-x-4">
                 <LabelTextField
                   label={"Department Code"}
                   placeholder={"Type here..."}
@@ -244,18 +251,36 @@ export default function Department() {
                 />
 
                 {/* Selector Add Segment */}
-                <LabelSelector selectorLabel={"Segment"} itemSource={segments} setSelectedVal={setSelectedAddSegment} selectedVal={selectedAddSegment} name={"segment"} />
+                <LabelSelector
+                  selectorLabel={"Segment"}
+                  itemSource={segments}
+                  setSelectedVal={setSelectedAddSegment}
+                  selectedVal={selectedAddSegment}
+                  name={"segment"}
+                />
 
                 {/* Selector Add Segment */}
-                <LabelSelector selectorLabel={"Group"} itemSource={groups} setSelectedVal={setSelectedAddGroup} selectedVal={selectedAddGroup} name={"group"} />
+                <LabelSelector
+                  selectorLabel={"Group"}
+                  itemSource={groups}
+                  setSelectedVal={setSelectedAddGroup}
+                  selectedVal={selectedAddGroup}
+                  name={"group"}
+                />
 
                 {/* Selector Add Segment */}
-                <LabelSelector selectorLabel={"Zone"} itemSource={zones} setSelectedVal={setsSelectedAddZone} selectedVal={selectedAddZone} name={"zone"} />
+                <LabelSelector
+                  selectorLabel={"Zone"}
+                  itemSource={zones}
+                  setSelectedVal={setsSelectedAddZone}
+                  selectedVal={selectedAddZone}
+                  name={"zone"}
+                />
+              </Box>
 
-                <Box className="space-x-4 w-full flex">
-                  <AddButton onAddBtnClick={handleAdd}/>
-                  <SearchButton onSearchBtnClick={handleSearch}/>
-                </Box>
+              <Box className="space-x-4 w-fit flex">
+                <AddButton onAddBtnClick={handleAdd} />
+                <SearchButton onSearchBtnClick={handleSearch} />
               </Box>
             </Box>
           </Box>
@@ -271,10 +296,12 @@ export default function Department() {
           >
             <Table>
               <TableHead>
-                <TableRow sx={{ borderBottom: "1px solid #C7D4D7" }} 
-                          className={`${styles.table}`} >
+                <TableRow
+                  sx={{ borderBottom: "1px solid #C7D4D7" }}
+                  className={`${styles.table}`}
+                >
                   <TableCell align="left" className="w-[4%]">
-                    <Checkbox2 className="mt-1 mb-2"/>
+                    <Checkbox2 className="mt-1 mb-2" />
                   </TableCell>
                   <TableCell align="center" className="w-[12%]">
                     Department Code
@@ -306,11 +333,14 @@ export default function Department() {
                         ? `bg-[#D8EAFF]`
                         : `${index % 2 === 1 ? `bg-inherit` : `bg-[#EBF4F6]`}`
                     }
-                    sx={{ "& .MuiTableCell-root": {
-                      padding: "10px 10px 10px 20px",
-                    },}}>
+                    sx={{
+                      "& .MuiTableCell-root": {
+                        padding: "10px 10px 10px 20px",
+                      },
+                    }}
+                  >
                     <TableCell align="left">
-                      <Checkbox2/>
+                      <Checkbox2 />
                     </TableCell>
 
                     {/* DepartmentCode */}
@@ -320,7 +350,13 @@ export default function Department() {
                           type="text"
                           className={`${styles.textBoxCell}`}
                           value={row.departmentCode}
-                          onChange={(e) => handleInputChange(index, 'departmentCode', e.target.value)}
+                          onChange={(e) =>
+                            handleInputChange(
+                              index,
+                              "departmentCode",
+                              e.target.value
+                            )
+                          }
                         />
                       ) : (
                         `${row.departmentCode}`
@@ -334,7 +370,13 @@ export default function Department() {
                           type="text"
                           className={`${styles.textBoxCell}`}
                           value={row.department}
-                          onChange={(e) => handleInputChange(index, 'department', e.target.value)}
+                          onChange={(e) =>
+                            handleInputChange(
+                              index,
+                              "department",
+                              e.target.value
+                            )
+                          }
                         />
                       ) : (
                         `${row.department}`
@@ -344,34 +386,61 @@ export default function Department() {
                     {/* Segment */}
                     <TableCell align="center">
                       {editMode[index] ? (
-                        <LabelSelector2 itemSource={segments} selectedVal={row.segmentId} id={row.departmentCode} handleSelectedVal={handleEditSegmentChange}/>
+                        <LabelSelector2
+                          itemSource={segments}
+                          selectedVal={row.segmentId}
+                          id={row.departmentCode}
+                          handleSelectedVal={handleEditSegmentChange}
+                        />
                       ) : (
-                        `${row.segmentId === null ? "-" : segments.find(s => s.id === row.segmentId)?.desc}`
+                        `${
+                          row.segmentId === null
+                            ? "-"
+                            : segments.find((s) => s.id === row.segmentId)?.desc
+                        }`
                       )}
                     </TableCell>
 
                     {/* Group */}
                     <TableCell align="center">
                       {editMode[index] ? (
-                        <LabelSelector2 itemSource={groups} selectedVal={row.groupId} id={row.departmentCode} handleSelectedVal={handleEditGroupChange}/>
+                        <LabelSelector2
+                          itemSource={groups}
+                          selectedVal={row.groupId}
+                          id={row.departmentCode}
+                          handleSelectedVal={handleEditGroupChange}
+                        />
                       ) : (
-                        `${row.groupId === null ? "-" : groups.find(s => s.id === row.groupId)?.desc}`
+                        `${
+                          row.groupId === null
+                            ? "-"
+                            : groups.find((s) => s.id === row.groupId)?.desc
+                        }`
                       )}
                     </TableCell>
 
                     {/* Zone */}
                     <TableCell align="center">
                       {editMode[index] ? (
-                        <LabelSelector2 itemSource={zones} selectedVal={row.zoneId} id={row.departmentCode} handleSelectedVal={handleEditZoneChange}/>
+                        <LabelSelector2
+                          itemSource={zones}
+                          selectedVal={row.zoneId}
+                          id={row.departmentCode}
+                          handleSelectedVal={handleEditZoneChange}
+                        />
                       ) : (
-                        `${row.zoneId === null ? "-" : zones.find(s => s.id === row.zoneId)?.desc}`
+                        `${
+                          row.zoneId === null
+                            ? "-"
+                            : zones.find((s) => s.id === row.zoneId)?.desc
+                        }`
                       )}
                     </TableCell>
                     <TableCell align="center">
                       {editMode[index] ? (
-                        <SaveButton onSaveBtnClick={handleSave} index={index}/>
+                        <SaveButton onSaveBtnClick={handleSave} index={index} />
                       ) : (
-                        <EditButton onEditBtnClick={handleEdit} index={index}/>
+                        <EditButton onEditBtnClick={handleEdit} index={index} />
                       )}
                     </TableCell>
                   </TableRow>
@@ -401,7 +470,10 @@ export default function Department() {
                       }}
                     >
                       <Typography>Total: {totalItems} items</Typography>
-                      <DeleteButton onDeleteBtnClick={handleDelete} disable={true}/>
+                      <DeleteButton
+                        onDeleteBtnClick={handleDelete}
+                        disable={true}
+                      />
                     </Box>
                   </TableCell>
                 </TableRow>

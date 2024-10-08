@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Typography } from "@mui/material";
 import { useState } from "react";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ui/textboxs/input";
 
 export function SearchTextbox({
   isDisplay,

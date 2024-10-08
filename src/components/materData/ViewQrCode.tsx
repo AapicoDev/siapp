@@ -24,6 +24,7 @@ import { Checkbox as Checkbox3 } from "@/components/ui/checkbox3";
 import { Printer, ImportCurve } from "iconsax-react";
 import Image from "next/image";
 import QRCode from "../../components/QRCode";
+import { IoClose } from "react-icons/io5";
 
 type RowData = {
   hrCode: string;
@@ -279,18 +280,36 @@ const ViewQrCode = ({ selectedCustomer, closeModal, customeraAeas }: any) => {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 flex flex-col items-center justify-center z-indextop">
       {/* Header */}
-      <Box className="flex w-[800px] bg-[#D9F0EC] py-1 rounded-t-lg justify-center">
-        <Box className="w-[100%] justify-center flex">
-          <Typography className="w-fit text-lg font-semibold text-[#1D7A9B] h-fit mt-1 ml-[78px]">
+      <Box
+        sx={{
+          display: "flex",
+          width: "800px",
+          backgroundColor: "#D9F0EC",
+          paddingY: "5px",
+          borderRadius: "8px 8px 0px 0px", 
+          justifyContent: "center",
+        }}
+      >
+        <Box sx={{ width: "100%", display: "flex", justifyContent: "center" }}>
+          <Typography
+            sx={{
+              width: "fit-content",
+              fontSize: "1.125rem",
+              fontWeight: "bold",
+              color: "#1D7A9B",
+              marginTop: "0.25rem",
+              marginLeft: "78px",
+            }}
+          >
             {formHeader}
           </Typography>
         </Box>
         <Button2
-          className="bg-transparent text-[#83A2AD] float"
-          sx={{ position: "relative", right: 0 }}
+          className="bg-transparent float w-fit"
+          sx={{ position: "relative", right: 0, top: 0, color: "#83A2AD" }}
           onClick={handleCloseViewQr}
         >
-          <CloseIcon className="w-[26px] h-[26px]" />
+          <IoClose size={26} />
         </Button2>
       </Box>
 
@@ -307,19 +326,13 @@ const ViewQrCode = ({ selectedCustomer, closeModal, customeraAeas }: any) => {
                 <Box className="flex">
                   <Typography
                     textAlign="left"
-                    className="text-[14px] pb-1 text-[#2C5079] font-bold"
+                    sx={{fontWeight: "700", color: "#2C5079", fontSize: "16px", paddingBottom: "0.25rem"}}
                   >
-                    Customer :
-                  </Typography>
-                  <Typography
-                    textAlign="left"
-                    className="text-[14px] pb-1 text-[#2C5079] pl-1"
-                  >
-                    {customer.customerName}
+                    {`Customer : ${customer.customerName}`}
                   </Typography>
                 </Box>
                 <Typography
-                  className="text-[16px] text-[#4C9BF5] underline"
+                  sx={{ color: "#4C9BF5", textDecorationLine: "underline", fontSize: "16px"}}
                   textAlign={"left"}
                 >
                   Total : {customer.chkPtTotal} check point
@@ -338,11 +351,11 @@ const ViewQrCode = ({ selectedCustomer, closeModal, customeraAeas }: any) => {
                 <FormControl focused className="w-full">
                   <Typography
                     textAlign="left"
-                    className="text-[14px] pb-1 text-[#2C5079] font-bold"
+                    sx={{ fontWeight: "700", color: "#2C5079", fontSize: "14px", paddingBottom: "0.25rem"}}
                   >
                     Area
                   </Typography>
-                  <InputLabel className="font-bold text-[#2C5079] w-full"></InputLabel>
+                  <InputLabel sx={{ fontWeight: "700", color: "#2C5079"}} className="w-full"></InputLabel>
                   <Select
                     name="areaId"
                     size="small"
@@ -375,9 +388,9 @@ const ViewQrCode = ({ selectedCustomer, closeModal, customeraAeas }: any) => {
                   >
                     {areas.map((area) => (
                       <MenuItem
+                        sx={{fontSize: "0.875rem", lineHeight: "1.25rem", color: "#2C5079"}}
                         key={area.id}
                         value={area.id}
-                        className="text-sm text-[#2C5079]"
                       >
                         {area.name}
                       </MenuItem>
@@ -388,7 +401,7 @@ const ViewQrCode = ({ selectedCustomer, closeModal, customeraAeas }: any) => {
                 <Box className="w-[35%]">
                   <Typography
                     textAlign="left"
-                    className="text-[14px] pb-1 text-[#2C5079] font-bold"
+                    sx={{ fontWeight: "700", color: "#2C5079", fontSize: "14px", paddingBottom: "0.25rem"}}
                   >
                     Print Type
                   </Typography>
@@ -404,7 +417,7 @@ const ViewQrCode = ({ selectedCustomer, closeModal, customeraAeas }: any) => {
                       onCheckedChange={handleSelectCardType}
                       checked={isPrintCardType}
                     />
-                    <Typography className="py-1 px-2 text-[#2C5079]">
+                    <Typography sx={{ color: "#2C5079"}} className="py-1 px-2">
                       Card
                     </Typography>
                   </Box>
@@ -421,13 +434,13 @@ const ViewQrCode = ({ selectedCustomer, closeModal, customeraAeas }: any) => {
                     onCheckedChange={handleSelectPaperType}
                     checked={!isPrintCardType}
                   />
-                  <Typography className="py-1 px-2 text-[#2C5079]">
+                  <Typography className="py-1 px-2" sx={{ color: "#2C5079"}}>
                     Paper
                   </Typography>
                 </Box>
               </Box>
 
-              <Typography className="text-[16px] text-[#4C9BF5] underline">
+              <Typography sx={{ color: "#4C9BF5", textDecorationLine: "underline", fontSize: "16px"}}>
                 Total : {checkpoints.length} check point
                 {checkpoints.length > 1 ? "s" : ""}
               </Typography>
@@ -455,32 +468,32 @@ const ViewQrCode = ({ selectedCustomer, closeModal, customeraAeas }: any) => {
                   >
                     <Typography
                       textAlign="left"
-                      className="text-[14px] text-[#2C5079] font-bold"
+                      sx={{ fontWeight: "700", color: "#2C5079", fontSize: "14px"}}
                     >
                       {index + 1}. {chkpt.name}
                     </Typography>
                     <Typography
                       textAlign="left"
-                      className="text-[14px] text-[#2C5079]"
+                      sx={{ color: "#2C5079", fontSize: "14px"}}
                     >
                       QR Code : {chkpt.qr}
                     </Typography>
                     <Box className="flex justify-between">
                       <Typography
                         textAlign="left"
-                        className="text-[14px] text-[#2C5079]"
+                        sx={{ color: "#2C5079", fontSize: "14px"}}
                       >
                         ละติจูด : {chkpt.lt}
                       </Typography>
                       <Typography
                         textAlign="left"
-                        className="text-[14px] text-[#2C5079]"
+                        sx={{ color: "#2C5079", fontSize: "14px"}}
                       >
                         ลองติจูด : {chkpt.lg}
                       </Typography>
                       <Typography
                         textAlign="left"
-                        className="text-[14px] text-[#2C5079]"
+                        sx={{ color: "#2C5079", fontSize: "14px"}}
                       >
                         อัลติจูด : {chkpt.ut}
                       </Typography>
@@ -490,6 +503,7 @@ const ViewQrCode = ({ selectedCustomer, closeModal, customeraAeas }: any) => {
               </Box>
             ))}
           </Box>
+
           {/* QR Code Card modal */}
           {openViewQRCard && isPrintCardType && (
             <div
@@ -505,7 +519,7 @@ const ViewQrCode = ({ selectedCustomer, closeModal, customeraAeas }: any) => {
                   >
                     <Box className="h-1/2 bg-white justify-between items-center rounded-t-lg flex">
                       {/* Logo */}
-                      <Box className="w-[60%] ml-7">
+                      <Box className="w-[55%] ml-7">
                         <Image
                           src="/ASMLogo.png"
                           alt="Logo"
@@ -513,13 +527,14 @@ const ViewQrCode = ({ selectedCustomer, closeModal, customeraAeas }: any) => {
                           height={100}
                         />
                       </Box>
-                      <Box className="w-[40%] text-center h-full pt-3 pl-1 pr-2">
-                        <Typography className="text-[14px] font-semibold text-[#00336D] p-1">
+                      <Box className="w-[45%] justify-center text-center h-full pt-3 pl-1 pr-2">
+                        <Typography sx={{ fontWeight: "600", color: "#00336D", fontSize: "14px", padding: "0.25rem"}}>
                           Call (24 hrs.)
                         </Typography>
-                        <Typography className="text-[14px] font-semibold text-[#00336D] flex bg-[#D8EAFF] w-fit ml-1 pl-2 pr-2 pt-[2px] pb-[2px] rounded-full">
+                        <Typography sx={{ fontWeight: "600", color: "#00336D", fontSize: "14px", paddingX: "0.5rem", paddingY: "2px", marginX: "0.5rem"}}
+                        className="flex bg-[#D8EAFF] rounded-full">
                           <CallCalling
-                            className="text-[#4C9BF5] mr-1 mt-[2px]"
+                            className="text-[#4C9BF5] mt-[2px] mx-1"
                             size={16}
                           />
                           02-348-8812
@@ -540,13 +555,13 @@ const ViewQrCode = ({ selectedCustomer, closeModal, customeraAeas }: any) => {
                     </Box>
                     <Box className="h-1/2 bg-[#00336D] rounded-b-lg text-center">
                       <Box className="w-[60%] p-3">
-                        <Typography className="text-[14px] font-semibold text-white underline">
+                        <Typography sx={{ fontWeight: "600", color: "white", fontSize: "14px", textDecorationLine: "underline"}}>
                           จุดที่ {chkPtQRCode.chkPtNO}
                         </Typography>
-                        <Typography className="text-[14px] font-semibold text-white">
+                        <Typography sx={{ fontWeight: "600", color: "white", fontSize: "14px"}}>
                           {chkPtQRCode.areaName}
                         </Typography>
-                        <Typography className="text-[14px] font-semibold text-white">
+                        <Typography sx={{ fontWeight: "600", color: "white", fontSize: "14px"}}>
                           {chkPtQRCode.chkPtname}
                         </Typography>
                       </Box>
@@ -581,13 +596,13 @@ const ViewQrCode = ({ selectedCustomer, closeModal, customeraAeas }: any) => {
                         />
                       </Box>
                       <Box className="text-center h-full pt-7 pl-1 pr-2">
-                        <Typography className="text-[14px] font-semibold text-[#00336D] underline">
+                        <Typography sx={{ fontWeight: "600", color: "#00336D", fontSize: "14px", textDecorationLine: "underline"}}>
                           จุดที่ {chkPtQRCode.chkPtNO}
                         </Typography>
-                        <Typography className="text-[14px] font-semibold text-[#00336D]">
+                        <Typography sx={{ fontWeight: "600", color: "#00336D", fontSize: "14px", paddingX: "2px"}}>
                           {chkPtQRCode.areaName}
                         </Typography>
-                        <Typography className="text-[14px] font-semibold text-[#00336D]">
+                        <Typography sx={{ fontWeight: "600", color: "#00336D", fontSize: "14px", paddingX: "2px"}}>
                           {chkPtQRCode.chkPtname}
                         </Typography>
                         <Box className="p-2 mt-4">
@@ -605,10 +620,11 @@ const ViewQrCode = ({ selectedCustomer, closeModal, customeraAeas }: any) => {
                       </Box>
                     </Box>
                     <Box className="h-[40%] bg-[#00336D] rounded-b-lg text-center">
-                      <Typography className="text-[14px] font-semibold text-white p-1 pt-20">
+                      <Typography sx={{ fontWeight: "600", color: "white", fontSize: "14px", padding: "0.25rem", paddingTop: "5rem"}}>
                         Call (24 hrs.)
                       </Typography>
-                      <Typography className="bg-[#D8EAFF] text-[14px] font-semibold text-[#00336D] flex w-fit ml-10 pl-2 pr-2 pt-[2px] pb-[2px] rounded-full">
+                      <Typography sx={{ fontWeight: "600", color: "#00336D", fontSize: "14px", paddingX: "0.5rem", paddingY: "2px", marginLeft: "2.5rem"}}
+                                  className="bg-[#D8EAFF] rounded-full flex w-fit">
                         <CallCalling
                           className="text-[#4C9BF5] mr-1 mt-[2px]"
                           size={16}
@@ -626,7 +642,7 @@ const ViewQrCode = ({ selectedCustomer, closeModal, customeraAeas }: any) => {
         {/* Footer */}
         <Box className="flex w-full justify-between px-6 border-t-2 pt-4 pb-4">
           <Box>
-            <Typography className="text-[16px] text-[#2C5079] underline mt-1">
+            <Typography sx={{ color: "#2C5079", fontSize: "16px", textDecorationLine:"underline", marginTop: "0.25rem"}}>
               Selected : {selectedChkPtTotal}
             </Typography>
           </Box>

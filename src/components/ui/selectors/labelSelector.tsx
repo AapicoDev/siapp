@@ -8,10 +8,11 @@ interface LabelSelectorProps {
   itemSource: any[];
   selectedVal: any;
   name: any;
+  defaultSelected?: string
   setSelectedVal: (value: any) => void;
 }
 
-export function LabelSelector({selectorLabel, itemSource, setSelectedVal, selectedVal, name,}:LabelSelectorProps) {
+export function LabelSelector({selectorLabel, itemSource, setSelectedVal, selectedVal, name, defaultSelected="Select"}:LabelSelectorProps) {
 
   const handleSelectionChange = (e :SelectChangeEvent<{value: unknown}>) => {
     console.log("value = ", e.target)
@@ -22,11 +23,13 @@ export function LabelSelector({selectorLabel, itemSource, setSelectedVal, select
     <>
     <FormControl focused className="w-full">
     <InputLabel
-      className="font-bold text-[#2C5079]"
       sx={{
+        fontWeight: "600",
+        color: "#2C5079",
         "&.Mui-focused": {
-          color: "#2C5079", // Customize label color on focus
-          fontWeight: "bold",
+          color: "#2C5079", 
+          fontWeight: "600",
+          fontSize: "18px"
         },
       }}>
       {selectorLabel}
@@ -40,24 +43,25 @@ export function LabelSelector({selectorLabel, itemSource, setSelectedVal, select
       onChange={(e) => handleSelectionChange(e)}
       renderValue={(value) =>
         value === ""
-          ? "Select"
+          ? `${defaultSelected}`
           : itemSource.find((s) => s.id === selectedVal)?.desc
       }
-      className={`${ selectedVal === undefined ? `text-[#83A2AD]` : "" }`}
       inputProps={{ "aria-label": "Without label" }}
       sx={{
+        color: `${ selectedVal === `${defaultSelected}` ? `#83A2AD` : "" }`,
         borderRadius: "10px",
         "& .MuiOutlinedInput-notchedOutline": {
           border: "1px solid #1D7A9B", // Customize border color
         },
         "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
           border: "1px solid #1D7A9B", // Customize border color on focus
+          fontSize: "18px"
         },
         "&:hover .MuiOutlinedInput-notchedOutline": {
           border: "1px solid #1D7A9B", // Hover border color
         },
         "& .MuiSelect-icon": {
-          color: "#a0a0a0", // Customize arrow icon color
+          color: "#83A2AD", // Customize arrow icon color
         },
       }}
     >

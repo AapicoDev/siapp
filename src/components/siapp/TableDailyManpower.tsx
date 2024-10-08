@@ -20,7 +20,7 @@ import { WorkStatus } from "./WorkStatus";
 import { ExportCurve, ImportCurve, Printer } from "iconsax-react";
 import { Button } from "@/components/ui/buttons/button";
 
-interface TableDailyProps {}
+interface TableDailyManpowerProps {}
 
 type RowData = {
   dateTime: string;
@@ -71,7 +71,7 @@ const rows: RowData[] = [
   },
 ];
 
-export function TableDaily({}: TableDailyProps) {
+export function TableDailyManpower({}: TableDailyManpowerProps) {
     
   const [customers, setCustomers] = useState(data.customers);
   const [rowData, setRowData] = useState(rows);

@@ -39,7 +39,10 @@ import { TablePatrolRandom } from "@/components/siapp/TablePatrolRandom";
 import { TickCircle } from "iconsax-react";
 import { GradientButton } from "@/components/ui/buttons/gradientButton";
 import { TableCorrectiveAction } from "@/components/siapp/TableCorrectiveAction";
-import { TableDaily } from "@/components/siapp/TableDaily";
+import { TableDailyManpower } from "@/components/siapp/TableDailyManpower";
+import { IoClose } from "react-icons/io5";
+import { LabelSelector } from "@/components/ui/selectors/labelSelector";
+import { Checkbox as Checkbox3 } from "@/components/ui/checkbox3";
 
 type RowData = {
   dateTime: string;
@@ -128,9 +131,19 @@ export default function Manpower() {
   const [openAddCustModal, setShowAddCustModal] = useState(false);
   const [openEditCustModal, setOpenEditCustModal] = useState<boolean>(false);
   const [openFilterModal, setOpenFilterModal] = useState<boolean>(false);
+  const [openDailyFilterModal, setOpenDailyFilterModal] = useState<boolean>(false);
   const [openAddContract, setOpenAddContract] = useState<boolean>(false);
   const [openEditContract, setOpenEditContract] = useState<boolean>(false);
   const [isSummaryPage, setIsSummaryPage] = useState<boolean>(true);
+  const [selectedCustomerFilter, setSelectedCustomerFilter] = useState();
+  const [selectedShiftFilter, setSelectedShiftFilter] = useState();
+  const [isWorkStatusAll, setIsWorkStatusAll] = useState(false);
+  const [isWorkStatusWork, setIsWorkStatusWork] = useState(false);
+  const [isWorkStatusNoWork, setIsWorkStatusNoWork] = useState(false);
+  const [isWorkStatusPresent, setIsWorkStatusPresent] = useState(false);
+  const [isWorkStatusAbsent, setIsWorkStatusAbsent] = useState(false);
+  const [isWorkStatusOT, setIsWorkStatusOT] = useState(false);
+  const [isWorkStatusLate, setIsWorkStatusLate] = useState(false);
 
   useEffect(() => {
     const time = new Date().toLocaleString(); //Output format = 10/2/2024, 1:28:36 PM
@@ -139,8 +152,7 @@ export default function Manpower() {
   const handleAddNewCust = () => {};
 
   const setToggleFilter = () => {
-    console.log("openFilterModal =", openFilterModal);
-    setOpenFilterModal(!openFilterModal);
+      setOpenFilterModal(!openFilterModal);
   };
 
   function handleCloseCustomerForm(isEdit: boolean) {
@@ -190,7 +202,7 @@ export default function Manpower() {
                     checked={isSummaryPage}
                     onCheckedChange={handleSelectChkPtPage}
                   />
-                  <Typography className="py-1 px-2 text-[#1D7A9B] font-bold">
+                  <Typography sx={{fontWeight: "700", color: "#1D7A9B"}} className="py-1 px-2">
                     Summary
                   </Typography>
                 </Box>
@@ -200,7 +212,7 @@ export default function Manpower() {
                     checked={!isSummaryPage}
                     onCheckedChange={handleSelectRandomPage}
                   />
-                  <Typography className="py-1 px-2 text-[#1D7A9B] font-bold">
+                  <Typography sx={{fontWeight: "700", color: "#1D7A9B"}} className="py-1 px-2">
                     Daily
                   </Typography>
                 </Box>
@@ -255,7 +267,7 @@ export default function Manpower() {
                         className="w-[ุ10%]"
                         sx={{ borderRight: "1px solid #C7D4D7" }}
                       >
-                        Date & Time
+                        Date
                       </TableCell>
                       <TableCell
                         align="center"
@@ -496,7 +508,7 @@ export default function Manpower() {
           )}
 
           {!isSummaryPage && (
-            <TableDaily />
+            <TableDailyManpower />
           )}
         </Box>
       </Box>
@@ -504,16 +516,43 @@ export default function Manpower() {
       {openFilterModal && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex flex-col">
           <Button
-            className="w-[122px] text-[#1D7A9B] bg-white hover:bg-[#D9F0EC] hover:text-[#1D7A9B] fixed right-6 top-[80px]"
+            className="w-24 text-[#1D7A9B] bg-white hover:bg-[#D9F0EC] hover:text-[#1D7A9B] fixed right-6 top-[80px]"
             onClick={() => setOpenFilterModal(false)}
           >
             <Filter size={20} style={{ marginRight: "5px" }} /> Filter
           </Button>
-          <div className="bg-white rounded-lg shadow-lg h-[600px] w-[498px] overflow-auto fixed right-6 top-[136px]">
+          <div className="bg-white rounded-lg shadow-lg h-fit w-[498px] overflow-auto fixed right-6 top-[136px] pb-2">
             {/* Header */}
-            <Box className="flex w-[full] bg-[#D9F0EC] py-2 rounded-t-lg justify-center">
-              <Box className="w-[100%] justify-center flex">
-                <Typography className="w-fit text-xl font-semibold text-[#1D7A9B] h-fit mt-1 ml-[78px] flex">
+            <Box
+              sx={{
+                display: "flex",
+                width: "100%",
+                backgroundColor: "#D9F0EC",
+                paddingY: "5px",
+                borderRadius: "8px 8px 0px 0px", // Adjust rounded corners as needed
+                justifyContent: "center",
+                paddingTop: "0.25rem",
+                paddingBottom: "0.25rem",
+              }}
+            >
+              <Box
+                sx={{
+                  width: "100%",
+                  display: "flex",
+                  justifyContent: "center",
+                }}
+              >
+                <Typography
+                  sx={{
+                    width: "fit-content",
+                    fontSize: "1.125rem", // text-lg equivalent
+                    fontWeight: "bold",
+                    color: "#1D7A9B",
+                    marginTop: "0.25rem",
+                    marginLeft: "65px",
+                    display: "flex",
+                  }}
+                >
                   <Filter
                     size={20}
                     style={{ marginRight: "5px", marginTop: "3px" }}
@@ -522,11 +561,11 @@ export default function Manpower() {
                 </Typography>
               </Box>
               <Button2
-                className="bg-transparent text-[#83A2AD] float"
-                sx={{ position: "relative", right: 0 }}
+                className="bg-transparent float w-fit"
+                sx={{ position: "relative", right: 0, color: "#83A2AD" }}
                 onClick={() => setOpenFilterModal(false)}
               >
-                <CloseIcon className="w-[26px] h-[26px]" />
+                <IoClose size={26} />
               </Button2>
             </Box>
 
@@ -536,297 +575,180 @@ export default function Manpower() {
               textAlign="center"
             >
               <Box className="w-full space-y-6 pt-4">
-                {/* Segment */}
-                <Box className="w-full">
-                  <FormControl focused className="w-full">
-                    <InputLabel
-                      className="text-[#2C5079"
-                      sx={{
-                        "&.Mui-focused": {
-                          color: "#2C5079",
-                          fontSize: "18px",
-                        },
-                      }}
-                    >
-                      Segment
-                    </InputLabel>
-                    <Select
-                      label="Segment"
-                      size="small"
-                      displayEmpty
-                      value={undefined}
-                      // onChange={handleAddSegmentChange}
-                      renderValue={(selected) => {
-                        if (selected === undefined) {
-                          return "Select Segment";
-                        }
-                        return selected;
-                      }}
-                      // className={`${ selectedAddSegment === undefined ? `text-[#83A2AD]` : "" }`}
-                      inputProps={{ "aria-label": "Without label" }}
-                      sx={{
-                        borderRadius: "10px",
-                        "& .MuiOutlinedInput-notchedOutline": {
-                          border: "1px solid #1D7A9B", // Customize border color
-                        },
-                        "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                          border: "1px solid #1D7A9B", // Customize border color on focus
-                          fontSize: "18px",
-                        },
-                        "&:hover .MuiOutlinedInput-notchedOutline": {
-                          border: "1px solid #1D7A9B", // Hover border color
-                        },
-                        "& .MuiSelect-icon": {
-                          color: "#83A2AD", // Customize arrow icon color
-                        },
-                      }}
-                    >
-                      {segments.map((segment, index) => (
-                        <MenuItem
-                          key={`${segment.id}-${index}`}
-                          value={segment.desc}
-                        >
-                          {segment.desc}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Box>
-
-                {/* Group */}
-                <Box className="w-full">
-                  <FormControl focused className="w-full">
-                    <InputLabel
-                      className="text-[#2C5079"
-                      sx={{
-                        "&.Mui-focused": {
-                          color: "#2C5079",
-                          fontSize: "18px",
-                        },
-                      }}
-                    >
-                      Group
-                    </InputLabel>
-                    <Select
-                      label="Group"
-                      size="small"
-                      displayEmpty
-                      value={undefined}
-                      // onChange={handleAddSegmentChange}
-                      renderValue={(selected) => {
-                        if (selected === undefined) {
-                          return "Select Group";
-                        }
-                        return selected;
-                      }}
-                      // className={`${ selectedAddSegment === undefined ? `text-[#83A2AD]` : "" }`}
-                      inputProps={{ "aria-label": "Without label" }}
-                      sx={{
-                        borderRadius: "10px",
-                        "& .MuiOutlinedInput-notchedOutline": {
-                          border: "1px solid #1D7A9B", // Customize border color
-                        },
-                        "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                          border: "1px solid #1D7A9B", // Customize border color on focus
-                          fontSize: "18px",
-                        },
-                        "&:hover .MuiOutlinedInput-notchedOutline": {
-                          border: "1px solid #1D7A9B", // Hover border color
-                        },
-                        "& .MuiSelect-icon": {
-                          color: "#83A2AD", // Customize arrow icon color
-                        },
-                      }}
-                    >
-                      {groups.map((group, index) => (
-                        <MenuItem
-                          key={`${group.id}-${index}`}
-                          value={group.desc}
-                        >
-                          {group.desc}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Box>
-
-                {/* Zone */}
-                <Box className="w-full">
-                  <FormControl focused className="w-full">
-                    <InputLabel
-                      className="text-[#2C5079"
-                      sx={{
-                        "&.Mui-focused": {
-                          color: "#2C5079",
-                          fontSize: "18px",
-                        },
-                      }}
-                    >
-                      Zone
-                    </InputLabel>
-                    <Select
-                      label="Zone"
-                      size="small"
-                      displayEmpty
-                      value={undefined}
-                      // onChange={handleAddSegmentChange}
-                      renderValue={(selected) => {
-                        if (selected === undefined) {
-                          return "Select Zone";
-                        }
-                        return selected;
-                      }}
-                      // className={`${ selectedAddSegment === undefined ? `text-[#83A2AD]` : "" }`}
-                      inputProps={{ "aria-label": "Without label" }}
-                      sx={{
-                        borderRadius: "10px",
-                        "& .MuiOutlinedInput-notchedOutline": {
-                          border: "1px solid #1D7A9B", // Customize border color
-                        },
-                        "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                          border: "1px solid #1D7A9B", // Customize border color on focus
-                          fontSize: "18px",
-                        },
-                        "&:hover .MuiOutlinedInput-notchedOutline": {
-                          border: "1px solid #1D7A9B", // Hover border color
-                        },
-                        "& .MuiSelect-icon": {
-                          color: "#83A2AD", // Customize arrow icon color
-                        },
-                      }}
-                    >
-                      {zones.map((zone, index) => (
-                        <MenuItem key={`${zone.id}-${index}`} value={zone.desc}>
-                          {zone.desc}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Box>
-
                 {/* Customer */}
                 <Box className="w-full">
-                  <FormControl focused className="w-full">
-                    <InputLabel
-                      className="text-[#2C5079"
-                      sx={{
-                        "&.Mui-focused": {
-                          color: "#2C5079",
-                          fontSize: "18px",
-                        },
-                      }}
-                    >
-                      Customer
-                    </InputLabel>
-                    <Select
-                      label="Customer"
-                      size="small"
-                      displayEmpty
-                      value={undefined}
-                      // onChange={handleAddSegmentChange}
-                      renderValue={(selected) => {
-                        if (selected === undefined) {
-                          return "Select Customer";
-                        }
-                        return selected;
-                      }}
-                      // className={`${ selectedAddSegment === undefined ? `text-[#83A2AD]` : "" }`}
-                      inputProps={{ "aria-label": "Without label" }}
-                      sx={{
-                        borderRadius: "10px",
-                        "& .MuiOutlinedInput-notchedOutline": {
-                          border: "1px solid #1D7A9B", // Customize border color
-                        },
-                        "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                          border: "1px solid #1D7A9B", // Customize border color on focus
-                          fontSize: "18px",
-                        },
-                        "&:hover .MuiOutlinedInput-notchedOutline": {
-                          border: "1px solid #1D7A9B", // Hover border color
-                        },
-                        "& .MuiSelect-icon": {
-                          color: "#83A2AD", // Customize arrow icon color
-                        },
-                      }}
-                    >
-                      {segments.map((segment, index) => (
-                        <MenuItem
-                          key={`${segment.id}-${index}`}
-                          value={segment.desc}
-                        >
-                          {segment.desc}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Box>
-
-                {/* HR Code & Code */}
-                <Box className="w-full flex space-x-5">
-                  <TextField
-                    label="Department"
-                    size="small"
-                    className="w-full"
-                    focused
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        "&.Mui-focused fieldset": {
-                          border: "1px solid #1D7A9B", // Focus border color
-                          borderRadius: "10px",
-                          fontSize: "18px",
-                        },
-                      },
-                      "& .MuiInputLabel-root.Mui-focused": {
-                        color: "#2C5079", // Label color when focused
-                        fontSize: "18px",
-                      },
-                      "& .MuiOutlinedInput-input::placeholder": {
-                        color: "#83A2AD", // Customize placeholder text color
-                        opacity: 1, // Ensure full opacity for the placeholder
-                      },
-                    }}
-                    placeholder={"Type here..."}
-                  />
-                  <TextField
-                    label="Department"
-                    size="small"
-                    className="w-full"
-                    focused
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        "&.Mui-focused fieldset": {
-                          border: "1px solid #1D7A9B", // Focus border color
-                          borderRadius: "10px",
-                          fontSize: "18px",
-                        },
-                      },
-                      "& .MuiInputLabel-root.Mui-focused": {
-                        color: "#2C5079", // Label color when focused
-                        fontSize: "18px",
-                      },
-                      "& .MuiOutlinedInput-input::placeholder": {
-                        color: "#83A2AD", // Customize placeholder text color
-                        opacity: 1, // Ensure full opacity for the placeholder
-                      },
-                    }}
-                    placeholder={"Type here..."}
+                  <LabelSelector
+                    selectorLabel={"Customer"}
+                    itemSource={customers}
+                    setSelectedVal={setSelectedCustomerFilter}
+                    selectedVal={selectedCustomerFilter}
+                    name={"customer"}
+                    defaultSelected="Select Customer"
                   />
                 </Box>
 
-                {/* IsActive */}
-                <Box className="w-full flex space-x-1">
-                  <Switch
-                    name="isActive"
-                    //  checked={formData.isActive}
-                    //  onCheckedChange={handleActiveChange}
+                {/* Incident Type */}
+                <Box className="w-full">
+                  <LabelSelector
+                    selectorLabel={"Shift"}
+                    itemSource={segments}
+                    setSelectedVal={setSelectedShiftFilter}
+                    selectedVal={selectedShiftFilter}
+                    name={"shift"}
+                    defaultSelected="Select Shift"
                   />
+                </Box>
+
+                <Box className="space-y-2">
                   <Typography
-                    textAlign="left"
-                    className="text-[14px] pb-1 text-[#2C5079] pl-2 pt-2"
+                    sx={{
+                      fontWeight: "700",
+                      color: "#2C5079",
+                      fontSize: "14px",
+                      textAlign: "left",
+                    }}
                   >
-                    {/* {formData.isActive === true ? "Active" : "Inactive"} */}
-                    Active
+                    Work Status
                   </Typography>
+                  <Box
+                    sx={{ borderRadius: "10px" }}
+                    className={`${
+                      isWorkStatusAll
+                        ? `bg-[#E2F7E1] border-[#86DC89]`
+                        : `bg-white border-[#83A2AD]`
+                    } flex p-1 h-fit border-[1px]`}
+                  >
+                    <Checkbox3
+                      className="border-[#83A2AD]"
+                      onCheckedChange={() =>
+                        setIsWorkStatusAll(!isWorkStatusAll)
+                      }
+                      checked={isWorkStatusAll}
+                    />
+                    <Typography sx={{ color: "#2C5079" }} className="py-1 px-2">
+                      ทั้งหมด
+                    </Typography>
+                  </Box>
+                  {isSummaryPage && (
+                    <>
+                  <Box
+                    sx={{ borderRadius: "10px" }}
+                    className={`${
+                      isWorkStatusWork
+                        ? `bg-[#E2F7E1] border-[#86DC89]`
+                        : `bg-white border-[#83A2AD]`
+                    } flex p-1 h-fit border-[1px]`}
+                  >
+                    <Checkbox3
+                      className="border-[#83A2AD]"
+                      onCheckedChange={() =>
+                        setIsWorkStatusWork(!isWorkStatusWork)
+                      }
+                      checked={isWorkStatusWork}
+                    />
+                    <Typography sx={{ color: "#2C5079" }} className="py-1 px-2">
+                    มีการทำงาน
+                    </Typography>
+                  </Box>
+                  <Box
+                    sx={{ borderRadius: "10px" }}
+                    className={`${
+                      isWorkStatusNoWork
+                        ? `bg-[#E2F7E1] border-[#86DC89]`
+                        : `bg-white border-[#83A2AD]`
+                    } flex p-1 h-fit border-[1px]`}
+                  >
+                    <Checkbox3
+                      className="border-[#83A2AD]"
+                      onCheckedChange={() =>
+                        setIsWorkStatusNoWork(!isWorkStatusNoWork)
+                      }
+                      checked={isWorkStatusNoWork}
+                    />
+                    <Typography sx={{ color: "#2C5079" }} className="py-1 px-2">
+                    ไม่มีการทำงาน
+                    </Typography>
+                  </Box></>)}
+
+                  {!isSummaryPage && (
+                    <>
+                  <Box
+                    sx={{ borderRadius: "10px" }}
+                    className={`${
+                      isWorkStatusPresent
+                        ? `bg-[#E2F7E1] border-[#86DC89]`
+                        : `bg-white border-[#83A2AD]`
+                    } flex p-1 h-fit border-[1px]`}
+                  >
+                    <Checkbox3
+                      className="border-[#83A2AD]"
+                      onCheckedChange={() =>
+                        setIsWorkStatusPresent(!isWorkStatusPresent)
+                      }
+                      checked={isWorkStatusPresent}
+                    />
+                    <Typography sx={{ color: "#2C5079" }} className="py-1 px-2">
+                    มาทำงาน
+                    </Typography>
+                  </Box>
+                  <Box
+                    sx={{ borderRadius: "10px" }}
+                    className={`${
+                      isWorkStatusAbsent
+                        ? `bg-[#E2F7E1] border-[#86DC89]`
+                        : `bg-white border-[#83A2AD]`
+                    } flex p-1 h-fit border-[1px]`}
+                  >
+                    <Checkbox3
+                      className="border-[#83A2AD]"
+                      onCheckedChange={() =>
+                        setIsWorkStatusAbsent(!isWorkStatusAbsent)
+                      }
+                      checked={isWorkStatusAbsent}
+                    />
+                    <Typography sx={{ color: "#2C5079" }} className="py-1 px-2">
+                    ขาดงาน
+                    </Typography>
+                  </Box>
+                  <Box
+                    sx={{ borderRadius: "10px" }}
+                    className={`${
+                      isWorkStatusOT
+                        ? `bg-[#E2F7E1] border-[#86DC89]`
+                        : `bg-white border-[#83A2AD]`
+                    } flex p-1 h-fit border-[1px]`}
+                  >
+                    <Checkbox3
+                      className="border-[#83A2AD]"
+                      onCheckedChange={() =>
+                        setIsWorkStatusOT(!isWorkStatusOT)
+                      }
+                      checked={isWorkStatusOT}
+                    />
+                    <Typography sx={{ color: "#2C5079" }} className="py-1 px-2">
+                    OT
+                    </Typography>
+                  </Box>
+                  <Box
+                    sx={{ borderRadius: "10px" }}
+                    className={`${
+                      isWorkStatusLate
+                        ? `bg-[#E2F7E1] border-[#86DC89]`
+                        : `bg-white border-[#83A2AD]`
+                    } flex p-1 h-fit border-[1px]`}
+                  >
+                    <Checkbox3
+                      className="border-[#83A2AD]"
+                      onCheckedChange={() =>
+                        setIsWorkStatusLate(!isWorkStatusLate)
+                      }
+                      checked={isWorkStatusLate}
+                    />
+                    <Typography sx={{ color: "#2C5079" }} className="py-1 px-2">
+                    สาย
+                    </Typography>
+                  </Box>
+                  </>)}
                 </Box>
               </Box>
             </Box>
@@ -845,6 +767,7 @@ export default function Manpower() {
           </div>
         </div>
       )}
+
     </div>
   );
 }

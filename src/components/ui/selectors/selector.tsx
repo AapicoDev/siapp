@@ -23,11 +23,11 @@ export function Selector({selectorLabel, itemSource, selectedVal, handleChange, 
     <FormControl focused className="w-full">
       <Typography
         textAlign="left"
-        className="text-[14px] pb-1 text-[#2C5079] font-bold"
+        sx={{fontSize: "14px", paddingBottom: "0.25rem", color: "#2C5079", fontWeight: "700"}}
       >
         {selectorLabel}
       </Typography>
-      <InputLabel className="font-bold text-[#2C5079] w-full"></InputLabel>
+      <InputLabel sx={{fontWeight: "700", color: "#2C5079"}} className="w-full"></InputLabel>
       <Select
         name={name}
         size="small"
@@ -39,13 +39,11 @@ export function Selector({selectorLabel, itemSource, selectedVal, handleChange, 
             ? "Select"
             : sourceList.find((s) => s.id === selectedVal)?.desc
         }
-        className={`${
-          selectedVal === undefined
-            ? `text-[#83A2AD]`
-            : "text-[#2C5079]"
-        }`}
         inputProps={{ "aria-label": "Without label" }}
         sx={{
+          color: `${
+            selectedVal === "" ? `#83A2AD` : "#2C5079"
+          }`,
           height: "40px",
           width: "100%",
           borderRadius: "10px",
@@ -67,7 +65,7 @@ export function Selector({selectorLabel, itemSource, selectedVal, handleChange, 
           <MenuItem
             key={s.id}
             value={s.id}
-            className="text-sm text-[#2C5079]"
+            sx={{fontSize: "0.875rem", lineHeight: "1.25rem", color: "#2C5079"}}
           >
             {s.desc}
           </MenuItem>

@@ -22,6 +22,7 @@ import { Textbox } from "../ui/textboxs/textbox";
 import { AddButton } from "../ui/buttons/addButton";
 import { DeleteBtnFooter } from "../ui/buttons/deleteBtnFooter";
 import { SaveBtnFooter } from "../ui/buttons/saveBtnFooter";
+import { IoClose } from "react-icons/io5";
 
 type RowData = {
   hrCode: string;
@@ -32,14 +33,14 @@ type RowData = {
   zoneId: any;
   qrCode: any;
   contractId: any;
-  code: string,
-  isActive: boolean
-  customerName: string
+  code: string;
+  isActive: boolean;
+  customerName: string;
 };
 
 type AreaData = {
-  id: number,
-  name: string,
+  id: number;
+  name: string;
 };
 
 const segments = [
@@ -118,21 +119,21 @@ const CustomerForm = ({ editCustomer, closeModal, customeraAeas }: any) => {
   useEffect(() => {
     if (editCustomer === undefined) {
       setFormHeader("+ New Customer");
-      setIsEdit(false)
+      setIsEdit(false);
     } else {
       setFormHeader("View / Edit Customer");
-      setIsEdit(true)
+      setIsEdit(true);
     }
   });
 
   const handleSelectChange = (e: SelectChangeEvent) => {
     const { name, value } = e.target;
     setFormData((prevData: any) => ({ ...prevData, [name]: value }));
-    console.log("formData", formData)
+    console.log("formData", formData);
   };
 
   const addArea = () => {
-    setAreas([...areas, { id: areas.length + 1, name: '', }]);
+    setAreas([...areas, { id: areas.length + 1, name: "" }]);
   };
 
   const removeArea = (id: number) => {
@@ -158,55 +159,69 @@ const CustomerForm = ({ editCustomer, closeModal, customeraAeas }: any) => {
   };
 
   const handleUndo = () => {
-    setFormData(editCustomer)
-    setAreas(customeraAeas)
+    setFormData(editCustomer);
+    setAreas(customeraAeas);
   };
 
-  const handleDelete = () => {
-    
-  };
+  const handleDelete = () => {};
 
-  const handleSave = () => {
-    
-  };
+  const handleSave = () => {};
 
   function handleCloseCustomerForm() {
     closeModal(isEdit);
-  };
+  }
 
   const handleActiveChange = (checked: boolean) => {
     setFormData((prevData: any) => ({ ...prevData, isActive: checked }));
-  }
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 flex flex-col items-center justify-center z-indextop">
       {/* Header */}
-      <Box className="flex w-[800px] bg-[#D9F0EC] py-1 rounded-t-lg justify-center">
-          <Box className="w-[100%] justify-center flex">
-            <Typography className="w-fit text-lg font-semibold text-[#1D7A9B] h-fit mt-1 ml-[78px]">
-              {formHeader}
-            </Typography>
-          </Box>
-          <Button2
-            className="bg-transparent text-[#83A2AD] float"
-            sx={{ position: "relative", right: 0 }}
-            onClick={handleCloseCustomerForm}
+      <Box
+        sx={{
+          display: "flex",
+          width: "800px",
+          backgroundColor: "#D9F0EC",
+          paddingY: "5px",
+          borderRadius: "8px 8px 0px 0px", // Adjust rounded corners as needed
+          justifyContent: "center",
+        }}
+      >
+        <Box sx={{ width: "100%", display: "flex", justifyContent: "center" }}>
+          <Typography
+            sx={{
+              width: "fit-content",
+              fontSize: "1.125rem", // text-lg equivalent
+              fontWeight: "bold",
+              color: "#1D7A9B",
+              marginTop: "0.25rem",
+              marginLeft: "78px",
+            }}
           >
-            <CloseIcon className="w-[26px] h-[26px]" />
-          </Button2>
+            {formHeader}
+          </Typography>
         </Box>
-      <div className="bg-white rounded-b-lg shadow-lg min-h-[544px] max-h-[654px] w-[800px]">
+        <Button2
+          className="bg-transparent float w-fit"
+          sx={{ position: "relative", right: 0, top: 0, color: "#83A2AD" }}
+          onClick={handleCloseCustomerForm}
+        >
+          <IoClose size={26} />
+        </Button2>
+      </Box>
 
+      <div className="bg-white rounded-b-lg shadow-lg min-h-[544px] max-h-[654px] w-[800px]">
         {/* Body */}
         <div className="max-h-[578px] overflow-auto">
-        <Box
-          className="w-full justify-center px-6 py-2 rounded-t-lg pb-6"
-          textAlign="center"
-        >
-          <Box className="flex w-full space-x-5 pt-4">
-            {/* Segment */}
-            <Box className="w-1/2">
-              {/* <FormControl focused className="w-full">
+          <Box
+            className="w-full justify-center px-6 py-2 rounded-t-lg pb-6"
+            textAlign="center"
+          >
+            <Box className="flex w-full space-x-5 pt-4">
+              {/* Segment */}
+              <Box className="w-1/2">
+                {/* <FormControl focused className="w-full">
                 <Typography
                   textAlign="left"
                   className="text-[14px] pb-1 text-[#2C5079] font-bold"
@@ -262,23 +277,41 @@ const CustomerForm = ({ editCustomer, closeModal, customeraAeas }: any) => {
                   ))}
                 </Select>
               </FormControl> */}
-              <Selector selectorLabel={"Segment"} itemSource={segments} handleChange={handleSelectChange} selectedVal={formData.segmentId} name={"segmentId"}/>
+                <Selector
+                  selectorLabel={"Segment"}
+                  itemSource={segments}
+                  handleChange={handleSelectChange}
+                  selectedVal={formData.segmentId}
+                  name={"segmentId"}
+                />
+              </Box>
+
+              {/* Group */}
+              <Box className="w-1/2">
+                <Selector
+                  selectorLabel={"Group"}
+                  itemSource={groups}
+                  handleChange={handleSelectChange}
+                  selectedVal={formData.groupId}
+                  name={"groupId"}
+                />
+              </Box>
             </Box>
 
-            {/* Group */}
-            <Box className="w-1/2">
-              <Selector selectorLabel={"Group"} itemSource={groups} handleChange={handleSelectChange} selectedVal={formData.groupId} name={"groupId"}/>
-            </Box>
-          </Box>
+            <Box className="flex w-full space-x-5 pt-3">
+              {/* Zone */}
+              <Box className="w-1/2">
+                <Selector
+                  selectorLabel={"Zone"}
+                  itemSource={zones}
+                  handleChange={handleSelectChange}
+                  selectedVal={formData.zoneId}
+                  name={"zoneId"}
+                />
+              </Box>
 
-          <Box className="flex w-full space-x-5 pt-3">
-            {/* Zone */}
-            <Box className="w-1/2">
-              <Selector selectorLabel={"Zone"} itemSource={zones} handleChange={handleSelectChange} selectedVal={formData.zoneId} name={"zoneId"}/>
-            </Box>
-
-            <Box className="w-1/2">
-              {/* <Typography
+              <Box className="w-1/2">
+                {/* <Typography
                 textAlign="left"
                 className="text-[14px] pb-1 text-[#2C5079] font-bold"
               >
@@ -292,97 +325,120 @@ const CustomerForm = ({ editCustomer, closeModal, customeraAeas }: any) => {
                 onChange={handleChange}
                 name="customerName"
               /> */}
-              <Textbox header="Customer" name="customerName" inputType="text" placeHolder="Type here..." value={formData?.customerName} handleChange={handleChange}/>
-            </Box>
-          </Box>
-
-          <Box className="flex w-full space-x-5 pt-3">
-            <Box className="w-[40%]">
-              <Textbox header="HR Code" name="hrCode" inputType="text" placeHolder="Type here..." value={formData?.hrCode} handleChange={handleChange}/>
-            </Box>
-            <Box className="w-[40%]">
-              <Textbox header="Code" name="code" inputType="text" placeHolder="Type here..." value={formData?.code} handleChange={handleChange}/>
-            </Box>
-            <Box className="w-[20%]">
-              <Typography
-                textAlign="left"
-                className="text-[14px] pb-1 text-[#2C5079] font-bold"
-              >
-                Status
-              </Typography>
-              <Box className="flex">
-                <Switch
-                  name="isActive"
-                  checked={formData.isActive}
-                  onCheckedChange={handleActiveChange}
+                <Textbox
+                  header="Customer"
+                  name="customerName"
+                  inputType="text"
+                  placeHolder="Type here..."
+                  value={formData?.customerName}
+                  handleChange={handleChange}
                 />
-                <Typography
-                  textAlign="left"
-                  className="text-[14px] pb-1 text-[#2C5079] font-bold pl-2 pt-2"
-                >
-                  {formData.isActive === true ? "Active" : "Inactive"}
-                </Typography>
               </Box>
             </Box>
-          </Box>
 
-          <Typography
-            textAlign="left"
-            className="text-[14px] pb-1 text-[#2C5079] font-bold pt-3"
-          >
-            Area
-          </Typography>
-          {areas.map((area, index) => (
-            <Box
-              key={area.id}
-              className="flex w-full bg-[#EBF4F6] rounded-lg justify-items-center align-middle justify-between mb-3"
+            <Box className="flex w-full space-x-5 pt-3">
+              <Box className="w-[40%]">
+                <Textbox
+                  header="HR Code"
+                  name="hrCode"
+                  inputType="text"
+                  placeHolder="Type here..."
+                  value={formData?.hrCode}
+                  handleChange={handleChange}
+                />
+              </Box>
+              <Box className="w-[40%]">
+                <Textbox
+                  header="Code"
+                  name="code"
+                  inputType="text"
+                  placeHolder="Type here..."
+                  value={formData?.code}
+                  handleChange={handleChange}
+                />
+              </Box>
+              <Box className="w-[20%]">
+                <Typography
+                  textAlign="left"
+                  sx={{fontSize: "14px", paddingBottom: "0.25rem", color: "#2C5079", fontWeight: "700"}}
+                >
+                  Status
+                </Typography>
+                <Box className="flex">
+                  <Switch
+                    name="isActive"
+                    checked={formData.isActive}
+                    onCheckedChange={handleActiveChange}
+                  />
+                  <Typography
+                    textAlign="left"
+                    sx={{fontSize: "14px", paddingBottom: "0.25rem", color: "#2C5079", fontWeight: "700", paddingLeft: '0.5rem', paddingTop: "0.5rem"}}
+                  >
+                    {formData.isActive === true ? "Active" : "Inactive"}
+                  </Typography>
+                </Box>
+              </Box>
+            </Box>
+
+            <Typography
+              textAlign="left"
+              sx={{fontSize: "14px", paddingBottom: "0.25rem", color: "#2C5079", fontWeight: "700", paddingTop: "0.75rem"}}
             >
-              <Box className="w-11 h-10 bg-[#37B7C3] rounded-lg justify-center text-white p-2 m-3">
-                {area.id}
-              </Box>
-              <Box className="flex w-full justify-center">
-                <Typography
-                  textAlign="left"
-                  className="text-[14px] text-[#2C5079] pt-5"
-                >
-                  Area's Name :
-                </Typography>
-                <Input
-                  value={area.name}
-                  onChange={(e) => handleAreaChange(area.id, e.target.value)}
-                  type="text"
-                  placeholder="Type here..."
-                  className="max-w-80 border-solid border-[#1D7A9B] rounded-[10px] bg-white p-4 m-3 placeholder:text-[#83A2AD]"
-                />
-              </Box>
-              <Box className="flex align-middle ml-2 justify-around">
-                <Button
-                  onClick={() => removeArea(area.id)}
-                  className="bg-[#F66262] rounded-r-lg rounded-l-none w-14 h-full"
-                >
-                  <Trash color="white" />
-                </Button>
-              </Box>
-            </Box>
-          ))}
-
-          <Box className="justify-start flex w-full">
-            <AddButton onAddBtnClick={addArea} />
-          </Box>
-
-          <Box className="w-full justify-between items-center pt-5">
-            <Typography className="text-[16px] text-[#4C9BF5] underline">
-              Total: {areas.length} area{areas.length > 1 ? "s" : ""}
+              Area
             </Typography>
+            {areas.map((area, index) => (
+              <Box
+                key={area.id}
+                className="flex w-full bg-[#EBF4F6] rounded-lg justify-items-center align-middle justify-between mb-3"
+              >
+                <Box className="w-11 h-10 bg-[#37B7C3] rounded-lg justify-center text-white p-2 m-3">
+                  {area.id}
+                </Box>
+                <Box className="flex w-full justify-center">
+                  <Typography
+                    textAlign="left"
+                    sx={{fontSize: "14px", color: "#2C5079", paddingTop: "1.25rem"}}
+                  >
+                    Area's Name :
+                  </Typography>
+                  <Input
+                    value={area.name}
+                    onChange={(e) => handleAreaChange(area.id, e.target.value)}
+                    type="text"
+                    placeholder="Type here..."
+                    className="max-w-80 border-solid border-[#1D7A9B] rounded-[10px] bg-white p-4 m-3 placeholder:text-[#83A2AD]"
+                  />
+                </Box>
+                <Box className="flex align-middle ml-2 justify-around">
+                  <Button
+                    onClick={() => removeArea(area.id)}
+                    className="bg-[#F66262] rounded-r-lg rounded-l-none w-14 h-full"
+                  >
+                    <Trash color="white" />
+                  </Button>
+                </Box>
+              </Box>
+            ))}
+
+            <Box className="justify-start flex w-full">
+              <AddButton onAddBtnClick={addArea} />
+            </Box>
+
+            <Box className="w-full justify-between items-center pt-5">
+              <Typography sx={{fontSize: "16px", color:"#4C9BF5", textDecorationLine: "underline"}}>
+                Total: {areas.length} area{areas.length > 1 ? "s" : ""}
+              </Typography>
+            </Box>
           </Box>
-        </Box>
         </div>
 
         {/* Footer */}
         {!isEdit && (
           <Box className="flex w-full justify-center px-6 space-x-4 border-t-2 pt-4 pb-4">
-            <Button className="w-28 h-11 bg-white text-[#83A2AD] border-[1px] border-[#83A2AD] hover:text-white hover:bg-[#83A2AD]"
-                    onClick={handleCloseCustomerForm}>
+            <Button
+              className="w-28 h-11 bg-white text-[#83A2AD] border-[1px] border-[#83A2AD] hover:text-white hover:bg-[#83A2AD]"
+              onClick={handleCloseCustomerForm}
+            >
               Cancel
             </Button>
             <Button
@@ -407,7 +463,10 @@ const CustomerForm = ({ editCustomer, closeModal, customeraAeas }: any) => {
               Undo all changes
             </Button>
             <Box className="space-x-4">
-              <DeleteBtnFooter onDeleteBtnFooterClick={handleDelete} disable={false} />
+              <DeleteBtnFooter
+                onDeleteBtnFooterClick={handleDelete}
+                disable={false}
+              />
               <SaveBtnFooter onSaveBtnFooterClick={handleSave} />
             </Box>
           </Box>

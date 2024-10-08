@@ -37,6 +37,10 @@ import { ViewButton } from "@/components/ui/buttons/viewButton";
 import { DeleteButton } from "@/components/ui/buttons/deleteButton";
 import { GoArrowUpRight } from "react-icons/go";
 import { TableContract } from "@/components/materData/TableContract";
+import { IoClose } from "react-icons/io5";
+import { LabelSelector } from "@/components/ui/selectors/labelSelector";
+import { Textbox } from "@/components/ui/textboxs/textbox";
+import LabelTextField from "@/components/ui/textboxs/LabelTextField";
 
 type RowData = {
   hrCode: string;
@@ -210,49 +214,49 @@ const mockArea: AreaData[] = [
 
 const mockChkPt = [
   {
-    areaId: 1, 
+    areaId: 1,
     chkPtName: "จุดที่ 1",
-  }, 
+  },
   {
-    areaId: 1, 
+    areaId: 1,
     chkPtName: "จุดที่ 2",
-  }, 
+  },
   {
-    areaId: 2, 
+    areaId: 2,
     chkPtName: "หน้าประตู",
-  }, 
+  },
   {
-    areaId: 3, 
+    areaId: 3,
     chkPtName: "หน้าตึก",
   },
-]
+];
 
 const mockContract = [
   {
-    custId: 1, 
+    custId: 1,
     id: "0001",
     startDate: "13/08/2024",
     endDate: "31/12/2024",
     attachment: "MUIC_contract2024_13.pdf",
-    isActive: true
+    isActive: true,
   },
   {
-    custId: 2, 
+    custId: 2,
     id: "0002",
     startDate: "01/05/2024",
     endDate: "31/12/2024",
     attachment: "contract2024_11.pdf",
-    isActive: true
+    isActive: true,
   },
   {
-    custId: 3, 
+    custId: 3,
     id: "0003",
     startDate: "01/04/2024",
     endDate: "31/12/2024",
     attachment: "contract2024_27.pdf",
-    isActive: false
-  }
-]
+    isActive: false,
+  },
+];
 
 const totalItems = rows.length;
 
@@ -267,7 +271,7 @@ const initialArea: AreaData[] = [
 export default function Customer() {
   const [editMode, setEditMode] = useState(Array(rows.length).fill(false)); // Array to track edit state for each row
   const [rowData, setRowData] = useState(rows); // Local state for row data
-  const [contractData, setContractData] = useState(mockContract); // Local state for row data
+  const [customerNameList,setCustomerNameList] = useState([{id: 1, desc: ""}]);
   const [areas, setAreas] = useState<AreaData[]>([
     { id: 1, custId: null, name: "" },
   ]);
@@ -275,12 +279,19 @@ export default function Customer() {
   const [selectedRow, setSelectedRow] = useState<RowData | null>(null);
   const [isSelectedAll, setIsSelectedAll] = useState(false);
   const [openAddCustModal, setShowAddCustModal] = useState(false);
-  const [openEditCustModal, setOpenEditCustModal] = useState<boolean>(false)
+  const [openEditCustModal, setOpenEditCustModal] = useState<boolean>(false);
   const [openFilterModal, setOpenFilterModal] = useState<boolean>(false);
-  const [openViewQR, setOpenViewQR] = useState<boolean>(false); 
+  const [selectedSegmentFilter, setSelectedSegmentFilter] = useState();
+  const [selectedGroupFilter, setSelectedGroupFilter] = useState();
+  const [selectedZoneFilter, setSelectedZoneFilter] = useState();
+  const [selectedDepartmentFilter, setSelectedDepartmentFilter] = useState();
+  const [selectedCustomerFilter, setSelectedCustomerFilter] = useState();
+  const [hrCodeFilter, setHrCodeFilter] = useState("");
+  const [codeFilter, setCodeFilter] = useState("");
+  const [openViewQR, setOpenViewQR] = useState<boolean>(false);
   const [openAddContract, setOpenAddContract] = useState<boolean>(false);
-  const [openEditContract, setOpenEditContract] = useState<boolean>(false); 
-  const [isCustomerPage, setIsCustomerPage] = useState<boolean>(true); 
+  const [openEditContract, setOpenEditContract] = useState<boolean>(false);
+  const [isCustomerPage, setIsCustomerPage] = useState<boolean>(true);
   const pathName = usePathname();
   const [selected, setSelected] = useState<selectedDelete[]>(
     rows.map((row) => ({
@@ -291,45 +302,72 @@ export default function Customer() {
 
   //calculate total checkpoint to display QR Code row
   const calTotalChkPt = () => {
-    const rowDataUpdate = [...rowData]
-    rowDataUpdate.forEach(customer => {
-      customer.customerId
+    const rowDataUpdate = [...rowData];
+    rowDataUpdate.forEach((customer) => {
+      customer.customerId;
       //use customerId to find area of that customer
       const custArea = mockArea.filter((a) => a.custId === customer.customerId);
       let sumChkPt = 0;
-      if(custArea.length > 0){
-          custArea.forEach(area => {
-            //use areaId to find number of checkpoint of that area
-            sumChkPt += mockChkPt.filter(chkPt => chkPt.areaId === area.id).length
-          });
+      if (custArea.length > 0) {
+        custArea.forEach((area) => {
+          //use areaId to find number of checkpoint of that area
+          sumChkPt += mockChkPt.filter(
+            (chkPt) => chkPt.areaId === area.id
+          ).length;
+        });
       }
       customer.chkPtTotal = sumChkPt;
     });
     setRowData(rowDataUpdate);
-  }
+  };
 
   const calTotalContract = () => {
-    const rowDataUpdate = [...rowData]
-    rowDataUpdate.forEach(customer => {
-      customer.customerId
-      const custContract = mockContract.filter((a) => a.custId === customer.customerId);
+    const rowDataUpdate = [...rowData];
+    rowDataUpdate.forEach((customer) => {
+      customer.customerId;
+      const custContract = mockContract.filter(
+        (a) => a.custId === customer.customerId
+      );
       customer.contractTotal = custContract.length;
     });
     setRowData(rowDataUpdate);
-  }
+  };
+
+  const handleScrollLock = (isLocked: boolean) => {
+    if (isLocked) {
+      const scrollPosition = window.scrollY; // Get current scroll position
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${scrollPosition}px`; // Lock scroll at current position
+      document.body.style.width = "100%";
+    } else {
+      const scrollY = document.body.style.top;
+      document.body.style.position = "";
+      document.body.style.top = "";
+      window.scrollTo(0, parseInt(scrollY || "0") * -1); // Restore previous scroll position
+    }
+  };
 
   useEffect(() => {
     calTotalChkPt();
     calTotalContract();
-  }, []);
+    custNameList();
+    handleScrollLock(openFilterModal);
+    return () => handleScrollLock(false);
+  }, [openFilterModal]);
+
+  const custNameList = () => {
+    const custName = rowData.map(cust => ({
+      id: cust.customerId,
+      desc: cust.customerName
+    }));
+    setCustomerNameList(custName);
+  };
 
   const handleAddNewCust = () => {
     setShowAddCustModal(true);
   };
 
-  const handleDeleteCust = () => {
-    
-  };
+  const handleDeleteCust = () => {};
 
   const setToggleFilter = () => {
     console.log("openFilterModal =", openFilterModal);
@@ -362,7 +400,7 @@ export default function Customer() {
   }
 
   function handleCloseViewQr() {
-    setOpenViewQR(false)
+    setOpenViewQR(false);
   }
 
   function handleCloseContractForm(isEdit: boolean) {
@@ -374,17 +412,19 @@ export default function Customer() {
   }
 
   const handleEditContract = (selecectedRow: any) => {
-    console.log("row =", selecectedRow)
+    console.log("row =", selecectedRow);
     setSelectedRow(selecectedRow);
-    setOpenEditContract(true)
-  }
+    setOpenEditContract(true);
+  };
 
   const handleOpenViewQr = (selecectedRow: any) => {
     setSelectedRow(selecectedRow);
-    const custArea = mockArea.filter(a => a.custId === selecectedRow.customerId);
+    const custArea = mockArea.filter(
+      (a) => a.custId === selecectedRow.customerId
+    );
     setCustAreas(custArea);
-    setOpenViewQR(true)
-  }
+    setOpenViewQR(true);
+  };
 
   const handleSelected = (index: number) => {
     const newSelected = [...selected];
@@ -408,7 +448,9 @@ export default function Customer() {
     setSelected(selectedAll);
   };
 
-  const handleAddBtnOnClick = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+  const handleAddBtnOnClick = (
+    e: React.MouseEvent<HTMLButtonElement, MouseEvent>
+  ) => {
     e.stopPropagation();
     setOpenAddContract(true);
   };
@@ -419,6 +461,16 @@ export default function Customer() {
 
   const handleSelectContractPage = (checked: boolean) => {
     if (checked) setIsCustomerPage(false);
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    if (name === "hrCode") {
+      setHrCodeFilter(value);
+    }
+    else if (name === "code") {
+      setCodeFilter(value);
+    }
   };
 
   return (
@@ -432,26 +484,32 @@ export default function Customer() {
             <Box justifyContent="space-between" className="flex">
               <Box className="space-x-4 py-4 flex">
                 <Box
-                  sx={{ borderRadius: "10px" }}
-                  className="justify-center flex p-1 pb-0 bg-white"
+                  sx={{
+                    justifyContent: "center",
+                    display: "flex",
+                    padding: "0.25rem",
+                    backgroundColor: "white",
+                    borderRadius: "10px",
+                  }}
                 >
                   <Checkbox
                     className="bg-[#EBF4F6] border-none"
                     checked={isCustomerPage}
                     onCheckedChange={handleSelectCustomerPage}
                   />
-                  <Typography className="py-1 px-2 text-[#1D7A9B] font-bold">
+                  <Typography sx={{fontWeight: "700", color: "#1D7A9B"}} className="py-1 px-2">
                     Customer
                   </Typography>
                 </Box>
                 <Box
-                  sx={{ borderRadius: "10px" }}
-                  className="justify-center flex p-1 bg-white"
+                  className="justify-center flex p-1 bg-white rounded-lg"
                 >
-                  <Checkbox className="bg-[#EBF4F6] border-none" 
+                  <Checkbox
+                    className="bg-[#EBF4F6] border-none"
                     checked={!isCustomerPage}
-                    onCheckedChange={handleSelectContractPage}/>
-                  <Typography className="py-1 px-2 text-[#1D7A9B] font-bold">
+                    onCheckedChange={handleSelectContractPage}
+                  />
+                  <Typography sx={{fontWeight: "700", color: "#1D7A9B"}} className="py-1 px-2">
                     Contract
                   </Typography>
                 </Box>
@@ -477,144 +535,151 @@ export default function Customer() {
             </Box>
           </Box>
 
-          {isCustomerPage && (<TableContainer
-            className="h-screen bg-white"
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              borderRadius: "15px 15px 0px 0px",
-              boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
-            }}
-          >
-            <Table>
-              <TableHead>
-                <TableRow
-                  sx={{ borderBottom: "1px solid #C7D4D7" }}
-                  className={`${styles.table}`}
-                >
-                  <TableCell align="left" className="w-[4%]">
-                    <Checkbox className="mt-1 mb-2"
-                      checked={isSelectedAll}
-                      onCheckedChange={handleCheckAll}
-                    />
-                  </TableCell>
-                  <TableCell align="center" className="w-[14%]">
-                    HR Code
-                  </TableCell>
-                  <TableCell align="center" className="w-[18%]">
-                    Customer
-                  </TableCell>
-                  <TableCell align="center" className="w-[20%]">
-                    Department
-                  </TableCell>
-                  <TableCell align="center" className="w-[14%]">
-                    Segment
-                  </TableCell>
-                  <TableCell align="center" className="w-[12%]">
-                    Zone
-                  </TableCell>
-                  {/* Edit button col */}
-                  <TableCell align="center" className="w-[9%]">
-                    QR Code
-                  </TableCell>
-                  <TableCell align="center" className="w-[9%]">
-                    Contract
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-
-              {/* Allow the TableBody to grow and fill vertical space */}
-              <TableBody sx={{ flexGrow: 1 }}>
-                {rowData.map((row, index) => (
+          {isCustomerPage && (
+            <TableContainer
+              className="h-screen bg-white"
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                borderRadius: "15px 15px 0px 0px",
+                boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
+              }}
+            >
+              <Table>
+                <TableHead>
                   <TableRow
-                    onClick={() => handleRowClick(row)} // Row click handler
-                    key={index}
-                    className={
-                      editMode[index]
-                        ? `bg-[#D8EAFF]`
-                        : `${index % 2 === 1 ? `bg-inherit` : `bg-[#EBF4F6]`}`
-                    }
-                    sx={{
-                      cursor: "pointer",
-                      "& .MuiTableCell-root": {
-                        padding: "10px 20px 10px 20px", // Customize border color
-                      },
-                      "&:hover": {
-                        backgroundColor: "#DCE9EB", // Optional: Change background color on hover
-                      },
-                    }}
+                    sx={{ borderBottom: "1px solid #C7D4D7" }}
+                    className={`${styles.table}`}
                   >
-                    <TableCell align="left">
+                    <TableCell align="left" className="w-[4%]">
                       <Checkbox
-                        checked={selected[index].isSelected}
-                        onClick={(event) => {
-                          event.stopPropagation(); // Prevent row click
-                          handleSelected(index);
-                        }}
+                        className="mt-1 mb-2"
+                        checked={isSelectedAll}
+                        onCheckedChange={handleCheckAll}
                       />
                     </TableCell>
-
-                    {/* HR Code */}
-                    <TableCell align="center">{row.hrCode}</TableCell>
-
-                    {/* Customer */}
-                    <TableCell align="center">{row.customerName}</TableCell>
-
-                    {/* Department */}
-                    <TableCell align="center">
-                      {
-                        departments.find((d) => d.did === row.departmentId)
-                          ?.desc
-                      }
+                    <TableCell align="center" className="w-[14%]">
+                      HR Code
                     </TableCell>
-
-                    {/* Segment */}
-                    <TableCell align="center">
-                      {row.segmentId === null
-                        ? "-"
-                        : segments.find((s) => s.smid === row.segmentId)?.desc}
+                    <TableCell align="center" className="w-[18%]">
+                      Customer
                     </TableCell>
-
-                    {/* Zone */}
-                    <TableCell align="center">
-                      {row.zoneId === null
-                        ? "-"
-                        : zones.find((z) => z.zid === row.zoneId)?.desc}
+                    <TableCell align="center" className="w-[20%]">
+                      Department
                     </TableCell>
-
-                    {/* ViewQR */}
-                    <TableCell align="center">
-                      {row.chkPtTotal === 0 ? (
-                        "-"
-                      ) : (
-                        <Button
-                          style={{
-                            border: "1px solid #37B7C3",
-                            fontWeight: "bold",
-                          }}
-                          className="w-[84px] text-[#37B7C3] bg-white hover:bg-[#37B7C3] hover:text-white"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            handleOpenViewQr(row)
-                          }}
-                        >
-                          View
-                        </Button>
-                      )}
+                    <TableCell align="center" className="w-[14%]">
+                      Segment
                     </TableCell>
-                    {/* Contract */}
-                    <TableCell align="center">
-                      {row.contractTotal === 0 ? (
-                        <AddButton onAddBtnClick={handleAddBtnOnClick}/>
-                      ) : (
-                        <ViewButton onViewBtnClick={handleEditContract} row={row} />
-                      )}
+                    <TableCell align="center" className="w-[12%]">
+                      Zone
+                    </TableCell>
+                    {/* Edit button col */}
+                    <TableCell align="center" className="w-[9%]">
+                      QR Code
+                    </TableCell>
+                    <TableCell align="center" className="w-[9%]">
+                      Contract
                     </TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>)}
+                </TableHead>
+
+                {/* Allow the TableBody to grow and fill vertical space */}
+                <TableBody sx={{ flexGrow: 1 }}>
+                  {rowData.map((row, index) => (
+                    <TableRow
+                      onClick={() => handleRowClick(row)} // Row click handler
+                      key={index}
+                      className={
+                        editMode[index]
+                          ? `bg-[#D8EAFF]`
+                          : `${index % 2 === 1 ? `bg-inherit` : `bg-[#EBF4F6]`}`
+                      }
+                      sx={{
+                        cursor: "pointer",
+                        "& .MuiTableCell-root": {
+                          padding: "10px 20px 10px 20px", // Customize border color
+                        },
+                        "&:hover": {
+                          backgroundColor: "#DCE9EB", // Optional: Change background color on hover
+                        },
+                      }}
+                    >
+                      <TableCell align="left">
+                        <Checkbox
+                          checked={selected[index].isSelected}
+                          onClick={(event) => {
+                            event.stopPropagation(); // Prevent row click
+                            handleSelected(index);
+                          }}
+                        />
+                      </TableCell>
+
+                      {/* HR Code */}
+                      <TableCell align="center">{row.hrCode}</TableCell>
+
+                      {/* Customer */}
+                      <TableCell align="center">{row.customerName}</TableCell>
+
+                      {/* Department */}
+                      <TableCell align="center">
+                        {
+                          departments.find((d) => d.did === row.departmentId)
+                            ?.desc
+                        }
+                      </TableCell>
+
+                      {/* Segment */}
+                      <TableCell align="center">
+                        {row.segmentId === null
+                          ? "-"
+                          : segments.find((s) => s.smid === row.segmentId)
+                              ?.desc}
+                      </TableCell>
+
+                      {/* Zone */}
+                      <TableCell align="center">
+                        {row.zoneId === null
+                          ? "-"
+                          : zones.find((z) => z.zid === row.zoneId)?.desc}
+                      </TableCell>
+
+                      {/* ViewQR */}
+                      <TableCell align="center">
+                        {row.chkPtTotal === 0 ? (
+                          "-"
+                        ) : (
+                          <Button
+                            style={{
+                              border: "1px solid #37B7C3",
+                              fontWeight: "bold",
+                            }}
+                            className="w-[84px] text-[#37B7C3] bg-white hover:bg-[#37B7C3] hover:text-white"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              handleOpenViewQr(row);
+                            }}
+                          >
+                            View
+                          </Button>
+                        )}
+                      </TableCell>
+                      {/* Contract */}
+                      <TableCell align="center">
+                        {row.contractTotal === 0 ? (
+                          <AddButton onAddBtnClick={handleAddBtnOnClick} />
+                        ) : (
+                          <ViewButton
+                            onViewBtnClick={handleEditContract}
+                            row={row}
+                          />
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
 
           {/* {!isCustomerPage && (
              <TableContainer 
@@ -738,12 +803,18 @@ export default function Customer() {
             </Table>
           </TableContainer>
         )}   */}
-           
-         {!isCustomerPage && (
-          <TableContract contractData={mockContract} custData={rowData} isSelectedAll={isSelectedAll} handlecheckAll={handleCheckAll}
-                         editMode={editMode} selected={selected} handleSelected={handleSelected}/>
-         )}
-        
+
+          {!isCustomerPage && (
+            <TableContract
+              contractData={mockContract}
+              custData={rowData}
+              isSelectedAll={isSelectedAll}
+              handlecheckAll={handleCheckAll}
+              editMode={editMode}
+              selected={selected}
+              handleSelected={handleSelected}
+            />
+          )}
 
           {/* TableFooter*/}
           <TableContainer
@@ -767,7 +838,10 @@ export default function Customer() {
                     >
                       <Typography>Total: {totalItems} items</Typography>
                       <Box>
-                        <DeleteButton onDeleteBtnClick={handleDeleteCust} disable={!selected.some((item) => item.isSelected)}/>
+                        <DeleteButton
+                          onDeleteBtnClick={handleDeleteCust}
+                          disable={!selected.some((item) => item.isSelected)}
+                        />
                         <Button
                           style={{ marginLeft: "auto", fontWeight: "bold" }}
                           className="w-48 enabled:bg-gradient-to-r from-[#00336C] to-[#37B7C3] hover:from-[#4C9BF5] hover:to-[#D8EAFF] 
@@ -813,9 +887,28 @@ export default function Customer() {
           </Button>
           <div className="bg-white rounded-lg shadow-lg h-[600px] w-[498px] overflow-auto fixed right-6 top-[136px]">
             {/* Header */}
-            <Box className="flex w-[full] bg-[#D9F0EC] py-2 rounded-t-lg justify-center">
-              <Box className="w-[100%] justify-center flex">
-                <Typography className="w-fit text-xl font-semibold text-[#1D7A9B] h-fit mt-1 ml-[78px] flex">
+            <Box 
+            sx={{
+              display: "flex",
+              width: "100%",
+              backgroundColor: "#D9F0EC",
+              paddingY: "5px",
+              borderRadius: "8px 8px 0px 0px", // Adjust rounded corners as needed
+              justifyContent: "center",
+              paddingTop: "0.5rem",
+              paddingBottom: "0.5rem",
+            }}>
+              <Box sx={{ width: "100%", display: "flex", justifyContent: "center" }}>
+                <Typography 
+                sx={{
+                  width: "fit-content",
+                  fontSize: "1.125rem", // text-lg equivalent
+                  fontWeight: "bold",
+                  color: "#1D7A9B",
+                  marginTop: "0.25rem",
+                  marginLeft: "78px",
+                  display: "flex"
+                }}>
                   <Filter
                     size={20}
                     style={{ marginRight: "5px", marginTop: "3px" }}
@@ -824,364 +917,110 @@ export default function Customer() {
                 </Typography>
               </Box>
               <Button2
-                className="bg-transparent text-[#83A2AD] float"
-                sx={{ position: "relative", right: 0 }}
+                className="bg-transparent float w-fit"
+                sx={{ position: "relative", right: 0, color: "#83A2AD" }}
                 onClick={() => setOpenFilterModal(false)}
               >
-                <CloseIcon className="w-[26px] h-[26px]" />
+                <IoClose size={26} />
               </Button2>
             </Box>
 
             {/* Body */}
-            <Box className="w-full justify-center px-6 py-2 rounded-t-lg pb-6" textAlign="center">
+            <Box
+              className="w-full justify-center px-6 py-2 rounded-t-lg pb-6"
+              textAlign="center"
+            >
               <Box className="w-full space-y-6 pt-4">
-
                 {/* Segment */}
                 <Box className="w-full">
-                  <FormControl focused className="w-full">
-                    <InputLabel
-                      className="text-[#2C5079"
-                      sx={{
-                        "&.Mui-focused": {
-                          color: "#2C5079",
-                          fontSize: "18px",
-                        },
-                      }}>
-                      Segment
-                    </InputLabel>
-                    <Select
-                      label="Segment"
-                      size="small"
-                      displayEmpty
-                      value={undefined}
-                      // onChange={handleAddSegmentChange}
-                      renderValue={(selected) => {
-                        if (selected === undefined) {
-                          return "Select Segment";
-                        }
-                        return selected;
-                      }}
-                      // className={`${ selectedAddSegment === undefined ? `text-[#83A2AD]` : "" }`}
-                      inputProps={{ "aria-label": "Without label" }}
-                      sx={{
-                        borderRadius: "10px",
-                        "& .MuiOutlinedInput-notchedOutline": {
-                          border: "1px solid #1D7A9B", // Customize border color
-                        },
-                        "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                          border: "1px solid #1D7A9B", // Customize border color on focus
-                          fontSize: "18px"
-                        },
-                        "&:hover .MuiOutlinedInput-notchedOutline": {
-                          border: "1px solid #1D7A9B", // Hover border color
-                        },
-                        "& .MuiSelect-icon": {
-                          color: "#83A2AD", // Customize arrow icon color
-                        },
-                      }}
-                    >
-                      {segments.map((segment, index) => (
-                        <MenuItem
-                          key={`${segment.smid}-${index}`}
-                          value={segment.desc}
-                        >
-                          {segment.desc}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+                  <LabelSelector
+                  selectorLabel={"Segment"}
+                  itemSource={segments}
+                  setSelectedVal={setSelectedSegmentFilter}
+                  selectedVal={selectedSegmentFilter}
+                  name={"segment"}
+                  defaultSelected="Select Segment"
+                />
                 </Box>
 
                 {/* Group */}
                 <Box className="w-full">
-                  <FormControl focused className="w-full">
-                    <InputLabel
-                      className="text-[#2C5079"
-                      sx={{
-                        "&.Mui-focused": {
-                          color: "#2C5079",
-                          fontSize: "18px",
-                        },
-                      }}>
-                      Group
-                    </InputLabel>
-                    <Select
-                      label="Group"
-                      size="small"
-                      displayEmpty
-                      value={undefined}
-                      // onChange={handleAddSegmentChange}
-                      renderValue={(selected) => {
-                        if (selected === undefined) {
-                          return "Select Group";
-                        }
-                        return selected;
-                      }}
-                      // className={`${ selectedAddSegment === undefined ? `text-[#83A2AD]` : "" }`}
-                      inputProps={{ "aria-label": "Without label" }}
-                      sx={{
-                        borderRadius: "10px",
-                        "& .MuiOutlinedInput-notchedOutline": {
-                          border: "1px solid #1D7A9B", // Customize border color
-                        },
-                        "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                          border: "1px solid #1D7A9B", // Customize border color on focus
-                          fontSize: "18px"
-                        },
-                        "&:hover .MuiOutlinedInput-notchedOutline": {
-                          border: "1px solid #1D7A9B", // Hover border color
-                        },
-                        "& .MuiSelect-icon": {
-                          color: "#83A2AD", // Customize arrow icon color
-                        },
-                      }}
-                    >
-                      {groups.map((group, index) => (
-                        <MenuItem
-                          key={`${group.gid}-${index}`}
-                          value={group.desc}
-                        >
-                          {group.desc}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+                <LabelSelector
+                  selectorLabel={"Group"}
+                  itemSource={groups}
+                  setSelectedVal={setSelectedGroupFilter}
+                  selectedVal={selectedGroupFilter}
+                  name={"group"}
+                  defaultSelected="Select Group"
+                />
                 </Box>
 
                 {/* Zone */}
                 <Box className="w-full">
-                  <FormControl focused className="w-full">
-                    <InputLabel
-                      className="text-[#2C5079"
-                      sx={{
-                        "&.Mui-focused": {
-                          color: "#2C5079",
-                          fontSize: "18px",
-                        },
-                      }}>
-                      Zone
-                    </InputLabel>
-                    <Select
-                      label="Zone"
-                      size="small"
-                      displayEmpty
-                      value={undefined}
-                      // onChange={handleAddSegmentChange}
-                      renderValue={(selected) => {
-                        if (selected === undefined) {
-                          return "Select Zone";
-                        }
-                        return selected;
-                      }}
-                      // className={`${ selectedAddSegment === undefined ? `text-[#83A2AD]` : "" }`}
-                      inputProps={{ "aria-label": "Without label" }}
-                      sx={{
-                        borderRadius: "10px",
-                        "& .MuiOutlinedInput-notchedOutline": {
-                          border: "1px solid #1D7A9B", // Customize border color
-                        },
-                        "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                          border: "1px solid #1D7A9B", // Customize border color on focus
-                          fontSize: "18px"
-                        },
-                        "&:hover .MuiOutlinedInput-notchedOutline": {
-                          border: "1px solid #1D7A9B", // Hover border color
-                        },
-                        "& .MuiSelect-icon": {
-                          color: "#83A2AD", // Customize arrow icon color
-                        },
-                      }}
-                    >
-                      {zones.map((zone, index) => (
-                        <MenuItem
-                          key={`${zone.zid}-${index}`}
-                          value={zone.desc}
-                        >
-                          {zone.desc}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+                <LabelSelector
+                  selectorLabel={"Zone"}
+                  itemSource={zones}
+                  setSelectedVal={setSelectedZoneFilter}
+                  selectedVal={selectedZoneFilter}
+                  name={"zone"}
+                  defaultSelected="Select Zone"
+                />
                 </Box>
 
                 {/* Department */}
                 <Box className="w-full">
-                  <FormControl focused className="w-full">
-                    <InputLabel
-                      className="text-[#2C5079"
-                      sx={{
-                        "&.Mui-focused": {
-                          color: "#2C5079",
-                          fontSize: "18px",
-                        },
-                      }}>
-                      Department
-                    </InputLabel>
-                    <Select
-                      label="Department"
-                      size="small"
-                      displayEmpty
-                      value={undefined}
-                      // onChange={handleAddSegmentChange}
-                      renderValue={(selected) => {
-                        if (selected === undefined) {
-                          return "Select Department";
-                        }
-                        return selected;
-                      }}
-                      // className={`${ selectedAddSegment === undefined ? `text-[#83A2AD]` : "" }`}
-                      inputProps={{ "aria-label": "Without label" }}
-                      sx={{
-                        borderRadius: "10px",
-                        "& .MuiOutlinedInput-notchedOutline": {
-                          border: "1px solid #1D7A9B", // Customize border color
-                        },
-                        "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                          border: "1px solid #1D7A9B", // Customize border color on focus
-                          fontSize: "18px"
-                        },
-                        "&:hover .MuiOutlinedInput-notchedOutline": {
-                          border: "1px solid #1D7A9B", // Hover border color
-                        },
-                        "& .MuiSelect-icon": {
-                          color: "#83A2AD", // Customize arrow icon color
-                        },
-                      }}
-                    >
-                      {departments.map((department, index) => (
-                        <MenuItem
-                          key={`${department.did}-${index}`}
-                          value={department.desc}
-                        >
-                          {department.desc}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+                <LabelSelector
+                  selectorLabel={"Department"}
+                  itemSource={departments}
+                  setSelectedVal={setSelectedDepartmentFilter}
+                  selectedVal={selectedDepartmentFilter}
+                  name={"department"}
+                  defaultSelected="Select Department"
+                />
                 </Box>
 
                 {/* Customer */}
                 <Box className="w-full">
-                  <FormControl focused className="w-full">
-                    <InputLabel
-                      className="text-[#2C5079"
-                      sx={{
-                        "&.Mui-focused": {
-                          color: "#2C5079",
-                          fontSize: "18px",
-                        },
-                      }}>
-                      Customer
-                    </InputLabel>
-                    <Select
-                      label="Customer"
-                      size="small"
-                      displayEmpty
-                      value={undefined}
-                      // onChange={handleAddSegmentChange}
-                      renderValue={(selected) => {
-                        if (selected === undefined) {
-                          return "Select Customer";
-                        }
-                        return selected;
-                      }}
-                      // className={`${ selectedAddSegment === undefined ? `text-[#83A2AD]` : "" }`}
-                      inputProps={{ "aria-label": "Without label" }}
-                      sx={{
-                        borderRadius: "10px",
-                        "& .MuiOutlinedInput-notchedOutline": {
-                          border: "1px solid #1D7A9B", // Customize border color
-                        },
-                        "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                          border: "1px solid #1D7A9B", // Customize border color on focus
-                          fontSize: "18px"
-                        },
-                        "&:hover .MuiOutlinedInput-notchedOutline": {
-                          border: "1px solid #1D7A9B", // Hover border color
-                        },
-                        "& .MuiSelect-icon": {
-                          color: "#83A2AD", // Customize arrow icon color
-                        },
-                      }}
-                    >
-                      {segments.map((segment, index) => (
-                        <MenuItem
-                          key={`${segment.smid}-${index}`}
-                          value={segment.desc}
-                        >
-                          {segment.desc}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+                  <LabelSelector
+                  selectorLabel={"Customer"}
+                  itemSource={customerNameList}
+                  setSelectedVal={setSelectedCustomerFilter}
+                  selectedVal={selectedCustomerFilter}
+                  name={"customer"}
+                  defaultSelected="Select Customer"
+                />
                 </Box>
 
                 {/* HR Code & Code */}
                 <Box className="w-full flex space-x-5">
-                <TextField
-                  label="Department"
-                  size="small"
-                  className="w-full"
-                  focused
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      "&.Mui-focused fieldset": {
-                        border: "1px solid #1D7A9B", // Focus border color
-                        borderRadius: "10px",
-                        fontSize: "18px"
-                      },
-                    },
-                    "& .MuiInputLabel-root.Mui-focused": {
-                      color: "#2C5079", // Label color when focused
-                      fontSize: "18px"
-                    },
-                    "& .MuiOutlinedInput-input::placeholder": {
-                      color: "#83A2AD", // Customize placeholder text color
-                      opacity: 1, // Ensure full opacity for the placeholder
-                    },
-                  }}
-                  placeholder={"Type here..."}
+                <LabelTextField
+                  label="HR Code"
+                  placeholder="Type here..."
+                  inputVal={hrCodeFilter}
+                  setInputVal={setHrCodeFilter}
                 />
-                  <TextField
-                  label="Department"
-                  size="small"
-                  className="w-full"
-                  focused
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      "&.Mui-focused fieldset": {
-                        border: "1px solid #1D7A9B", // Focus border color
-                        borderRadius: "10px",
-                        fontSize: "18px"
-                      },
-                    },
-                    "& .MuiInputLabel-root.Mui-focused": {
-                      color: "#2C5079", // Label color when focused
-                      fontSize: "18px"
-                    },
-                    "& .MuiOutlinedInput-input::placeholder": {
-                      color: "#83A2AD", // Customize placeholder text color
-                      opacity: 1, // Ensure full opacity for the placeholder
-                    },
-                  }}
-                  placeholder={"Type here..."}
+                  <LabelTextField
+                  label="Code"
+                  placeholder="Type here..."
+                  inputVal={codeFilter}
+                  setInputVal={setCodeFilter}
                 />
                 </Box>
 
                 {/* IsActive */}
                 <Box className="w-full flex space-x-1">
                   <Switch
-                     name="isActive"
+                    name="isActive"
                     //  checked={formData.isActive}
                     //  onCheckedChange={handleActiveChange}
                   />
                   <Typography
-                  textAlign="left"
-                  className="text-[14px] pb-1 text-[#2C5079] pl-2 pt-2"
-                >
-                  {/* {formData.isActive === true ? "Active" : "Inactive"} */}
-                  Active
-                </Typography>
+                    textAlign="left"
+                    sx={{fontSize: "14px", paddingBottom: "0.25rem", color: "#2C5079", fontWeight: "700", paddingLeft: '0.5rem', paddingTop: "0.5rem"}}
+                  >
+                    {/* {formData.isActive === true ? "Active" : "Inactive"} */}
+                    Active
+                  </Typography>
                 </Box>
               </Box>
             </Box>
@@ -1192,9 +1031,7 @@ export default function Customer() {
                 <Button className="w-32 h-11 bg-white text-[#F66262] border-[1px] border-[#F66262] hover:text-white hover:bg-[#F66262]">
                   Reset
                 </Button>
-                <Button
-                  className="w-32 h-11 enabled:bg-gradient-to-r from-[#00336C] to-[#37B7C3] hover:from-[#2BA441] hover:to-[#A7E5A6] disabled:bg-[#83A2AD]"
-                >
+                <Button className="w-32 h-11 enabled:bg-gradient-to-r from-[#00336C] to-[#37B7C3] hover:from-[#2BA441] hover:to-[#A7E5A6] disabled:bg-[#83A2AD]">
                   Apply
                 </Button>
               </Box>
@@ -1204,15 +1041,26 @@ export default function Customer() {
       )}
 
       {openViewQR && (
-        <ViewQrCode closeModal={handleCloseViewQr} customeraAeas={custAreas} selectedCustomer={selectedRow}/>
+        <ViewQrCode
+          closeModal={handleCloseViewQr}
+          customeraAeas={custAreas}
+          selectedCustomer={selectedRow}
+        />
       )}
 
       {openAddContract && (
-        <ContractForm closeModal={handleCloseContractForm} customeraAeas={areas}/>
+        <ContractForm
+          closeModal={handleCloseContractForm}
+          customeraAeas={areas}
+        />
       )}
 
       {openEditContract && (
-        <ContractForm closeModal={handleCloseContractForm} customeraAeas={areas} selectedCustomer={selectedRow}/>
+        <ContractForm
+          closeModal={handleCloseContractForm}
+          customeraAeas={areas}
+          selectedCustomer={selectedRow}
+        />
       )}
     </div>
   );

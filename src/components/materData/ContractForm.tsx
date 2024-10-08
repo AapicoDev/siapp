@@ -24,6 +24,8 @@ import { DeleteBtnFooter } from "../ui/buttons/deleteBtnFooter";
 import { SaveBtnFooter } from "../ui/buttons/saveBtnFooter";
 import { SubmitBtn } from "../ui/buttons/submitBtn";
 import { CancelBtn } from "../ui/buttons/cancelBtn";
+import { IoClose } from "react-icons/io5";
+import { Selector } from "../ui/selectors/selector";
 
 type RowData = {
   hrCode: string;
@@ -200,18 +202,36 @@ const ContractForm = ({ selectedCustomer, closeModal, customeraAeas }: any) => {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 flex flex-col items-center justify-center z-indextop">
       {/* Header */}
-      <Box className="flex w-[800px] bg-[#D9F0EC] py-1 rounded-t-lg justify-center">
-        <Box className="w-[100%] justify-center flex">
-          <Typography className="w-fit text-lg font-semibold text-[#1D7A9B] h-fit mt-1 ml-[78px]">
+      <Box
+        sx={{
+          display: "flex",
+          width: "800px",
+          backgroundColor: "#D9F0EC",
+          paddingY: "5px",
+          borderRadius: "8px 8px 0px 0px", // Adjust rounded corners as needed
+          justifyContent: "center",
+        }}
+      >
+        <Box sx={{ width: "100%", display: "flex", justifyContent: "center" }}>
+          <Typography
+            sx={{
+              width: "fit-content",
+              fontSize: "1.125rem", // text-lg equivalent
+              fontWeight: "bold",
+              color: "#1D7A9B",
+              marginTop: "0.25rem",
+              marginLeft: "78px",
+            }}
+          >
             {formHeader}
           </Typography>
         </Box>
         <Button2
-          className="bg-transparent text-[#83A2AD] float"
-          sx={{ position: "relative", right: 0 }}
+          className="bg-transparent float w-fit"
+          sx={{ position: "relative", right: 0, top: 0, color: "#83A2AD" }}
           onClick={handleCloseContractForm}
         >
-          <CloseIcon className="w-[26px] h-[26px]" />
+          <IoClose size={26} />
         </Button2>
       </Box>
       <div className="bg-white rounded-b-lg shadow-lg min-h-[544px] max-h-[654px] w-[800px]">
@@ -222,21 +242,15 @@ const ContractForm = ({ selectedCustomer, closeModal, customeraAeas }: any) => {
             <Box className="flex w-full space-x-5 pt-2">
               <Box className="w-full border-b-2 pb-2 flex">
                 <Box className="w-1/2">
-                  <Typography
-                    textAlign="left"
-                    className="text-[14px] text-[#2C5079] font-bold flex"
-                  >
-                    Customer :
                     <Typography
                       textAlign="left"
-                      className="text-[14px] text-[#2C5079] pl-1"
+                      sx={{ fontWeight: "700", color: "#2C5079", fontSize: "16px", paddingBottom: "0.25rem"}}
                     >
-                      {customer?.customerName}
+                      {`Customer : ${customer.customerName}`}
                     </Typography>
-                  </Typography>
 
                   <Typography
-                    className="text-[16px] text-[#4C9BF5] underline flex-1"
+                    sx={{ color: "#4C9BF5", textDecorationLine: "underline", fontSize: "16px"}}
                     textAlign={"left"}
                   >
                     Total : {customer?.contractTotal} contract
@@ -257,61 +271,19 @@ const ContractForm = ({ selectedCustomer, closeModal, customeraAeas }: any) => {
 
             <Box className="flex w-full space-x-5 pt-2">
               <Box className="w-1/2">
-                <FormControl focused className="w-full">
-                  <Typography
-                    textAlign="left"
-                    className="text-[14px] pb-1 text-[#2C5079] font-bold"
-                  >
-                    Contract No.
-                  </Typography>
-                  <InputLabel className="font-bold text-[#2C5079] w-full"></InputLabel>
-                  <Select
-                    name="areaId"
-                    size="small"
-                    value={selectedContractId}
-                    onChange={handleSelectAreaChange}
-                    // renderValue={() =>
-                    //   mockContract.find((contract) => contract.id === selectedContractId)?.name
-                    // }
-                    className={`${
-                      selectedContractId === undefined ? `text-[#83A2AD]` : ""
-                    }`}
-                    inputProps={{ "aria-label": "Without label" }}
-                    sx={{
-                      height: "40px",
-                      width: "100%",
-                      borderRadius: "10px",
-                      "& .MuiOutlinedInput-notchedOutline": {
-                        border: "1px solid #1D7A9B", // Customize border color
-                      },
-                      "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                        border: "1px solid #1D7A9B", // Customize border color on focus
-                      },
-                      "&:hover .MuiOutlinedInput-notchedOutline": {
-                        border: "1px solid #1D7A9B", // Hover border color
-                      },
-                      "& .MuiSelect-icon": {
-                        color: "#83A2AD", // Customize arrow icon color
-                      },
-                    }}
-                  >
-                    {areas.map((area) => (
-                      <MenuItem
-                        key={area.id}
-                        value={area.id}
-                        className="text-sm text-[#2C5079]"
-                      >
-                        {area.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+              <Selector
+                  selectorLabel={"Contract No."}
+                  itemSource={segments}
+                  handleChange={handleSelectChange}
+                  selectedVal={selectedContractId}
+                  name={"contractId"}
+                />
               </Box>
 
               <Box className="w-1/2">
                 <Typography
                   textAlign="left"
-                  className="text-[14px] pb-1 text-[#2C5079] font-bold"
+                  sx={{fontWeight: "700", color: "#2C5079", fontSize: "14px", paddingBottom: "0.25rem"}}
                 >
                   Start Date - End Date
                 </Typography>
@@ -441,7 +413,7 @@ const ContractForm = ({ selectedCustomer, closeModal, customeraAeas }: any) => {
 
             <Typography
               textAlign="left"
-              className="text-[14px] pb-1 text-[#2C5079] font-bold mt-2"
+              sx={{fontWeight: "700", color: "#2C5079", fontSize: "14px", paddingBottom: "0.25rem", marginTop: "0.5rem"}}
             >
               Attachment
             </Typography>
@@ -450,7 +422,7 @@ const ContractForm = ({ selectedCustomer, closeModal, customeraAeas }: any) => {
                 sx={{ borderRadius: "10px" }}
                 className="justify-between flex p-1 bg-white max-w-[220px] border-[1px] border-[#4C9BF5] cursor-pointer"
               >
-                <Typography className="py-1 px-2 text-[#2C5079]">
+                <Typography sx={{color: "#2C5079", paddingX: "0.5rem", paddingY: "0.25rem"}}>
                   {"file_name"}
                 </Typography>
                 <GoArrowUpRight
@@ -499,7 +471,7 @@ const ContractForm = ({ selectedCustomer, closeModal, customeraAeas }: any) => {
             ))}
 
             <Box className="w-full justify-between items-center pt-5">
-              <Typography className="text-[16px] text-[#4C9BF5] underline">
+              <Typography sx={{ color: "#4C9BF5", textDecorationLine: "underline", fontSize: "16px"}}>
                 Total: {areas.length} area{areas.length > 1 ? "s" : ""}
               </Typography>
             </Box>
