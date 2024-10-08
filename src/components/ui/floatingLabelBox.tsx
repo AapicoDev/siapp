@@ -2,11 +2,11 @@ import { Box, Typography } from "@mui/material";
 import { useState } from "react";
 
 interface FloatingLabelBoxProps {
-    children: React.ReactNode;
+    field: React.ReactNode;
     label: any;
 }
 
-const FloatingLabelBox = ({children, label}: FloatingLabelBoxProps) => {
+const FloatingLabelBox = ({field, label}: FloatingLabelBoxProps) => {
 
   return (
     <Box
@@ -37,7 +37,7 @@ const FloatingLabelBox = ({children, label}: FloatingLabelBoxProps) => {
         {label}
       </Typography>
       <Box className="h-fit pt-[2px] px-1 w-full flex justify-between">
-      {children}
+      {field}
       </Box>
     </Box>
   );

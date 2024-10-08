@@ -575,7 +575,7 @@ export default function Patrol() {
                 <Box className="w-full flex space-x-5">
                   <FloatingLabelBox
                     label={"Round"}
-                    children={
+                    field={
                       <>
                         <Button
                           className="w-fit h-fit text-[#1D7A9B] bg-[#D9F0EC] hover:bg-[#D9F0EC]"

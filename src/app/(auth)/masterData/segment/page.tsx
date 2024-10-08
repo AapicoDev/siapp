@@ -27,10 +27,6 @@ type selectedDelete = {
   segId: number;
 };
 
-// interface SegmentTableProps {
-//   row: RowData[]
-// }
-
 export default function Segment() {
 
   const rows: RowData[] = [

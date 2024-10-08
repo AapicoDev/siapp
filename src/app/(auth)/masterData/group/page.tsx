@@ -21,10 +21,6 @@ type RowData = {
   customer: number;
 };
 
-// interface SegmentTableProps {
-//   row: RowData[]
-// }
-
 export default function Group() {
 
   const rows: RowData[] = [

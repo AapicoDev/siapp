@@ -20,11 +20,12 @@ import { Visibility, VisibilityOff } from "@mui/icons-material";
 import Header from "../../components/Header";
 import Sidebar from "@/components/Sidebar";
 import Image from "next/image";
+import { login } from "../appwrite";
 
 export default function Login() {
   const [loggedInUser, setLoggedInUser] = useState(null);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("demo@demo.com");
+  const [password, setPassword] = useState("12345678");
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
 
@@ -79,6 +80,7 @@ export default function Login() {
               <input
                 type="text"
                 id="username"
+                value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
@@ -93,16 +95,22 @@ export default function Login() {
               <input
                 type="password"
                 id="password"
+                value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <button
               type="submit"
-              onClick={(e) => {
+              onClick={async (e) => {
                 e.preventDefault();
                 console.log("click");
-                router.push("dashboard");
+                const loginResult = await login(email, password);
+                if (loginResult) {
+                  router.push("dashboard");
+                } else {
+                  alert("Login failed");
+                }
               }}
               className="w-full bg-gradient-to-r from-blue-600 to-teal-400 text-white font-semibold py-2 px-4 rounded-md hover:from-blue-700 hover:to-teal-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >

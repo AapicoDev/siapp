@@ -221,62 +221,6 @@ const CustomerForm = ({ editCustomer, closeModal, customeraAeas }: any) => {
             <Box className="flex w-full space-x-5 pt-4">
               {/* Segment */}
               <Box className="w-1/2">
-                {/* <FormControl focused className="w-full">
-                <Typography
-                  textAlign="left"
-                  className="text-[14px] pb-1 text-[#2C5079] font-bold"
-                >
-                  Segment
-                </Typography>
-                <InputLabel className="font-bold text-[#2C5079] w-full"></InputLabel>
-                <Select
-                  name="segmentId"
-                  size="small"
-                  displayEmpty
-                  value={formData?.segmentId || ""}
-                  onChange={handleSelectChange}
-                  renderValue={(value) =>
-                    value === ""
-                      ? "Select"
-                      : segments.find(
-                          (segment) => segment.id === formData?.segmentId
-                        )?.desc
-                  }
-                  className={`${
-                    formData?.segmentId === undefined
-                      ? `text-[#83A2AD]`
-                      : "text-[#2C5079]"
-                  }`}
-                  inputProps={{ "aria-label": "Without label" }}
-                  sx={{
-                    height: "40px",
-                    width: "100%",
-                    borderRadius: "10px",
-                    "& .MuiOutlinedInput-notchedOutline": {
-                      border: "1px solid #1D7A9B", // Customize border color
-                    },
-                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                      border: "1px solid #1D7A9B", // Customize border color on focus
-                    },
-                    "&:hover .MuiOutlinedInput-notchedOutline": {
-                      border: "1px solid #1D7A9B", // Hover border color
-                    },
-                    "& .MuiSelect-icon": {
-                      color: "#83A2AD", // Customize arrow icon color
-                    },
-                  }}
-                >
-                  {segments.map((segment) => (
-                    <MenuItem
-                      key={segment.id}
-                      value={segment.id}
-                      className="text-sm text-[#2C5079]"
-                    >
-                      {segment.desc}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl> */}
                 <Selector
                   selectorLabel={"Segment"}
                   itemSource={segments}
@@ -311,20 +255,6 @@ const CustomerForm = ({ editCustomer, closeModal, customeraAeas }: any) => {
               </Box>
 
               <Box className="w-1/2">
-                {/* <Typography
-                textAlign="left"
-                className="text-[14px] pb-1 text-[#2C5079] font-bold"
-              >
-                Customer
-              </Typography>
-              <Input
-                type="text"
-                placeholder="Type here..."
-                className="border-solid border-[#1D7A9B] rounded-[10px] bg-white p-4 mr-2 placeholder:text-[#83A2AD] text-[#2C5079]"
-                value={formData?.customerName}
-                onChange={handleChange}
-                name="customerName"
-              /> */}
                 <Textbox
                   header="Customer"
                   name="customerName"
@@ -399,7 +329,7 @@ const CustomerForm = ({ editCustomer, closeModal, customeraAeas }: any) => {
                     textAlign="left"
                     sx={{fontSize: "14px", color: "#2C5079", paddingTop: "1.25rem"}}
                   >
-                    Area's Name :
+                    Area&apos;s Name :
                   </Typography>
                   <Input
                     value={area.name}
