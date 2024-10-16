@@ -41,6 +41,7 @@ import { IoClose } from "react-icons/io5";
 import { LabelSelector } from "@/components/ui/selectors/labelSelector";
 import { Textbox } from "@/components/ui/textboxs/textbox";
 import LabelTextField from "@/components/ui/textboxs/LabelTextField";
+import data from "@/app/mockData.json";
 
 type RowData = {
   hrCode: string;
@@ -231,32 +232,33 @@ const mockChkPt = [
   },
 ];
 
-const mockContract = [
-  {
-    custId: 1,
-    id: "0001",
-    startDate: "13/08/2024",
-    endDate: "31/12/2024",
-    attachment: "MUIC_contract2024_13.pdf",
-    isActive: true,
-  },
-  {
-    custId: 2,
-    id: "0002",
-    startDate: "01/05/2024",
-    endDate: "31/12/2024",
-    attachment: "contract2024_11.pdf",
-    isActive: true,
-  },
-  {
-    custId: 3,
-    id: "0003",
-    startDate: "01/04/2024",
-    endDate: "31/12/2024",
-    attachment: "contract2024_27.pdf",
-    isActive: false,
-  },
-];
+const mockContract = data.contracts;
+// = [
+//   {
+//     custId: 1,
+//     id: "0001",
+//     startDate: "13/08/2024",
+//     endDate: "31/12/2024",
+//     attachment: "MUIC_contract2024_13.pdf",
+//     isActive: true,
+//   },
+//   {
+//     custId: 2,
+//     id: "0002",
+//     startDate: "01/05/2024",
+//     endDate: "31/12/2024",
+//     attachment: "contract2024_11.pdf",
+//     isActive: true,
+//   },
+//   {
+//     custId: 3,
+//     id: "0003",
+//     startDate: "01/04/2024",
+//     endDate: "31/12/2024",
+//     attachment: "contract2024_27.pdf",
+//     isActive: false,
+//   },
+// ];
 
 const totalItems = rows.length;
 
@@ -326,7 +328,7 @@ export default function Customer() {
     rowDataUpdate.forEach((customer) => {
       customer.customerId;
       const custContract = mockContract.filter(
-        (a) => a.custId === customer.customerId
+        (a) => a.customerId === customer.customerId
       );
       customer.contractTotal = custContract.length;
     });
@@ -414,17 +416,22 @@ export default function Customer() {
   const handleEditContract = (selecectedRow: any) => {
     console.log("row =", selecectedRow);
     setSelectedRow(selecectedRow);
+    handleCustArea(selecectedRow);
     setOpenEditContract(true);
   };
 
   const handleOpenViewQr = (selecectedRow: any) => {
     setSelectedRow(selecectedRow);
+    handleCustArea(selecectedRow);
+    setOpenViewQR(true);
+  };
+
+  const handleCustArea = (selecectedRow: any) => {
     const custArea = mockArea.filter(
       (a) => a.custId === selecectedRow.customerId
     );
     setCustAreas(custArea);
-    setOpenViewQR(true);
-  };
+  }
 
   const handleSelected = (index: number) => {
     const newSelected = [...selected];
@@ -449,9 +456,13 @@ export default function Customer() {
   };
 
   const handleAddBtnOnClick = (
-    e: React.MouseEvent<HTMLButtonElement, MouseEvent>
+    e: React.MouseEvent<HTMLButtonElement, MouseEvent>, selectedRow: any
   ) => {
     e.stopPropagation();
+    setSelectedRow(selectedRow);
+    handleCustArea(selectedRow);
+    const selectedCust = customerNameList.find(c => c.id === selectedRow.customerId);
+    console.log("selectedRow = ", selectedRow)
     setOpenAddContract(true);
   };
 
@@ -666,7 +677,7 @@ export default function Customer() {
                       {/* Contract */}
                       <TableCell align="center">
                         {row.contractTotal === 0 ? (
-                          <AddButton onAddBtnClick={handleAddBtnOnClick} />
+                          <AddButton onAddBtnClick={(e)=>handleAddBtnOnClick(e,row)} />
                         ) : (
                           <ViewButton
                             onViewBtnClick={handleEditContract}
@@ -1043,7 +1054,7 @@ export default function Customer() {
       {openViewQR && (
         <ViewQrCode
           closeModal={handleCloseViewQr}
-          customeraAeas={custAreas}
+          customeraAreas={custAreas}
           selectedCustomer={selectedRow}
         />
       )}
@@ -1051,15 +1062,20 @@ export default function Customer() {
       {openAddContract && (
         <ContractForm
           closeModal={handleCloseContractForm}
-          customeraAeas={areas}
+          customeraAreas={custAreas}
+          selectedCustomer={selectedRow}
+          isEditFromCustPage={false}
+          custList={[customerNameList.find(c => c.id === selectedRow?.customerId)]}
         />
       )}
 
       {openEditContract && (
         <ContractForm
           closeModal={handleCloseContractForm}
-          customeraAeas={areas}
+          customeraAreas={custAreas}
           selectedCustomer={selectedRow}
+          isEditFromCustPage={true}
+          custList={customerNameList}
         />
       )}
     </div>

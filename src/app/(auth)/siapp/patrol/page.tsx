@@ -8,12 +8,7 @@ import {
   TableFooter,
   TableHead,
   TableRow,
-  TextField,
   Typography,
-  Select,
-  MenuItem,
-  InputLabel,
-  FormControl,
   Button as Button2,
 } from "@mui/material/";
 import CloseIcon from "@mui/icons-material/Close";
@@ -37,15 +32,29 @@ import { LabelSelector } from "@/components/ui/selectors/labelSelector";
 import LabelTextField from "@/components/ui/textboxs/LabelTextField";
 import FloatingLabelBox from "@/components/ui/floatingLabelBox";
 import { FiMinus, FiPlus } from "react-icons/fi";
+import { GradientButton } from "@/components/ui/buttons/gradientButton";
+import PatrolDeatilView from "@/components/siapp/PatrolDetailView";
+import {
+  getPatrolRoundData,
+  getAllPatrolCheckpointData
+} from "../../../lib/api";
 
 type RowData = {
   dateTime: string;
-  customerId: number;
-  areaId: any;
+  startDateTime: string;
+  useTime: string;
+  customerName: string;
+  areaId: string;
+  areaName: any;
   round: any;
-  checkPointId: any;
+  checkpointId: string;
+  checkpointNo: any;
+  checkPointName: any;
   patroller: string;
-  status: number;
+  status: string;
+  allCheckpoints: string[],
+  remark: string;
+  image: any[];
 };
 
 type RandomRowData = {
@@ -59,7 +68,7 @@ type RandomRowData = {
   patroller: string;
 };
 
-const rows: RowData[] = [
+const rows = [
   {
     dateTime: "10/2/2024 @11:52:06",
     customerId: 1,
@@ -141,11 +150,17 @@ const randomRows: RandomRowData[] = [
   },
 ];
 
-const totalItems = rows.length;
-
 export default function Patrol() {
-  const [editMode, setEditMode] = useState(Array(rows.length).fill(false)); // Array to track edit state for each row
-  const [rowData, setRowData] = useState(rows);
+  const [rowData, setRowData] = useState<RowData[]>([
+    { dateTime: "",
+      startDateTime: "", useTime: "",
+      customerName: "", areaName: "",areaId: "",
+      round: 0, checkPointName: "",
+      checkpointId: "", checkpointNo: undefined,
+      patroller: "", status: "",
+      allCheckpoints: [], remark: "",
+      image: []}]);
+  //const [editMode, setEditMode] = useState(Array(rowData.length).fill(false)); // Array to track edit state for each row
   const [randomRowData, setRandomRowData] = useState(randomRows);
   const [customers, setCustomers] = useState(data.customers);
   const [areas, setAreas] = useState(data.areas);
@@ -154,9 +169,9 @@ export default function Patrol() {
   const [segments, setSegment] = useState(data.segments);
   const [groups, setGroups] = useState(data.groups);
   const [zones, setZones] = useState(data.zones);
-  const [selectedRow, setSelectedRow] = useState<RowData | null>(null);
+  const [selectedRow, setSelectedRow] = useState<RowData>();
   const [openAddCustModal, setShowAddCustModal] = useState(false);
-  const [openEditCustModal, setOpenEditCustModal] = useState<boolean>(false);
+  const [openPatrolDetailModal, setOpenPatrolDetailModal] = useState<boolean>(false);
   const [openFilterModal, setOpenFilterModal] = useState<boolean>(false);
   const [selectedSegmentFilter, setSelectedSegmentFilter] = useState();
   const [selectedGroupFilter, setSelectedGroupFilter] = useState();
@@ -169,10 +184,69 @@ export default function Patrol() {
   const [openAddContract, setOpenAddContract] = useState<boolean>(false);
   const [openEditContract, setOpenEditContract] = useState<boolean>(false);
   const [isCheckpointPage, setIsCheckpointPage] = useState<boolean>(true);
+  const totalItems = rowData.length;
+  const [patrolRounds, setPatrolRounds] = useState<any>();
+  const [patrolCheckpoints, setPatrolCheckpoints] = useState<any>();
 
   useEffect(() => {
-    const time = new Date().toLocaleString(); //Output format = 10/2/2024, 1:28:36 PM
+    tableData();
   }, []);
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+  
+    const day = String(date.getUTCDate()).padStart(2, '0'); // Get day and pad with 0 if necessary
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+    const year = date.getUTCFullYear();
+
+    const hours = String(date.getUTCHours()).padStart(2, '0');
+    const minutes = String(date.getUTCMinutes()).padStart(2, '0');
+    const seconds = String(date.getUTCSeconds()).padStart(2, '0');
+  
+    return `${day}/${month}/${year}\n@${hours}:${minutes}:${seconds}`;
+  };
+
+  function calCheckpointDiffTime(start :any, end: any){
+    const startTime = new Date(start);
+    const endTime = new Date(end);
+    const diffMs = endTime.getTime() - startTime.getTime();
+    // Convert milliseconds to hours, minutes, and seconds
+    const hours = Math.floor(diffMs / (1000 * 60 * 60));
+    const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+    return hours+" " + minutes+ " " + seconds;
+  };
+
+  const tableData = async () => {
+    const allPatrolRoundData = await getPatrolRoundData();
+    setPatrolRounds(allPatrolRoundData);
+    console.log("data = ", allPatrolRoundData);
+    const allPatrolCheckpointData = await getAllPatrolCheckpointData();
+    setPatrolCheckpoints(allPatrolCheckpointData);
+    console.log("patrolCheckpointData = ", allPatrolCheckpointData);
+    const tableData: RowData[] = allPatrolCheckpointData?.documents.map((chkPt)=> {
+      return {
+        dateTime: formatDate(chkPt.EndTime),
+        startDateTime: formatDate(chkPt.StartTime),
+        useTime: calCheckpointDiffTime(chkPt.StartTime, chkPt.EndTime),
+        customerName: allPatrolRoundData?.documents.find(p => p.$id === chkPt.PatrolRoundId)?.Customer,
+        areaId: allPatrolRoundData?.documents.find(p => p.$id === chkPt.PatrolRoundId)?.AreaId,
+        areaName: allPatrolRoundData?.documents.find(p => p.$id === chkPt.PatrolRoundId)?.Area,
+        round: allPatrolRoundData?.documents.find(p => p.$id === chkPt.PatrolRoundId)?.Round,
+        checkpointId: chkPt.$id,
+        checkpointNo: chkPt.CheckpointNumber,
+        checkPointName: chkPt.CheckpointName,
+        patroller: chkPt.Patroller,
+        status: chkPt.Status,
+        allCheckpoints: allPatrolRoundData?.documents.find(p => p.$id === chkPt.PatrolRoundId)?.PatrolCheckPointId,
+        remark: chkPt.Remark,
+        image: chkPt.Image
+      };
+      
+    }) || rowData
+    console.log("tableData", tableData);
+    setRowData(tableData);
+  }
 
   const handleAddNewCust = () => {
     setShowAddCustModal(true);
@@ -183,13 +257,9 @@ export default function Patrol() {
     setOpenFilterModal(!openFilterModal);
   };
 
-  function handleCloseCustomerForm(isEdit: boolean) {
-    if (!isEdit) {
-      setShowAddCustModal(false);
-    } else {
-      setOpenEditCustModal(false);
-    }
-    setRowData(rows);
+  function handleClosePatrolDetailView() {
+    setOpenPatrolDetailModal(false);
+    //setRowData(rows);
   }
 
   function handleCloseViewQr() {
@@ -234,6 +304,13 @@ export default function Patrol() {
   const handleSelectRandomPage = (checked: boolean) => {
     if (checked) setIsCheckpointPage(false);
   };
+
+  const handleRowClick = async (row: RowData) => {
+    setSelectedRow(row);
+    console.log("row =",row)
+
+    setOpenPatrolDetailModal(true);
+  }
 
   return (
     <div>
@@ -310,10 +387,10 @@ export default function Patrol() {
                     sx={{ borderBottom: "1px solid #C7D4D7" }}
                     className={`${styles.table}`}
                   >
-                    <TableCell align="center" className="w-[8%]">
+                    <TableCell align="center" className="w-[6%]">
                       Date & Time
                     </TableCell>
-                    <TableCell align="center" className="w-[24%]">
+                    <TableCell align="center" className="w-[22%]">
                       Customer
                     </TableCell>
                     <TableCell align="center" className="w-[20%]">
@@ -322,7 +399,7 @@ export default function Patrol() {
                     <TableCell align="center" className="w-[12%]">
                       Round
                     </TableCell>
-                    <TableCell align="center" className="w-[12%]">
+                    <TableCell align="center" className="w-[16%]">
                       Check Point
                     </TableCell>
                     {/* Edit button col */}
@@ -339,28 +416,35 @@ export default function Patrol() {
                 <TableBody sx={{ flexGrow: 1 }}>
                   {rowData.map((row, index) => (
                     <TableRow
-                      key={index}
-                      className={
-                        editMode[index]
-                          ? `bg-[#D8EAFF]`
-                          : `${index % 2 === 1 ? `bg-inherit` : `bg-[#EBF4F6]`}`
-                      }
+                    onClick={() => handleRowClick(row)} // Row click handler
+                    key={index}
+                    className={`${index % 2 === 1 ? `bg-inherit` : `bg-[#EBF4F6]`}`}
+                    sx={{
+                      cursor: "pointer",
+                      "& .MuiTableCell-root": {
+                        padding: "10px 20px 10px 20px", // Customize border color
+                      },
+                      "&:hover": {
+                        backgroundColor: "#DCE9EB", // Optional: Change background color on hover
+                      },
+                    }}
                     >
                       <TableCell align="center">{row.dateTime}</TableCell>
 
                       {/* Customer */}
                       <TableCell align="center">
-                        {
+                        {/* {
                           customers.find((c) => c.id === row.customerId)
                             ?.customerName
-                        }
+                        } */}{row.customerName}
                       </TableCell>
 
                       {/* Area */}
                       <TableCell align="center">
-                        {row.areaId === null
+                        {/* {row.areaId === null
                           ? "-"
-                          : areas.find((a) => a.id === row.areaId)?.name}
+                          : areas.find((a) => a.id === row.areaId)?.name} */}
+                          {row.areaName}
                       </TableCell>
 
                       {/* Round */}
@@ -370,10 +454,10 @@ export default function Patrol() {
 
                       {/* checkpoint name */}
                       <TableCell align="center">
-                        {row.checkPointId === null
+                        {/* {row.checkPointId === null
                           ? "-"
                           : checkpoints.find((ch) => ch.id === row.checkPointId)
-                              ?.chkPtName}
+                              ?.chkPtName} */}{row.checkPointName}
                       </TableCell>
 
                       {/* Patroller */}
@@ -383,7 +467,7 @@ export default function Patrol() {
 
                       {/* Status */}
                       <TableCell align="center" className="flex justify-center">
-                        <PatrolStatus status={row.status} />
+                        <PatrolStatus status={row.status}/>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -421,16 +505,21 @@ export default function Patrol() {
                       }}
                     >
                       <Typography>Total: {totalItems} items</Typography>
-                      <Box>
-                        <Button
-                          style={{ marginLeft: "auto", fontWeight: "bold" }}
-                          className="w-48 enabled:bg-gradient-to-r from-[#00336C] to-[#37B7C3] hover:from-[#4C9BF5] hover:to-[#D8EAFF] 
-                                 hover:text-[#00336C] disabled:bg-[#83A2AD]"
-                          onClick={() => handleAddNewCust()}
-                        >
-                          +New
-                        </Button>
-                      </Box>
+                      {isCheckpointPage && (
+                      <Box className="w-fit flex">
+                            <Box className="w-fit p-2">
+                              <GradientButton
+                                content={"Customer Report"}
+                                onBtnClick={handleAddNewCust}
+                              />
+                            </Box>
+                            <Box className="w-fit p-2">
+                              <GradientButton
+                                content={"Summary"}
+                                onBtnClick={handleAddNewCust}
+                              />
+                            </Box>
+                          </Box>)}
                     </Box>
                   </TableCell>
                 </TableRow>
@@ -441,11 +530,10 @@ export default function Patrol() {
       </Box>
 
       {/* Edit/Delete Customer */}
-      {openEditCustModal && (
-        <CustomerForm
-          closeModal={handleCloseCustomerForm}
-          editCustomer={selectedRow}
-          customeraAeas={areas}
+      {openPatrolDetailModal && (
+        <PatrolDeatilView
+          closeModal={handleClosePatrolDetailView}
+          checkpoint={selectedRow || rowData[0]}
         />
       )}
 

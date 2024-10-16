@@ -114,7 +114,7 @@ export default function MinutesOfMeetingReport() {
   };
 
   const handleSearch = () => {
-    console.log("startTime = ", timeStart);
+    console.log("startTime = ", timeStart?.getHours().toString().padStart(2, '0'));
     console.log("finishTime = ", timeFinish);
   };
 

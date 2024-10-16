@@ -13,7 +13,6 @@ interface SelectorProps {
 }
 
 export function Selector({selectorLabel, itemSource, selectedVal, handleChange, name,}: SelectorProps) {
-  const [sourceList, setSourceList] = useState<any[]>(itemSource);
 
   function handleSelectionChange(e: SelectChangeEvent){
     handleChange(e);
@@ -37,7 +36,7 @@ export function Selector({selectorLabel, itemSource, selectedVal, handleChange, 
         renderValue={(value) =>
           value === ""
             ? "Select"
-            : sourceList.find((s) => s.id === selectedVal)?.desc
+            : itemSource.find((s) => s.id === selectedVal)?.desc
         }
         inputProps={{ "aria-label": "Without label" }}
         sx={{
@@ -61,7 +60,7 @@ export function Selector({selectorLabel, itemSource, selectedVal, handleChange, 
           },
         }}
       >
-        {sourceList.map((s) => (
+        {itemSource.map((s) => (
           <MenuItem
             key={s.id}
             value={s.id}

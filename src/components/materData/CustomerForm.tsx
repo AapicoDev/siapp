@@ -133,7 +133,8 @@ const CustomerForm = ({ editCustomer, closeModal, customeraAeas }: any) => {
   };
 
   const addArea = () => {
-    setAreas([...areas, { id: areas.length + 1, name: "" }]);
+    const latestId = areas.reduce((max, area) => (area.id > max ? area.id : max), 0);
+    setAreas([...areas, { id: latestId + 1, name: "" }]);
   };
 
   const removeArea = (id: number) => {

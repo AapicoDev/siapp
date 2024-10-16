@@ -115,6 +115,251 @@
       "chkPtName": "หน้าตึก"
     }
   ],
+  "rounds": [
+    {
+      "id": 1,
+      "areaId": 1,
+      "contrtactId": "0001-2024",
+      "roundNo": "1",
+      "startTime": "Wed Oct 09 2024 08:00:00 GMT+0700 (GMT+07:00)", 
+      "finishTime": "Wed Oct 09 2024 09:00:00 GMT+0700 (GMT+07:00)",
+      "totalTime": "60",
+      "isSameDay": 1,
+      "shiftId": 1,
+      "alertTo": [1,2],
+      "isStrictOrder": true,
+      "isNeedto": true
+    },
+    {
+      "id": 2,
+      "contrtactId": "0001-2024",
+      "areaId": 1,
+      "roundNo": "2",
+      "startTime": "Wed Oct 09 2024 12:00:00 GMT+0700 (GMT+07:00)", 
+      "finishTime": "Wed Oct 09 2024 14:00:00 GMT+0700 (GMT+07:00)",
+      "totalTime": "60",
+      "isSameDay": 1,
+      "shiftId": 2,
+      "alertTo": [2],
+      "isStrictOrder": false,
+      "isNeedto": false
+    },
+    {
+      "id": 3,
+      "contrtactId": "0002-2024",
+      "areaId": 3,
+      "roundNo": "3",
+      "startTime": "Wed Oct 09 2024 18:00:00 GMT+0700 (GMT+07:00)", 
+      "finishTime": "Wed Oct 09 2024 19:00:00 GMT+0700 (GMT+07:00)",
+      "totalTime": "120",
+      "isSameDay": 2,
+      "shiftId": 2,
+      "alertTo": [1],
+      "isStrictOrder": true,
+      "isNeedto": false
+    },
+    {
+      "id": 4,
+      "contrtactId": "0003-2024",
+      "areaId": 2,
+      "roundNo": "4",
+      "startTime": "Wed Oct 09 2024 20:00:00 GMT+0700 (GMT+07:00)", 
+      "finishTime": "Wed Oct 09 2024 21:00:00 GMT+0700 (GMT+07:00)",
+      "totalTime": "60",
+      "isSameDay": 1,
+      "shiftId": 1,
+      "alertTo": [2],
+      "isStrictOrder": true,
+      "isNeedto": true
+    }
+  ],
+  "daysOfWeek": [
+    {
+      "id" : "ทุกวัน",
+      "desc": "ทุกวัน (Everyday)" 
+    },
+    {
+      "id" : "วันจันทร์",
+      "desc": "วันจันทร์ (Monday)" 
+    },
+    {
+      "id" : "วันอังคาร",
+      "desc": "วันอังคาร (Tuesday)" 
+    },
+    {
+      "id" : "วันพุธ",
+      "desc": "วันพุธ (Wednesday)" 
+    },
+    {
+      "id" : "วันพฤหัส",
+      "desc": "วันพฤหัส (Thursday)" 
+    },
+    {
+      "id" : "วันศุกร์",
+      "desc": "วันศุกร์ (Friday)" 
+    },
+    {
+      "id" : "วันเสาร์",
+      "desc": "วันเสาร์ (Saturday)" 
+    },
+    {
+      "id" : "วันอาทิตย์",
+      "desc": "วันอาทิตย์ (Sunday)" 
+    }
+  ],
+  "contracts": [
+    {
+      "id": "0001-2024",
+      "customerId": 1,
+      "startDate": "Wed Oct 09 2024 08:00:00 GMT+0700 (GMT+07:00)", 
+      "finishDate": "Wed Oct 09 2025 08:00:00 GMT+0700 (GMT+07:00)",
+      "attachment": ["file_contract_name.pdf"],
+      "isActive": 1,
+      "shiftList": [
+        {
+          "id": 1,
+          "name": "เสาร์, อาทิตย์",
+          "workdays": ["วันเสาร์","วันอาทิตย์"],
+          "manpowerList":[
+            {
+              "id": 1,
+              "nameInReport" : "name in report",
+              "roleId": 1,
+              "quantity": 1
+            },
+            {
+              "id": 2,
+              "nameInReport" : "name in report2",
+              "roleId": 2,
+              "quantity": 2
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "วันธรรมดา",
+          "workdays": ["วันจันทร์","วันอังคาร","วันพุธ","วันพฤหัส","วันศุกร์"],
+          "manpowerList":[
+            {
+              "id": 3,
+              "nameInReport" : "name in report3",
+              "roleId": 3,
+              "quantity": 1
+            }
+          ]
+        }
+      ],
+      "patrolAlertList": [
+        {
+          "id": 1,
+          "isAsm": 1,
+          "name":"กตคน์ แย้มโสพิศ",
+          "email": "kitty@asm-company.com",
+          "otherPositionId": [1,2]
+        },{
+          "id": 2,
+          "isAsm": 2,
+          "name":"วัฒนา เฉลิม",
+          "email": "wattana.cha@mahidol.edu",
+          "otherPositionId": [1,2,4]
+        }
+      ]
+    },
+    {
+      "id": "0002-2024",
+      "customerId": 2,
+      "startDate": "Wed Jun 23 2024 08:00:00 GMT+0700 (GMT+07:00)", 
+      "finishDate": "Wed Dec 25 2024 08:00:00 GMT+0700 (GMT+07:00)",
+      "attachment": ["file_contract_2.pdf"],
+      "isActive": 1,
+      "shiftList": [
+        {
+          "id": 1,
+          "name": "วันจันทร์, อาทิตย์",
+          "workdays": ["วันจันทร์","วันอาทิตย์"],
+          "manpowerList":[
+            {
+              "id": 1,
+              "nameInReport" : "name in report",
+              "roleId": 1,
+              "quantity": 1
+            },
+            {
+              "id": 2,
+              "nameInReport" : "name in report2",
+              "roleId": 2,
+              "quantity": 2
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "วันธรรมดา",
+          "workdays": ["วันจันทร์","วันอังคาร","วันพุธ","วันพฤหัส","วันศุกร์"],
+          "manpowerList":[
+            {
+              "id": 3,
+              "nameInReport" : "name in report3",
+              "roleId": 2,
+              "quantity": 2
+            }
+          ]
+        }
+      ],
+      "patrolAlertList": [
+        {
+          "id": 1,
+          "isAsm": 2,
+          "name":"กตคน์ แย้มโสพิศ",
+          "email": "kitty@asm-company.com",
+          "otherPositionId": [1,2]
+        },{
+          "id": 2,
+          "isAsm": 1,
+          "name":"วัฒนา เฉลิม",
+          "email": "wattana.cha@mahidol.edu",
+          "otherPositionId": [1]
+        }
+      ]
+    },
+    {
+      "id": "0003-2024",
+      "customerId": 1,
+      "startDate": "Wed Jan 01 2024 08:00:00 GMT+0700 (GMT+07:00)", 
+      "finishDate": "Wed Jul 09 2024 08:00:00 GMT+0700 (GMT+07:00)",
+      "attachment": ["file_contract_name.pdf", "file_contract_2.pdf"],
+      "isActive": 1,
+      "shiftList": [
+        {
+          "id": 1,
+          "name": "เสาร์, อาทิตย์, จันทร์",
+          "workdays": ["วันจันทร์","วันเสาร์","วันอาทิตย์"],
+          "manpowerList":[
+            {
+              "id": 1,
+              "nameInReport" : "name in report",
+              "roleId": 1,
+              "quantity": 3
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "วันทำงาน",
+          "workdays": ["วันจันทร์","วันอังคาร","วันพุธ","วันพฤหัส","วันศุกร์"]
+        }
+      ],
+      "patrolAlertList": [
+        {
+          "id": 2,
+          "isAsm": 1,
+          "name":"นายคนที่ หนึ่ง",
+          "email": "kitty@asm-company.com",
+          "otherPositionId": [2]
+        }
+      ]
+    }
+  ],
   "patrolStatus": [
     {
       "id": 1,
@@ -183,7 +428,6 @@
       "desc": "RO2"
     }
   ],
-
   "incidentTypes": [
     {
       "id": 1,
@@ -246,22 +490,32 @@
     {
       "empId": "12345678",
       "fname": "สมมติ1",
-      "lname": "สมมติ1"
+      "lname": "สมมติ1",
+      "email": "numberone@mail.com"
     },
     {
       "empId": "12345679",
       "fname": "สมมติ2",
-      "lname": "สมมติ2"
+      "lname": "สมมติ2",
+      "email": "numberTwo@mail.com"
     },
     {
       "empId": "12345680",
       "fname": "สมมติ3",
-      "lname": "สมมติ3"
+      "lname": "สมมติ3",
+      "email": "numberThree@mail.com"
     },
     {
       "empId": "12345681",
       "fname": "สมมติ4",
-      "lname": "สมมติ4"
+      "lname": "สมมติ4",
+      "email": "numberFour@mail.com"
+    },
+    {
+      "empId": "20241015",
+      "fname": "กตคน์",
+      "lname": "แย้มโสพิศ",
+      "email": "kitty@asm-company.com"
     }
   ],
   "permissions": [

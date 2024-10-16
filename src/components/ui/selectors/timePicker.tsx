@@ -8,15 +8,16 @@ import { TimePickerInput } from "./timePickerInput"
 interface TimePickerDemoProps {
   date: Date | undefined;
   setDate: (date: Date | undefined) => void;
+  theme?: any;
 }
  
-export function TimePicker({ date, setDate }: TimePickerDemoProps) {
+export function TimePicker({ date, setDate, theme="green"}: TimePickerDemoProps) {
   const minuteRef = React.useRef<HTMLInputElement>(null);
   const hourRef = React.useRef<HTMLInputElement>(null);
   const secondRef = React.useRef<HTMLInputElement>(null);
  
   return (
-    <div className="flex items-center justify-center bg-[#D9F0EC] rounded-lg text-[#1D7A9B] w-full">
+    <div className={`flex items-center justify-center ${theme === "green" ? 'bg-[#D9F0EC] text-[#1D7A9B]' : 'bg-[white] text-[#2C5079]'} rounded-lg w-full`}>
     <div className="flex h-[34px] items-center">
         <Clock className="ml-2 h-[18px] w-[18px]" />
       </div>

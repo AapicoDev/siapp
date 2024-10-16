@@ -4,9 +4,10 @@ import { useState } from "react";
 interface FloatingLabelBoxProps {
     field: React.ReactNode;
     label: any;
+    labelAlign?: any;
 }
 
-const FloatingLabelBox = ({field, label}: FloatingLabelBoxProps) => {
+const FloatingLabelBox = ({field, label, labelAlign="center"}: FloatingLabelBoxProps) => {
 
   return (
     <Box
@@ -24,7 +25,7 @@ const FloatingLabelBox = ({field, label}: FloatingLabelBoxProps) => {
       <Typography
         sx={{
           position: "absolute",
-          left: "40%",
+          left: `${labelAlign === "center" ? `40%` : '10%'}`,
           marginTop: "16px",
           transform: "translateY(-130%)",
           fontSize: "14px",
@@ -36,7 +37,7 @@ const FloatingLabelBox = ({field, label}: FloatingLabelBoxProps) => {
       >
         {label}
       </Typography>
-      <Box className="h-fit pt-[2px] px-1 w-full flex justify-between">
+      <Box className="h-fit pt-[1px] px-1 w-full flex justify-between">
       {field}
       </Box>
     </Box>

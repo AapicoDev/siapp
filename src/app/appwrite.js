@@ -32,7 +32,7 @@ export const getLoggedInUser = async () => {
         throw new Error("Failed to get logged-in user: " + error.message);
     }
 };
-export async function fetchContactData(databaseId, collectionId, documentId) {
+export async function fetchOneData(databaseId, collectionId, documentId) {
     try {
         const response = await databases.getDocument(
             databaseId,
@@ -41,13 +41,12 @@ export async function fetchContactData(databaseId, collectionId, documentId) {
         );
         return response;
     } catch (error) {
-        console.error("Error fetching contact data:", error);
+        console.error("Error fetching data:", error);
         throw error;
     }
 }
 
-
-export async function fetchData(databaseId, collectionId, query) {
+export async function fetchDataList(databaseId, collectionId, query) {
     try {
         const response = await databases.listDocuments(
             databaseId,
@@ -56,7 +55,7 @@ export async function fetchData(databaseId, collectionId, query) {
         );
         return response;
     } catch (error) {
-        console.error("Error fetching contact data:", error);
+        console.error("Error fetching data:", error);
         throw error;
     }
 }

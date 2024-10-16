@@ -17,19 +17,19 @@ export function PatrolStatus({
    const [statusColor, setStatusColor] = useState("");
 
   useEffect(() => {
-    if (status === 1) {
+    if (status === "OnTime") {
        setStatusDesc("ตามกำหนด");
        setStatusColor("bg-[#86DC89]")
     }
-    else if(status === 2){
+    else if(status === "Absent"){
        setStatusDesc("ขาดจุด");
        setStatusColor("bg-[#F66262]")
     }
-    else if(status === 3){
+    else if(status === "Cancel"){
         setStatusDesc("ยกเลิก");
         setStatusColor("bg-[#83A2AD]")
      }
-     else if(status === 4){
+     else if(status === "Delay"){
         setStatusDesc("สาย");
         setStatusColor("bg-[#FFB169]")
      }

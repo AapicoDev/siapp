@@ -166,10 +166,10 @@ const mockCheckpoints: CheckpointData[] = [
   },
 ];
 
-const ViewQrCode = ({ selectedCustomer, closeModal, customeraAeas }: any) => {
+const ViewQrCode = ({ selectedCustomer, closeModal, customeraAreas }: any) => {
   const [isEdit, setIsEdit] = useState(false);
   const [customer, setCustomer] = useState(selectedCustomer);
-  const [areas, setAreas] = useState<AreaData[]>(customeraAeas);
+  const [areas, setAreas] = useState<AreaData[]>(customeraAreas);
   const [checkpoints, setCheckpoints] =
     useState<CheckpointData[]>(mockCheckpoints);
   const formHeader = "View QR Code";
@@ -328,7 +328,13 @@ const ViewQrCode = ({ selectedCustomer, closeModal, customeraAeas }: any) => {
                     textAlign="left"
                     sx={{fontWeight: "700", color: "#2C5079", fontSize: "16px", paddingBottom: "0.25rem"}}
                   >
-                    {`Customer : ${customer.customerName}`}
+                    {`Customer : `}
+                  </Typography>
+                  <Typography
+                    textAlign="left"
+                    sx={{color: "#2C5079", fontSize: "16px", paddingBottom: "0.25rem", paddingLeft: "0.25rem"}}
+                  >
+                    {`${customer.customerName}`}
                   </Typography>
                 </Box>
                 <Typography

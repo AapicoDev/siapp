@@ -13,7 +13,12 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 
-export function DatePicker() {
+interface DatePickerProps {
+  justify? : any;
+  h?: any
+}
+
+export function DatePicker({justify="left", h="h-8"}: DatePickerProps) {
   const [date, setDate] = React.useState<Date>()
 
   return (
@@ -22,7 +27,7 @@ export function DatePicker() {
         <Button
           variant={"outline"}
           className={cn(
-            "w-full h-8 justify-start text-left font-normal bg-[#D9F0EC] text-[#1D7A9B]",
+            `w-full ${h} justify-${justify} text-left font-normal bg-[#D9F0EC] text-[#1D7A9B]`,
             !date && "text-muted-foreground"
           )}
         >

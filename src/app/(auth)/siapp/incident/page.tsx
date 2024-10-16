@@ -36,61 +36,57 @@ import { GradientButton } from "@/components/ui/buttons/gradientButton";
 import { TableCorrectiveAction } from "@/components/siapp/TableCorrectiveAction";
 import { LabelSelector } from "@/components/ui/selectors/labelSelector";
 import { IoClose } from "react-icons/io5";
+import { Checkbox as Checkbox2 } from "@/components/ui/checkbox";
+import {
+  getIncidentData, getIncidentTypeData
+} from "../../../lib/api";
 
 type RowData = {
+  rowNo: number;
   dateTime: string;
-  customerId: number;
-  incidentId: any;
-  topic: any;
-  location: any;
+  customerName: string;
+  incidentType: string;
+  topic: string;
   reporter: string;
-  status: number;
+  status: string;
 };
 
-const rows: RowData[] = [
-  {
-    dateTime: "10/2/2024 @11:52:06",
-    customerId: 1,
-    incidentId: 1,
-    topic: "แม่บ้าน ASM เกิดอุบัติเหตุที่ศีรษะ",
-    location: "บริเวณบ้านจีนอาคาร B ห้องน้ำชาย",
-    reporter: "Name Surname (Position)",
-    status: 1,
-  },
-  {
-    dateTime: "10/2/2024 @11:52:06",
-    customerId: 2,
-    incidentId: 2,
-    topic: "Incident’s topic",
-    location: "Location",
-    reporter: "Name Surname (Position)",
-    status: 1,
-  },
-  {
-    dateTime: "10/2/2024 @11:52:06",
-    customerId: 3,
-    incidentId: 3,
-    topic: "Incident’s topic",
-    location: "Location",
-    reporter: "Name Surname (Position)",
-    status: 2,
-  },
-  {
-    dateTime: "10/2/2024 @11:52:06",
-    customerId: 4,
-    incidentId: 4,
-    topic: "Incident’s topic",
-    location: "Location",
-    reporter: "Name Surname (Position)",
-    status: 2,
-  },
-];
-const totalItems = rows.length;
+type selectedDelete = {
+  isSelected: boolean;
+  segId: number;
+};
+
+type incidentType = {
+  rowNo: number;
+  incidentTypeTH: string;
+  incidentTypeEN: string;
+  correctiveAction: string;
+  contact: string;
+}
 
 export default function Patrol() {
-  const [editMode, setEditMode] = useState(Array(rows.length).fill(false)); // Array to track edit state for each row
-  const [rowData, setRowData] = useState(rows);
-  const [incidentTypes, setIncidentTypes] = useState(data.incidentTypes);
+  //const [editMode, setEditMode] = useState(Array(rows.length).fill(false)); // Array to track edit state for each row
+  const [rowData, setRowData] = useState<RowData[]>([
+      {
+        rowNo: 0,
+        dateTime: "",
+        customerName: "",
+        incidentType: "",
+        topic: "",
+        reporter: "",
+        status: ""
+      }
+    ]
+  );
+  const [incidentTypes, setIncidentTypes] = useState<incidentType[]>([
+    {
+      rowNo: 0,
+      incidentTypeTH: "",
+      incidentTypeEN: "",
+      correctiveAction: "",
+      contact: ""
+    }
+  ]);
   const [customers, setCustomers] = useState(data.customers);
   const [segments, setSegment] = useState(data.segments);
   const [groups, setGroups] = useState(data.groups);
@@ -106,12 +102,76 @@ export default function Patrol() {
   const [selectedIncidentTypeFilter, setSelectedIncidentTypeFilter] = useState();
   const [isIncidentStatusAll, setIsIncidentStatusAll] = useState(false);
   const [isIncidentStatusSolved, setIsIncidentStatusSolved] = useState(false);
-  const [isIncidentStatusInProcess, setIsIncidentStatusInProcess] =
-    useState(false);
+  const [isIncidentStatusInProcess, setIsIncidentStatusInProcess] = useState(false);
+  const [selected, setSelected] = useState<selectedDelete[]>(
+    rowData.map((row) => ({
+      isSelected: false,
+      segId: row.rowNo
+    }))
+  );
+  const [isSelectedAll, setIsSelectedAll] = useState(false);
+  const totalItems = rowData.length;
 
   useEffect(() => {
     const time = new Date().toLocaleString(); //Output format = 10/2/2024, 1:28:36 PM
+    tableData();
+    incidentTypeData();
   }, []);
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+  
+    const day = String(date.getUTCDate()).padStart(2, '0'); // Get day and pad with 0 if necessary
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+    const year = date.getUTCFullYear();
+
+    const hours = String(date.getUTCHours()).padStart(2, '0');
+    const minutes = String(date.getUTCMinutes()).padStart(2, '0');
+    const seconds = String(date.getUTCSeconds()).padStart(2, '0');
+  
+    return `${day}/${month}/${year}\n@${hours}:${minutes}:${seconds}`;
+  };
+
+  const tableData = async () => {
+    const response = await getIncidentData();
+    console.log("incident =", response?.documents);
+    const tableData: RowData[] = response?.documents.map((incident, index) => {
+      return {
+        rowNo: index + 1,
+        dateTime: formatDate(incident.$createdAt),
+        customerName: incident.Customer,
+        incidentType: incident.Incident,
+        topic: incident.Topic,
+        reporter: incident.Reporter,
+        status: incident.Status
+      };
+    }) || rowData
+    console.log("incident tableData = ", tableData);
+    setRowData(tableData);
+  }
+
+  const incidentTypeData = async () => {
+    const response = await getIncidentTypeData();
+    console.log("incidentType =", response?.documents);
+    const mapincidentTypes: incidentType[] = response?.documents.map((type, index) => {
+      return {
+        rowNo: index + 1,
+        incidentTypeEN: type.IncidentType_EN,
+        incidentTypeTH: type.IncidentType_TH,
+        correctiveAction: type.CorrectiveAction,
+        contact: type.Contact
+      };
+    }) || incidentTypes
+    console.log("incident tableData = ", tableData);
+    setIncidentTypes(mapincidentTypes);
+  }
+
+  const handleApproved = (index: number) => {
+    const approveRow = [...rowData]
+    approveRow[index].status = approveRow[index].status === "Pending" ? "Approved" : approveRow[index].status;
+    setRowData(approveRow);
+    console.log("approveRow =", approveRow)
+  }
 
   const handleAddNewCust = () => {};
 
@@ -119,15 +179,6 @@ export default function Patrol() {
     console.log("openFilterModal =", openFilterModal);
     setOpenFilterModal(!openFilterModal);
   };
-
-  function handleCloseCustomerForm(isEdit: boolean) {
-    if (!isEdit) {
-      setShowAddCustModal(false);
-    } else {
-      setOpenEditCustModal(false);
-    }
-    setRowData(rows);
-  }
 
   function handleCloseContractForm(isEdit: boolean) {
     if (!isEdit) {
@@ -149,6 +200,28 @@ export default function Patrol() {
 
   const handleSelectRandomPage = (checked: boolean) => {
     if (checked) setIsIncidentPage(false);
+  };
+
+  const handleSelected = (index: number) => {
+    const newSelected = [...selected];
+    newSelected[index].isSelected = !selected[index].isSelected;
+    setSelected(newSelected);
+    const isCheckAll = !selected.some((item) => item.isSelected === false);
+    if (isCheckAll) {
+      setIsSelectedAll(true);
+    } else {
+      setIsSelectedAll(false);
+    }
+    console.log("isCheckAll", isCheckAll);
+  };
+
+  const handleCheckAll = (checked: boolean) => {
+    setIsSelectedAll(checked);
+    const selectedAll = [...selected];
+    selectedAll.forEach((element) => {
+      element.isSelected = checked;
+    });
+    setSelected(selectedAll);
   };
 
   return (
@@ -227,6 +300,11 @@ export default function Patrol() {
                       sx={{ borderBottom: "1px solid #C7D4D7" }}
                       className={`${styles.table}`}
                     >
+                      <TableCell align="left" className="w-[12%]">
+                    <Checkbox2 className="mt-1 mb-2"
+                               checked={isSelectedAll}
+                               onCheckedChange={handleCheckAll} />
+                      </TableCell>
                       <TableCell align="center" className="w-[8%]">
                         Date & Time
                       </TableCell>
@@ -238,9 +316,6 @@ export default function Patrol() {
                       </TableCell>
                       <TableCell align="center" className="w-[12%]">
                         Topic
-                      </TableCell>
-                      <TableCell align="center" className="w-[12%]">
-                        Location
                       </TableCell>
                       <TableCell align="center" className="w-[11%]">
                         Reporter
@@ -256,30 +331,27 @@ export default function Patrol() {
                     {rowData.map((row, index) => (
                       <TableRow
                         key={index}
-                        className={
-                          editMode[index]
-                            ? `bg-[#D8EAFF]`
-                            : `${
-                                index % 2 === 1 ? `bg-inherit` : `bg-[#EBF4F6]`
-                              }`
-                        }
+                        className={`${index % 2 === 1 ? `bg-inherit` : `bg-[#EBF4F6]`}`}
                       >
+                        <TableCell align="left">
+                      <Checkbox2 
+                        checked={selected[index].isSelected}
+                        onClick={(event) => {
+                        event.stopPropagation(); // Prevent row click
+                        handleSelected(index);
+                      }}/>
+                    </TableCell>
+                        
                         <TableCell align="center">{row.dateTime}</TableCell>
 
                         {/* Customer */}
                         <TableCell align="center">
-                          {
-                            customers.find((c) => c.id === row.customerId)
-                              ?.customerName
-                          }
+                          {row.customerName}
                         </TableCell>
 
                         {/* Incedent Type */}
                         <TableCell align="center">
-                          {row.incidentId === null
-                            ? "-"
-                            : incidentTypes.find((i) => i.id === row.incidentId)
-                                ?.desc}
+                          {row.incidentType}
                         </TableCell>
 
                         {/* Topic */}
@@ -288,9 +360,9 @@ export default function Patrol() {
                         </TableCell>
 
                         {/* Location */}
-                        <TableCell align="center">
+                        {/* <TableCell align="center">
                           {row.location === null ? "-" : row.location}
-                        </TableCell>
+                        </TableCell> */}
 
                         {/* Reporter */}
                         <TableCell align="center">
@@ -302,12 +374,12 @@ export default function Patrol() {
                           align="center"
                           className="flex justify-center"
                         >
-                          <IconButton>
+                          <IconButton onClick={() => handleApproved(index)}>
                             <TickCircle
                               size={30}
                               variant="Bold"
                               className={`${
-                                row.status === 1
+                                row.status === "Approved"
                                   ? `text-[#A7E5A6]`
                                   : `text-[#C7D4D7]`
                               } rounded-full bg-white p-[1px] mt-1`}
