@@ -1,6 +1,5 @@
 "use client";
 import { Box, Table, TableBody, TableCell, TableContainer, TableFooter, TableHead, TableRow, TextField, Typography } from "@mui/material/";
-import SegmentTable from "@/components/materData/SegmentTable";
 import Navbar from "@/components/Navbar";
 import LabelTextField from "@/components/ui/textboxs/LabelTextField";
 import { Button } from "@/components/ui/buttons/button";

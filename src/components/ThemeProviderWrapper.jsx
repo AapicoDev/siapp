@@ -46,6 +46,28 @@ const theme = createTheme({
         },
       },
     },
+    MuiTab: {
+      styleOverrides: {
+        root: {
+          color: "#2c5079", 
+          fontWeight: 400,
+          textTransform: "none",
+          fontSize: "16px",
+          '&.Mui-selected': {
+            color: "#1D7A9B",
+            fontWeight: 700,
+            borderBottom: "3px solid #1D7A9B",
+          },
+        },
+      },
+    },
+    MuiTabs: {
+      styleOverrides: {
+        indicator: {
+          backgroundColor: 'transparent',
+        },
+      },
+    }
   },
 });
 

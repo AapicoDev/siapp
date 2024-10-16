@@ -1,14 +1,9 @@
 "use client";
 import { Box, Paper, Table, TableBody, TableCell, TableContainer, TableFooter, TableHead, TableRow, TextField, Typography } from "@mui/material/";
-import SegmentTable from "@/components/materData/SegmentTable";
 import Navbar from "@/components/Navbar";
 import LabelTextField from "@/components/ui/textboxs/LabelTextField";
 import { Button } from "@/components/ui/buttons/button";
 import { useEffect, useState } from "react";
-import { Checkbox as Checkbox2 } from "@/components/ui/checkbox";
-import { Edit2 } from "iconsax-react";
-import { Input } from "@/components/ui/textboxs/input";
-import { AddButton } from "@/components/ui/buttons/addButton";
 import { SearchButton } from "@/components/ui/buttons/searchButton";
 import styles from "../../../styles.module.css"
 import { EditButton } from "@/components/ui/buttons/editButton";

@@ -5,7 +5,16 @@ import { Typography } from "@mui/material";
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/textboxs/input";
 
-export function Textbox({ header,inputType, placeHolder, handleChange, value, name }: any) {
+interface TextboxProps {
+  header?: any;
+  inputType: any;
+  placeHolder: any;
+  handleChange: any;
+  value: any;
+  name: any;
+}
+
+export function Textbox({ header, inputType, placeHolder, handleChange, value, name }: TextboxProps) {
 
   const [isHeader, setHeader] = useState(true);
 
@@ -22,7 +31,7 @@ export function Textbox({ header,inputType, placeHolder, handleChange, value, na
     {isHeader && (
       <Typography
         textAlign="left"
-        className="text-[14px] pb-1 text-[#2C5079] font-bold"
+        sx={{fontSize: "14px", paddingBottom: "0.25rem", color: "#2C5079", fontWeight: "700"}}
       >
         {header}
       </Typography>)}

@@ -459,7 +459,7 @@ export default function Patrol() {
                     checked={isCheckpointPage}
                     onCheckedChange={handleSelectCustomerPage}
                   />
-                  <Typography className="py-1 px-2 text-[#1D7A9B] font-bold">
+                  <Typography sx={{fontWeight: "700", color: "#1D7A9B"}} className="py-1 px-2">
                     Check Point
                   </Typography>
                 </Box>
@@ -470,7 +470,7 @@ export default function Patrol() {
                   <Checkbox className="bg-[#EBF4F6] border-none" 
                     checked={!isCheckpointPage}
                     onCheckedChange={handleSelectContractPage}/>
-                  <Typography className="py-1 px-2 text-[#1D7A9B] font-bold">
+                  <Typography sx={{fontWeight: "700", color: "#1D7A9B"}} className="py-1 px-2">
                     Random
                   </Typography>
                 </Box>

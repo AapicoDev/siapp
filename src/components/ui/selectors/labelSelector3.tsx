@@ -7,17 +7,14 @@ interface LabelSelectorProps {
   selectorLabel: any;
   itemSource: any[];
   selectedVal: any;
-  name: any;
+  field: any;
   defaultSelected?: string
-  setSelectedVal: (value: any) => void;
+  id: any;
+  id2?: any
+  handleSelectedVal: (id: any, id2: any, field: any, value: any) => void;
 }
 
-export function LabelSelector({selectorLabel, itemSource, setSelectedVal, selectedVal, name, defaultSelected="Select"}:LabelSelectorProps) {
-
-  const handleSelectionChange = (e :SelectChangeEvent<{value: unknown}>) => {
-    console.log("value = ", e.target)
-    setSelectedVal(e.target.value);
-  }
+export function LabelSelector3({selectorLabel, itemSource, handleSelectedVal, selectedVal, field , defaultSelected="Select",id, id2=undefined}:LabelSelectorProps) {
 
   return (
     <>
@@ -29,18 +26,19 @@ export function LabelSelector({selectorLabel, itemSource, setSelectedVal, select
         "&.Mui-focused": {
           color: "#2C5079", 
           fontWeight: "600",
-          fontSize: "18px"
+          fontSize: "18px",
+          bgcolor: "white",
         },
       }}>
       {selectorLabel}
     </InputLabel>
     <Select
-      name={name}
-      label={name}
+      name={field}
+      label={field}
       size="small"
       displayEmpty
       value={selectedVal || ""}
-      onChange={(e) => handleSelectionChange(e)}
+      onChange={(e) => handleSelectedVal(id, id2, field, e.target.value)}
       renderValue={(value) =>
         value === ""
           ? `${defaultSelected}`

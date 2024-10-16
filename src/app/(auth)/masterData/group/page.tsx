@@ -1,6 +1,5 @@
 "use client";
 import { Box, FormControl, Table, TableBody, TableCell, TableContainer, TableFooter, TableHead, TableRow, TextField, Typography } from "@mui/material/";
-import SegmentTable from "@/components/materData/SegmentTable";
 import Navbar from "@/components/Navbar";
 import LabelTextField from "@/components/ui/textboxs/LabelTextField";
 import { Button } from "@/components/ui/buttons/button";
@@ -21,10 +20,6 @@ type RowData = {
   department: number;
   customer: number;
 };
-
-// interface SegmentTableProps {
-//   row: RowData[]
-// }
 
 export default function Group() {
 
@@ -152,7 +147,7 @@ export default function Group() {
                 />
                 </Box>
                 <AddButton onAddBtnClick={handleAdd}/>
-                <SearchButton onSearchBtnClick={handleSearch}/>
+                <Box className="w-[15%]"><SearchButton onSearchBtnClick={handleSearch}/></Box>
               </Box>
             </Box>
           </Box>

@@ -13,11 +13,12 @@ import { DeleteBtnFooter } from "../ui/buttons/deleteBtnFooter";
 import { DeleteButton } from "../ui/buttons/deleteButton";
 
 type incidentType = {
-    id: number,
-    desc: any,
-    correctiveAction: any,
-    contact: any
-  };
+  rowNo: number;
+  incidentTypeTH: string;
+  incidentTypeEN: string;
+  correctiveAction: string;
+  contact: string;
+}
 
 interface TableCorrectiveActionProps{
     incidentTypes: incidentType[];
@@ -37,7 +38,7 @@ export function TableCorrectiveAction({incidentTypes}: TableCorrectiveActionProp
   const [selected, setSelected] = useState<selectedDelete[]>(
     incidentTypes.map((row) => ({
       isSelected: false,
-      segId: row.id, 
+      segId: row.rowNo, 
     }))
   );
 
@@ -144,11 +145,11 @@ export function TableCorrectiveAction({incidentTypes}: TableCorrectiveActionProp
                         <Input
                           type="text"
                           className={`${styles.textBoxCell}`}
-                          value={row.desc}
-                          onChange={(e) => handleInputChange(index, 'desc', e.target.value)}
+                          value={row.incidentTypeEN}
+                          //onChange={(e) => handleInputChange(index, 'desc', e.target.value)}
                         />
                       ) : (
-                        `${row.desc}`
+                        `${row.incidentTypeTH} (${row.incidentTypeEN})`
                       )}
                     </TableCell>
                     <TableCell align="center">

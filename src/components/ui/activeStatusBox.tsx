@@ -5,34 +5,26 @@ import { Box, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/textboxs/input";
 
-interface PatrolStatusProp {
+interface ActiveStatusBoxProp {
     status: any
 }
 
-export function PatrolStatus({
+export function ActiveStatusBox({
   status,
-}: PatrolStatusProp) {
+}: ActiveStatusBoxProp) {
 
    const [statusDesc, setStatusDesc] = useState("");
    const [statusColor, setStatusColor] = useState("");
 
   useEffect(() => {
-    if (status === "OnTime") {
-       setStatusDesc("ตามกำหนด");
+    if (status === 1) {
+       setStatusDesc("Active");
        setStatusColor("bg-[#86DC89]")
     }
-    else if(status === "Absent"){
-       setStatusDesc("ขาดจุด");
-       setStatusColor("bg-[#F66262]")
+    else if(status === 0){
+       setStatusDesc("Inactive");
+       setStatusColor("bg-[#83A2AD]")
     }
-    else if(status === "Cancel"){
-        setStatusDesc("ยกเลิก");
-        setStatusColor("bg-[#83A2AD]")
-     }
-     else if(status === "Delay"){
-        setStatusDesc("สาย");
-        setStatusColor("bg-[#FFB169]")
-     }
   });
   
 

@@ -39,7 +39,8 @@ export default function NotificationDropDown() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <IconButton className="p-2 rounded-full text-gray-400 hover:text-gray-500 bg-white">
+        <IconButton className="focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500" 
+        sx={{padding: "0.5rem", borderRadius: "999px", color: "#9ca3af", ":hover": {color: "#6b7280", bgcolor: "hsl(var(--accent))"}, bgcolor: "white" }}>
           <Notification variant="Bold" size={20}/>
         </IconButton>
       </DropdownMenuTrigger>

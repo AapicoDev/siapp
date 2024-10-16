@@ -1,6 +1,5 @@
 "use client";
 import { Box, Table, TableBody, TableCell, TableContainer, TableFooter, TableHead, TableRow, TextField, Typography } from "@mui/material/";
-import SegmentTable from "@/components/materData/SegmentTable";
 import Navbar from "@/components/Navbar";
 import LabelTextField from "@/components/ui/textboxs/LabelTextField";
 import { Button } from "@/components/ui/buttons/button";
@@ -27,10 +26,6 @@ type selectedDelete = {
   isSelected: boolean;
   segId: number;
 };
-
-// interface SegmentTableProps {
-//   row: RowData[]
-// }
 
 export default function Segment() {
 
@@ -184,7 +179,7 @@ export default function Segment() {
                 />
                 </Box>
                 <AddButton onAddBtnClick={handleAdd}/>
-                <SearchButton onSearchBtnClick={handleSearch}/>
+                <Box className="w-[15%]"><SearchButton onSearchBtnClick={handleSearch}/></Box>
               </Box>
             </Box>
           </Box>

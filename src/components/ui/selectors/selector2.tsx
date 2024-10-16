@@ -2,31 +2,40 @@
 
 import * as React from "react";
 import { FormControl, InputLabel, MenuItem, Select, SelectChangeEvent, Typography } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-interface SelectorProps {
-  selectorLabel: any;
+interface Selector2Props {
+  selectorLabel?: any;
   itemSource: any[];
   selectedVal: any;
   name: any;
-  handleChange: any;
+  defaultSelected: any;
+  setSelectedVal: (value: any) => void;
 }
 
-export function Selector({selectorLabel, itemSource, selectedVal, handleChange, name,}: SelectorProps) {
+export function Selector2({selectorLabel, itemSource, setSelectedVal, selectedVal, name, defaultSelected="Select"}:Selector2Props) {
 
-  function handleSelectionChange(e: SelectChangeEvent){
-    handleChange(e);
+const [isHeader, setHeader] = useState(true);
+
+    useEffect(() => {
+      if (selectorLabel === undefined) setHeader(false)
+    });
+
+  const handleSelectionChange = (e :SelectChangeEvent<{value: unknown}>) => {
+    console.log("value = ", e.target)
+    setSelectedVal(e.target.value);
   }
 
   return (
     <FormControl focused className="w-full">
+    {isHeader && (
       <Typography
         textAlign="left"
-        sx={{fontSize: "14px", paddingBottom: "0.25rem", color: "#2C5079", fontWeight: "700"}}
+        className="text-[14px] pb-1 text-[#2C5079] font-bold"
       >
         {selectorLabel}
-      </Typography>
-      <InputLabel sx={{fontWeight: "700", color: "#2C5079"}} className="w-full"></InputLabel>
+      </Typography>)}
+      <InputLabel className="font-bold text-[#2C5079] w-full"></InputLabel>
       <Select
         name={name}
         size="small"
@@ -35,25 +44,28 @@ export function Selector({selectorLabel, itemSource, selectedVal, handleChange, 
         onChange={(e) => handleSelectionChange(e)}
         renderValue={(value) =>
           value === ""
-            ? "Select"
+            ? `${defaultSelected}`
             : itemSource.find((s) => s.id === selectedVal)?.desc
         }
+        className={`${
+          selectedVal === `${defaultSelected}`
+            ? `text-[#83A2AD]`
+            : "text-[#2C5079]"
+        }`}
         inputProps={{ "aria-label": "Without label" }}
         sx={{
-          color: `${
-            selectedVal === "" ? `#83A2AD` : "#2C5079"
-          }`,
-          height: "40px",
+          height: "34px",
           width: "100%",
           borderRadius: "10px",
+          backgroundColor: "#D9F0EC",
           "& .MuiOutlinedInput-notchedOutline": {
-            border: "1px solid #1D7A9B", // Customize border color
+            border: "1px solid #D9F0EC", // Customize border color
           },
           "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-            border: "1px solid #1D7A9B", // Customize border color on focus
+            border: "1px solid #D9F0EC", // Customize border color on focus
           },
           "&:hover .MuiOutlinedInput-notchedOutline": {
-            border: "1px solid #1D7A9B", // Hover border color
+            border: "1px solid #D9F0EC", // Hover border color
           },
           "& .MuiSelect-icon": {
             color: "#83A2AD", // Customize arrow icon color
@@ -64,7 +76,7 @@ export function Selector({selectorLabel, itemSource, selectedVal, handleChange, 
           <MenuItem
             key={s.id}
             value={s.id}
-            sx={{fontSize: "0.875rem", lineHeight: "1.25rem", color: "#2C5079"}}
+            className="text-sm text-[#2C5079]"
           >
             {s.desc}
           </MenuItem>

@@ -1,21 +1,18 @@
 "use client";
 
 import { TextField } from "@mui/material";
-import { ChangeEvent } from "react";
 
 interface LabelTextFieldProps {
   label: any;
   placeholder: any;
   inputVal: any;
-  setInputVal: (value: any) => void;
+  field: any;
+  id: any;
+  id2?: any
+  handleChangeVal: (id: any, field: any, value: any,) => void;
 }
 
-export default function LabelTextField({ label, placeholder, inputVal, setInputVal }: LabelTextFieldProps) {
-
-  const handleChange = (e :ChangeEvent<{value: unknown}>) => {
-    setInputVal(e.target.value);
-  }
-
+export default function LabelTextField3({ label, placeholder, inputVal, field, id, handleChangeVal }: LabelTextFieldProps) {
   return (
     <>
       <TextField
@@ -45,7 +42,7 @@ export default function LabelTextField({ label, placeholder, inputVal, setInputV
           fontFamily:"Kanit"
         }}
         placeholder={placeholder}
-        onChange={handleChange}
+        onChange={(e) => handleChangeVal(id, field, e.target.value)}
         value={inputVal}
       />
     </>

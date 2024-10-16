@@ -16,7 +16,7 @@ export function SearchButton({ onSearchBtnClick }: SearchButtonProps) {
             event.stopPropagation(); // Prevent event propagation
             onSearchBtnClick(event); // Call the click handler passed as prop
           }}
-        className="w-24 bg-[#37B7C3] hover:bg-[#D9F0EC] hover:text-[#1D7A9B]"
+        className="w-full bg-[#37B7C3] hover:bg-[#D9F0EC] hover:text-[#1D7A9B]"
       >
         Search
       </Button>

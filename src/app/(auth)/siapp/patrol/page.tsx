@@ -8,12 +8,7 @@ import {
   TableFooter,
   TableHead,
   TableRow,
-  TextField,
   Typography,
-  Select,
-  MenuItem,
-  InputLabel,
-  FormControl,
   Button as Button2,
 } from "@mui/material/";
 import CloseIcon from "@mui/icons-material/Close";
@@ -28,23 +23,38 @@ import CustomerForm from "@/components/materData/CustomerForm";
 import { Switch } from "@/components/ui/switch";
 import ViewQrCode from "@/components/materData/ViewQrCode";
 import ContractForm from "@/components/materData/ContractForm";
-import { AddButton } from "@/components/ui/buttons/addButton";
-import { ViewButton } from "@/components/ui/buttons/viewButton";
-import { DeleteButton } from "@/components/ui/buttons/deleteButton";
-import { TableContract } from "@/components/materData/TableContract";
 import { DatePicker } from "@/components/ui/datePicker";
-import data from "@/app/mockData.json"
+import data from "@/app/mockData.json";
 import { PatrolStatus } from "@/components/siapp/PatrolStatus";
 import { TablePatrolRandom } from "@/components/siapp/TablePatrolRandom";
+import { IoClose } from "react-icons/io5";
+import { LabelSelector } from "@/components/ui/selectors/labelSelector";
+import LabelTextField from "@/components/ui/textboxs/LabelTextField";
+import FloatingLabelBox from "@/components/ui/floatingLabelBox";
+import { FiMinus, FiPlus } from "react-icons/fi";
+import { GradientButton } from "@/components/ui/buttons/gradientButton";
+import PatrolDeatilView from "@/components/siapp/PatrolDetailView";
+import {
+  getPatrolRoundData,
+  getAllPatrolCheckpointData
+} from "../../../lib/api";
 
 type RowData = {
   dateTime: string;
-  customerId: number;
-  areaId: any;
+  startDateTime: string;
+  useTime: string;
+  customerName: string;
+  areaId: string;
+  areaName: any;
   round: any;
-  checkPointId: any;
+  checkpointId: string;
+  checkpointNo: any;
+  checkPointName: any;
   patroller: string;
-  status: number;
+  status: string;
+  allCheckpoints: string[],
+  remark: string;
+  image: any[];
 };
 
 type RandomRowData = {
@@ -58,7 +68,7 @@ type RandomRowData = {
   patroller: string;
 };
 
-const rows: RowData[] = [
+const rows = [
   {
     dateTime: "10/2/2024 @11:52:06",
     customerId: 1,
@@ -140,33 +150,103 @@ const randomRows: RandomRowData[] = [
   },
 ];
 
-const totalItems = rows.length;
-
 export default function Patrol() {
-  const [editMode, setEditMode] = useState(Array(rows.length).fill(false)); // Array to track edit state for each row
-  const [rowData, setRowData] = useState(rows);
+  const [rowData, setRowData] = useState<RowData[]>([
+    { dateTime: "",
+      startDateTime: "", useTime: "",
+      customerName: "", areaName: "",areaId: "",
+      round: 0, checkPointName: "",
+      checkpointId: "", checkpointNo: undefined,
+      patroller: "", status: "",
+      allCheckpoints: [], remark: "",
+      image: []}]);
+  //const [editMode, setEditMode] = useState(Array(rowData.length).fill(false)); // Array to track edit state for each row
   const [randomRowData, setRandomRowData] = useState(randomRows);
-  const [customers, setCustomers] = useState(data.customers); 
+  const [customers, setCustomers] = useState(data.customers);
   const [areas, setAreas] = useState(data.areas);
   const [statusList, setStatusList] = useState(data.patrolStatus);
   const [checkpoints, setCheckpoints] = useState(data.checkpoints);
   const [segments, setSegment] = useState(data.segments);
   const [groups, setGroups] = useState(data.groups);
   const [zones, setZones] = useState(data.zones);
-  const [selectedRow, setSelectedRow] = useState<RowData | null>(null);
-  const [isSelectedAll, setIsSelectedAll] = useState(false);
+  const [selectedRow, setSelectedRow] = useState<RowData>();
   const [openAddCustModal, setShowAddCustModal] = useState(false);
-  const [openEditCustModal, setOpenEditCustModal] = useState<boolean>(false)
+  const [openPatrolDetailModal, setOpenPatrolDetailModal] = useState<boolean>(false);
   const [openFilterModal, setOpenFilterModal] = useState<boolean>(false);
-  const [openViewQR, setOpenViewQR] = useState<boolean>(false); 
+  const [selectedSegmentFilter, setSelectedSegmentFilter] = useState();
+  const [selectedGroupFilter, setSelectedGroupFilter] = useState();
+  const [selectedZoneFilter, setSelectedZoneFilter] = useState();
+  const [selectedAreaFilter, setSelectedAreaFilter] = useState();
+  const [selectedCustomerFilter, setSelectedCustomerFilter] = useState();
+  const [roundFilter, setRoundFilter] = useState(0);
+  const [checkPointFilter, setCheckPointFilter] = useState(0);
+  const [openViewQR, setOpenViewQR] = useState<boolean>(false);
   const [openAddContract, setOpenAddContract] = useState<boolean>(false);
-  const [openEditContract, setOpenEditContract] = useState<boolean>(false); 
-  const [isCheckpointPage, setIsCheckpointPage] = useState<boolean>(true); 
+  const [openEditContract, setOpenEditContract] = useState<boolean>(false);
+  const [isCheckpointPage, setIsCheckpointPage] = useState<boolean>(true);
+  const totalItems = rowData.length;
+  const [patrolRounds, setPatrolRounds] = useState<any>();
+  const [patrolCheckpoints, setPatrolCheckpoints] = useState<any>();
 
   useEffect(() => {
-    const time = new Date().toLocaleString(); //Output format = 10/2/2024, 1:28:36 PM
-
+    tableData();
   }, []);
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+  
+    const day = String(date.getUTCDate()).padStart(2, '0'); // Get day and pad with 0 if necessary
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+    const year = date.getUTCFullYear();
+
+    const hours = String(date.getUTCHours()).padStart(2, '0');
+    const minutes = String(date.getUTCMinutes()).padStart(2, '0');
+    const seconds = String(date.getUTCSeconds()).padStart(2, '0');
+  
+    return `${day}/${month}/${year}\n@${hours}:${minutes}:${seconds}`;
+  };
+
+  function calCheckpointDiffTime(start :any, end: any){
+    const startTime = new Date(start);
+    const endTime = new Date(end);
+    const diffMs = endTime.getTime() - startTime.getTime();
+    // Convert milliseconds to hours, minutes, and seconds
+    const hours = Math.floor(diffMs / (1000 * 60 * 60));
+    const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+    return hours+" " + minutes+ " " + seconds;
+  };
+
+  const tableData = async () => {
+    const allPatrolRoundData = await getPatrolRoundData();
+    setPatrolRounds(allPatrolRoundData);
+    console.log("data = ", allPatrolRoundData);
+    const allPatrolCheckpointData = await getAllPatrolCheckpointData();
+    setPatrolCheckpoints(allPatrolCheckpointData);
+    console.log("patrolCheckpointData = ", allPatrolCheckpointData);
+    const tableData: RowData[] = allPatrolCheckpointData?.documents.map((chkPt)=> {
+      return {
+        dateTime: formatDate(chkPt.EndTime),
+        startDateTime: formatDate(chkPt.StartTime),
+        useTime: calCheckpointDiffTime(chkPt.StartTime, chkPt.EndTime),
+        customerName: allPatrolRoundData?.documents.find(p => p.$id === chkPt.PatrolRoundId)?.Customer,
+        areaId: allPatrolRoundData?.documents.find(p => p.$id === chkPt.PatrolRoundId)?.AreaId,
+        areaName: allPatrolRoundData?.documents.find(p => p.$id === chkPt.PatrolRoundId)?.Area,
+        round: allPatrolRoundData?.documents.find(p => p.$id === chkPt.PatrolRoundId)?.Round,
+        checkpointId: chkPt.$id,
+        checkpointNo: chkPt.CheckpointNumber,
+        checkPointName: chkPt.CheckpointName,
+        patroller: chkPt.Patroller,
+        status: chkPt.Status,
+        allCheckpoints: allPatrolRoundData?.documents.find(p => p.$id === chkPt.PatrolRoundId)?.PatrolCheckPointId,
+        remark: chkPt.Remark,
+        image: chkPt.Image
+      };
+      
+    }) || rowData
+    console.log("tableData", tableData);
+    setRowData(tableData);
+  }
 
   const handleAddNewCust = () => {
     setShowAddCustModal(true);
@@ -177,17 +257,23 @@ export default function Patrol() {
     setOpenFilterModal(!openFilterModal);
   };
 
-  function handleCloseCustomerForm(isEdit: boolean) {
-    if (!isEdit) {
-      setShowAddCustModal(false);
-    } else {
-      setOpenEditCustModal(false);
-    }
-    setRowData(rows);
+  function handleClosePatrolDetailView() {
+    setOpenPatrolDetailModal(false);
+    //setRowData(rows);
   }
 
   function handleCloseViewQr() {
-    setOpenViewQR(false)
+    setOpenViewQR(false);
+  }
+
+  function handleRoundFilter(operation: any) {
+    if (operation === "-") {
+      if (roundFilter > 0) {
+        setRoundFilter(roundFilter - 1);
+      }
+    } else if (operation === "+") {
+      setRoundFilter(roundFilter + 1);
+    }
   }
 
   function handleCloseContractForm(isEdit: boolean) {
@@ -199,12 +285,14 @@ export default function Patrol() {
   }
 
   const handleEditContract = (selecectedRow: any) => {
-    console.log("row =", selecectedRow)
+    console.log("row =", selecectedRow);
     setSelectedRow(selecectedRow);
-    setOpenEditContract(true)
-  }
+    setOpenEditContract(true);
+  };
 
-  const handleAddBtnOnClick = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+  const handleAddBtnOnClick = (
+    e: React.MouseEvent<HTMLButtonElement, MouseEvent>
+  ) => {
     e.stopPropagation();
     setOpenAddContract(true);
   };
@@ -216,6 +304,13 @@ export default function Patrol() {
   const handleSelectRandomPage = (checked: boolean) => {
     if (checked) setIsCheckpointPage(false);
   };
+
+  const handleRowClick = async (row: RowData) => {
+    setSelectedRow(row);
+    console.log("row =",row)
+
+    setOpenPatrolDetailModal(true);
+  }
 
   return (
     <div>
@@ -233,15 +328,17 @@ export default function Patrol() {
                     checked={isCheckpointPage}
                     onCheckedChange={handleSelectChkPtPage}
                   />
-                  <Typography className="py-1 px-2 text-[#1D7A9B] font-bold">
+                  <Typography sx={{fontWeight: "700", color: "#1D7A9B"}} className="py-1 px-2">
                     Check Point
                   </Typography>
                 </Box>
                 <Box className="justify-center flex p-1 bg-white rounded-lg h-10">
-                  <Checkbox className="bg-[#EBF4F6] border-none" 
+                  <Checkbox
+                    className="bg-[#EBF4F6] border-none"
                     checked={!isCheckpointPage}
-                    onCheckedChange={handleSelectRandomPage}/>
-                  <Typography className="py-1 px-2 text-[#1D7A9B] font-bold">
+                    onCheckedChange={handleSelectRandomPage}
+                  />
+                  <Typography sx={{fontWeight: "700", color: "#1D7A9B"}} className="py-1 px-2">
                     Random
                   </Typography>
                 </Box>
@@ -249,9 +346,11 @@ export default function Patrol() {
 
               <Box className="space-x-2 py-4 flex">
                 <Box className="justify-center flex p-1 bg-white rounded-lg">
-                  <DatePicker/>
-                  <Typography className="text-[#2C5079] text-sm px-4 pt-1" >to</Typography>
-                  <DatePicker/>
+                  <DatePicker />
+                  <Typography className="text-[#2C5079] text-sm px-4 pt-1">
+                    to
+                  </Typography>
+                  <DatePicker />
                 </Box>
                 <Input
                   type="text"
@@ -272,105 +371,118 @@ export default function Patrol() {
             </Box>
           </Box>
 
-          {isCheckpointPage && (<TableContainer
-            className="h-screen bg-white p-2"
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              borderRadius: "15px 15px 0px 0px",
-              boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
-            }}
-          >
-            <Table>
-              <TableHead>
-                <TableRow
-                  sx={{ borderBottom: "1px solid #C7D4D7" }}
-                  className={`${styles.table}`}
-                >
-                  <TableCell align="center" className="w-[8%]">
-                    Date & Time
-                  </TableCell>
-                  <TableCell align="center" className="w-[24%]">
-                    Customer
-                  </TableCell>
-                  <TableCell align="center" className="w-[20%]">
-                    Area
-                  </TableCell>
-                  <TableCell align="center" className="w-[12%]">
-                    Round
-                  </TableCell>
-                  <TableCell align="center" className="w-[12%]">
-                    Check Point
-                  </TableCell>
-                  {/* Edit button col */}
-                  <TableCell align="center" className="w-[11%]">
-                    Patroller
-                  </TableCell>
-                  <TableCell align="center" className="w-[13%]">
-                    Status
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-
-              {/* Allow the TableBody to grow and fill vertical space */}
-              <TableBody sx={{ flexGrow: 1 }}>
-                {rowData.map((row, index) => (
+          {isCheckpointPage && (
+            <TableContainer
+              className="h-screen bg-white p-2"
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                borderRadius: "15px 15px 0px 0px",
+                boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
+              }}
+            >
+              <Table>
+                <TableHead>
                   <TableRow
-                    key={index}
-                    className={
-                      editMode[index]
-                        ? `bg-[#D8EAFF]`
-                        : `${index % 2 === 1 ? `bg-inherit` : `bg-[#EBF4F6]`}`
-                    }
+                    sx={{ borderBottom: "1px solid #C7D4D7" }}
+                    className={`${styles.table}`}
                   >
-                    <TableCell align="center" >{row.dateTime}</TableCell>
-
-                    {/* Customer */}
-                    <TableCell align="center">
-                      {
-                        customers.find((c) => c.id === row.customerId) ?.customerName
-                      }
+                    <TableCell align="center" className="w-[6%]">
+                      Date & Time
                     </TableCell>
-
-                    {/* Area */}
-                    <TableCell align="center">
-                      { row.areaId === null ? "-"
-                        : areas.find((a) => a.id === row.areaId) ?.name
-                      }
+                    <TableCell align="center" className="w-[22%]">
+                      Customer
                     </TableCell>
-
-                    {/* Round */}
-                    <TableCell align="center">
-                      {row.round === null ? "-"
-                        : row.round}
+                    <TableCell align="center" className="w-[20%]">
+                      Area
                     </TableCell>
-
-                    {/* checkpoint name */}
-                    <TableCell align="center">
-                      {row.checkPointId === null
-                        ? "-"
-                        : checkpoints.find((ch) => ch.id === row.checkPointId)?.chkPtName}
+                    <TableCell align="center" className="w-[12%]">
+                      Round
                     </TableCell>
-
-                    {/* Patroller */}
-                    <TableCell align="center">
-                      {row.patroller === null ? "-" : row.patroller}
+                    <TableCell align="center" className="w-[16%]">
+                      Check Point
                     </TableCell>
-
-                    {/* Status */}
-                    <TableCell align="center" className="flex justify-center">
-                      <PatrolStatus status={row.status} />
+                    {/* Edit button col */}
+                    <TableCell align="center" className="w-[11%]">
+                      Patroller
+                    </TableCell>
+                    <TableCell align="center" className="w-[13%]">
+                      Status
                     </TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>)}
+                </TableHead>
 
-           
-         {!isCheckpointPage && (
-          <TablePatrolRandom randomData={randomRowData} areas={areas} checkpoints={checkpoints}/>
-         )}
+                {/* Allow the TableBody to grow and fill vertical space */}
+                <TableBody sx={{ flexGrow: 1 }}>
+                  {rowData.map((row, index) => (
+                    <TableRow
+                    onClick={() => handleRowClick(row)} // Row click handler
+                    key={index}
+                    className={`${index % 2 === 1 ? `bg-inherit` : `bg-[#EBF4F6]`}`}
+                    sx={{
+                      cursor: "pointer",
+                      "& .MuiTableCell-root": {
+                        padding: "10px 20px 10px 20px", // Customize border color
+                      },
+                      "&:hover": {
+                        backgroundColor: "#DCE9EB", // Optional: Change background color on hover
+                      },
+                    }}
+                    >
+                      <TableCell align="center">{row.dateTime}</TableCell>
+
+                      {/* Customer */}
+                      <TableCell align="center">
+                        {/* {
+                          customers.find((c) => c.id === row.customerId)
+                            ?.customerName
+                        } */}{row.customerName}
+                      </TableCell>
+
+                      {/* Area */}
+                      <TableCell align="center">
+                        {/* {row.areaId === null
+                          ? "-"
+                          : areas.find((a) => a.id === row.areaId)?.name} */}
+                          {row.areaName}
+                      </TableCell>
+
+                      {/* Round */}
+                      <TableCell align="center">
+                        {row.round === null ? "-" : row.round}
+                      </TableCell>
+
+                      {/* checkpoint name */}
+                      <TableCell align="center">
+                        {/* {row.checkPointId === null
+                          ? "-"
+                          : checkpoints.find((ch) => ch.id === row.checkPointId)
+                              ?.chkPtName} */}{row.checkPointName}
+                      </TableCell>
+
+                      {/* Patroller */}
+                      <TableCell align="center">
+                        {row.patroller === null ? "-" : row.patroller}
+                      </TableCell>
+
+                      {/* Status */}
+                      <TableCell align="center" className="flex justify-center">
+                        <PatrolStatus status={row.status}/>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+
+          {!isCheckpointPage && (
+            <TablePatrolRandom
+              randomData={randomRowData}
+              areas={areas}
+              checkpoints={checkpoints}
+            />
+          )}
 
           {/* TableFooter*/}
           <TableContainer
@@ -393,16 +505,21 @@ export default function Patrol() {
                       }}
                     >
                       <Typography>Total: {totalItems} items</Typography>
-                      <Box>
-                        <Button
-                          style={{ marginLeft: "auto", fontWeight: "bold" }}
-                          className="w-48 enabled:bg-gradient-to-r from-[#00336C] to-[#37B7C3] hover:from-[#4C9BF5] hover:to-[#D8EAFF] 
-                                 hover:text-[#00336C] disabled:bg-[#83A2AD]"
-                          onClick={() => handleAddNewCust()}
-                        >
-                          +New
-                        </Button>
-                      </Box>
+                      {isCheckpointPage && (
+                      <Box className="w-fit flex">
+                            <Box className="w-fit p-2">
+                              <GradientButton
+                                content={"Customer Report"}
+                                onBtnClick={handleAddNewCust}
+                              />
+                            </Box>
+                            <Box className="w-fit p-2">
+                              <GradientButton
+                                content={"Summary"}
+                                onBtnClick={handleAddNewCust}
+                              />
+                            </Box>
+                          </Box>)}
                     </Box>
                   </TableCell>
                 </TableRow>
@@ -413,27 +530,53 @@ export default function Patrol() {
       </Box>
 
       {/* Edit/Delete Customer */}
-      {openEditCustModal && (
-        <CustomerForm
-          closeModal={handleCloseCustomerForm}
-          editCustomer={selectedRow}
-          customeraAeas={areas}
+      {openPatrolDetailModal && (
+        <PatrolDeatilView
+          closeModal={handleClosePatrolDetailView}
+          checkpoint={selectedRow || rowData[0]}
         />
       )}
 
       {openFilterModal && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex flex-col">
           <Button
-            className="w-[122px] text-[#1D7A9B] bg-white hover:bg-[#D9F0EC] hover:text-[#1D7A9B] fixed right-6 top-[80px]"
+            className="w-24 text-[#1D7A9B] bg-white hover:bg-[#D9F0EC] hover:text-[#1D7A9B] fixed right-6 top-[80px]"
             onClick={() => setOpenFilterModal(false)}
           >
             <Filter size={20} style={{ marginRight: "5px" }} /> Filter
           </Button>
-          <div className="bg-white rounded-lg shadow-lg h-[600px] w-[498px] overflow-auto fixed right-6 top-[136px]">
+          <div className="bg-white rounded-lg shadow-lg h-[660px] w-[498px] overflow-auto fixed right-6 top-[136px]">
             {/* Header */}
-            <Box className="flex w-[full] bg-[#D9F0EC] py-2 rounded-t-lg justify-center">
-              <Box className="w-[100%] justify-center flex">
-                <Typography className="w-fit text-xl font-semibold text-[#1D7A9B] h-fit mt-1 ml-[78px] flex">
+            <Box
+              sx={{
+                display: "flex",
+                width: "100%",
+                backgroundColor: "#D9F0EC",
+                paddingY: "5px",
+                borderRadius: "8px 8px 0px 0px", // Adjust rounded corners as needed
+                justifyContent: "center",
+                paddingTop: "0.25rem",
+                paddingBottom: "0.25rem",
+              }}
+            >
+              <Box
+                sx={{
+                  width: "100%",
+                  display: "flex",
+                  justifyContent: "center",
+                }}
+              >
+                <Typography
+                  sx={{
+                    width: "fit-content",
+                    fontSize: "1.125rem", // text-lg equivalent
+                    fontWeight: "bold",
+                    color: "#1D7A9B",
+                    marginTop: "0.25rem",
+                    marginLeft: "65px",
+                    display: "flex",
+                  }}
+                >
                   <Filter
                     size={20}
                     style={{ marginRight: "5px", marginTop: "3px" }}
@@ -442,308 +585,139 @@ export default function Patrol() {
                 </Typography>
               </Box>
               <Button2
-                className="bg-transparent text-[#83A2AD] float"
-                sx={{ position: "relative", right: 0 }}
+                className="bg-transparent float w-fit"
+                sx={{ position: "relative", right: 0, color: "#83A2AD" }}
                 onClick={() => setOpenFilterModal(false)}
               >
-                <CloseIcon className="w-[26px] h-[26px]" />
+                <IoClose size={26} />
               </Button2>
             </Box>
 
             {/* Body */}
-            <Box className="w-full justify-center px-6 py-2 rounded-t-lg pb-6" textAlign="center">
+            <Box
+              className="w-full justify-center px-6 py-2 rounded-t-lg pb-6"
+              textAlign="center"
+            >
               <Box className="w-full space-y-6 pt-4">
-
                 {/* Segment */}
                 <Box className="w-full">
-                  <FormControl focused className="w-full">
-                    <InputLabel
-                      className="text-[#2C5079"
-                      sx={{
-                        "&.Mui-focused": {
-                          color: "#2C5079",
-                          fontSize: "18px",
-                        },
-                      }}>
-                      Segment
-                    </InputLabel>
-                    <Select
-                      label="Segment"
-                      size="small"
-                      displayEmpty
-                      value={undefined}
-                      // onChange={handleAddSegmentChange}
-                      renderValue={(selected) => {
-                        if (selected === undefined) {
-                          return "Select Segment";
-                        }
-                        return selected;
-                      }}
-                      // className={`${ selectedAddSegment === undefined ? `text-[#83A2AD]` : "" }`}
-                      inputProps={{ "aria-label": "Without label" }}
-                      sx={{
-                        borderRadius: "10px",
-                        "& .MuiOutlinedInput-notchedOutline": {
-                          border: "1px solid #1D7A9B", // Customize border color
-                        },
-                        "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                          border: "1px solid #1D7A9B", // Customize border color on focus
-                          fontSize: "18px"
-                        },
-                        "&:hover .MuiOutlinedInput-notchedOutline": {
-                          border: "1px solid #1D7A9B", // Hover border color
-                        },
-                        "& .MuiSelect-icon": {
-                          color: "#83A2AD", // Customize arrow icon color
-                        },
-                      }}
-                    >
-                      {segments.map((segment, index) => (
-                        <MenuItem
-                          key={`${segment.id}-${index}`}
-                          value={segment.desc}
-                        >
-                          {segment.desc}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+                  <LabelSelector
+                    selectorLabel={"Segment"}
+                    itemSource={segments}
+                    setSelectedVal={setSelectedSegmentFilter}
+                    selectedVal={selectedSegmentFilter}
+                    name={"segment"}
+                    defaultSelected="Select Segment"
+                  />
                 </Box>
 
                 {/* Group */}
                 <Box className="w-full">
-                  <FormControl focused className="w-full">
-                    <InputLabel
-                      className="text-[#2C5079"
-                      sx={{
-                        "&.Mui-focused": {
-                          color: "#2C5079",
-                          fontSize: "18px",
-                        },
-                      }}>
-                      Group
-                    </InputLabel>
-                    <Select
-                      label="Group"
-                      size="small"
-                      displayEmpty
-                      value={undefined}
-                      // onChange={handleAddSegmentChange}
-                      renderValue={(selected) => {
-                        if (selected === undefined) {
-                          return "Select Group";
-                        }
-                        return selected;
-                      }}
-                      // className={`${ selectedAddSegment === undefined ? `text-[#83A2AD]` : "" }`}
-                      inputProps={{ "aria-label": "Without label" }}
-                      sx={{
-                        borderRadius: "10px",
-                        "& .MuiOutlinedInput-notchedOutline": {
-                          border: "1px solid #1D7A9B", // Customize border color
-                        },
-                        "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                          border: "1px solid #1D7A9B", // Customize border color on focus
-                          fontSize: "18px"
-                        },
-                        "&:hover .MuiOutlinedInput-notchedOutline": {
-                          border: "1px solid #1D7A9B", // Hover border color
-                        },
-                        "& .MuiSelect-icon": {
-                          color: "#83A2AD", // Customize arrow icon color
-                        },
-                      }}
-                    >
-                      {groups.map((group, index) => (
-                        <MenuItem
-                          key={`${group.id}-${index}`}
-                          value={group.desc}
-                        >
-                          {group.desc}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Box>
-
-                {/* Zone */}
-                <Box className="w-full">
-                  <FormControl focused className="w-full">
-                    <InputLabel
-                      className="text-[#2C5079"
-                      sx={{
-                        "&.Mui-focused": {
-                          color: "#2C5079",
-                          fontSize: "18px",
-                        },
-                      }}>
-                      Zone
-                    </InputLabel>
-                    <Select
-                      label="Zone"
-                      size="small"
-                      displayEmpty
-                      value={undefined}
-                      // onChange={handleAddSegmentChange}
-                      renderValue={(selected) => {
-                        if (selected === undefined) {
-                          return "Select Zone";
-                        }
-                        return selected;
-                      }}
-                      // className={`${ selectedAddSegment === undefined ? `text-[#83A2AD]` : "" }`}
-                      inputProps={{ "aria-label": "Without label" }}
-                      sx={{
-                        borderRadius: "10px",
-                        "& .MuiOutlinedInput-notchedOutline": {
-                          border: "1px solid #1D7A9B", // Customize border color
-                        },
-                        "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                          border: "1px solid #1D7A9B", // Customize border color on focus
-                          fontSize: "18px"
-                        },
-                        "&:hover .MuiOutlinedInput-notchedOutline": {
-                          border: "1px solid #1D7A9B", // Hover border color
-                        },
-                        "& .MuiSelect-icon": {
-                          color: "#83A2AD", // Customize arrow icon color
-                        },
-                      }}
-                    >
-                      {zones.map((zone, index) => (
-                        <MenuItem
-                          key={`${zone.id}-${index}`}
-                          value={zone.desc}
-                        >
-                          {zone.desc}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+                  <LabelSelector
+                    selectorLabel={"Group"}
+                    itemSource={groups}
+                    setSelectedVal={setSelectedGroupFilter}
+                    selectedVal={selectedGroupFilter}
+                    name={"group"}
+                    defaultSelected="Select Group"
+                  />
                 </Box>
 
                 {/* Customer */}
                 <Box className="w-full">
-                  <FormControl focused className="w-full">
-                    <InputLabel
-                      className="text-[#2C5079"
-                      sx={{
-                        "&.Mui-focused": {
-                          color: "#2C5079",
-                          fontSize: "18px",
-                        },
-                      }}>
-                      Customer
-                    </InputLabel>
-                    <Select
-                      label="Customer"
-                      size="small"
-                      displayEmpty
-                      value={undefined}
-                      // onChange={handleAddSegmentChange}
-                      renderValue={(selected) => {
-                        if (selected === undefined) {
-                          return "Select Customer";
-                        }
-                        return selected;
-                      }}
-                      // className={`${ selectedAddSegment === undefined ? `text-[#83A2AD]` : "" }`}
-                      inputProps={{ "aria-label": "Without label" }}
-                      sx={{
-                        borderRadius: "10px",
-                        "& .MuiOutlinedInput-notchedOutline": {
-                          border: "1px solid #1D7A9B", // Customize border color
-                        },
-                        "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                          border: "1px solid #1D7A9B", // Customize border color on focus
-                          fontSize: "18px"
-                        },
-                        "&:hover .MuiOutlinedInput-notchedOutline": {
-                          border: "1px solid #1D7A9B", // Hover border color
-                        },
-                        "& .MuiSelect-icon": {
-                          color: "#83A2AD", // Customize arrow icon color
-                        },
-                      }}
-                    >
-                      {segments.map((segment, index) => (
-                        <MenuItem
-                          key={`${segment.id}-${index}`}
-                          value={segment.desc}
-                        >
-                          {segment.desc}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Box>
-
-                {/* HR Code & Code */}
-                <Box className="w-full flex space-x-5">
-                <TextField
-                  label="Department"
-                  size="small"
-                  className="w-full"
-                  focused
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      "&.Mui-focused fieldset": {
-                        border: "1px solid #1D7A9B", // Focus border color
-                        borderRadius: "10px",
-                        fontSize: "18px"
-                      },
-                    },
-                    "& .MuiInputLabel-root.Mui-focused": {
-                      color: "#2C5079", // Label color when focused
-                      fontSize: "18px"
-                    },
-                    "& .MuiOutlinedInput-input::placeholder": {
-                      color: "#83A2AD", // Customize placeholder text color
-                      opacity: 1, // Ensure full opacity for the placeholder
-                    },
-                  }}
-                  placeholder={"Type here..."}
-                />
-                  <TextField
-                  label="Department"
-                  size="small"
-                  className="w-full"
-                  focused
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      "&.Mui-focused fieldset": {
-                        border: "1px solid #1D7A9B", // Focus border color
-                        borderRadius: "10px",
-                        fontSize: "18px"
-                      },
-                    },
-                    "& .MuiInputLabel-root.Mui-focused": {
-                      color: "#2C5079", // Label color when focused
-                      fontSize: "18px"
-                    },
-                    "& .MuiOutlinedInput-input::placeholder": {
-                      color: "#83A2AD", // Customize placeholder text color
-                      opacity: 1, // Ensure full opacity for the placeholder
-                    },
-                  }}
-                  placeholder={"Type here..."}
-                />
-                </Box>
-
-                {/* IsActive */}
-                <Box className="w-full flex space-x-1">
-                  <Switch
-                     name="isActive"
-                    //  checked={formData.isActive}
-                    //  onCheckedChange={handleActiveChange}
+                  <LabelSelector
+                    selectorLabel={"Customer"}
+                    itemSource={customers}
+                    setSelectedVal={setSelectedCustomerFilter}
+                    selectedVal={selectedCustomerFilter}
+                    name={"customer"}
+                    defaultSelected="Select Customer"
                   />
-                  <Typography
-                  textAlign="left"
-                  className="text-[14px] pb-1 text-[#2C5079] pl-2 pt-2"
-                >
-                  {/* {formData.isActive === true ? "Active" : "Inactive"} */}
-                  Active
-                </Typography>
+                </Box>
+
+                {/* Zone */}
+                <Box className="w-full">
+                  <LabelSelector
+                    selectorLabel={"Zone"}
+                    itemSource={zones}
+                    setSelectedVal={setSelectedZoneFilter}
+                    selectedVal={selectedZoneFilter}
+                    name={"zone"}
+                    defaultSelected="Select Zone"
+                  />
+                </Box>
+
+                {/* Area */}
+                <Box className="w-full">
+                  <LabelSelector
+                    selectorLabel={"Area"}
+                    itemSource={areas}
+                    setSelectedVal={setSelectedAreaFilter}
+                    selectedVal={selectedAreaFilter}
+                    name={"area"}
+                    defaultSelected="Select Area"
+                  />
+                </Box>
+
+                {/* Round and Checkpoints */}
+                <Box className="w-full flex space-x-5">
+                  <FloatingLabelBox
+                    label={"Round"}
+                    field={
+                      <>
+                        <Button
+                          className="w-fit h-fit text-[#1D7A9B] bg-[#D9F0EC] hover:bg-[#D9F0EC]"
+                          onClick={() => handleRoundFilter("-")}
+                        >
+                          <FiMinus size={18} />
+                        </Button>
+                        <Typography
+                          sx={{
+                            fontWeight: "600",
+                            color: "#2C5079",
+                            fontSize: "14px",
+                            paddingTop: "0.5rem",
+                          }}
+                        >
+                          {roundFilter === 0 ? "--" : roundFilter}
+                        </Typography>
+                        <Button
+                          className="w-fit h-fit text-[#1D7A9B] bg-[#D9F0EC] hover:bg-[#D9F0EC] "
+                          onClick={() => handleRoundFilter("+")}
+                        >
+                          <FiPlus size={18} />
+                        </Button>
+                      </>
+                    }
+                  />
+
+                  <Box className=" w-[80%] justify-center flex p-1 rounded-lg border-[1px] border-[#2C5079] bg-[#EBF4F6]">
+                    <Typography className="text-[#2C5079] text-sm px-4 pt-1">
+                      {checkPointFilter === 0 ? "--" : checkPointFilter} Check Points
+                    </Typography>
+                  </Box>
+                </Box>
+
+                <Box className="w-full">
+                  <LabelSelector
+                    selectorLabel={"Check Points"}
+                    itemSource={areas}
+                    setSelectedVal={setSelectedAreaFilter}
+                    selectedVal={selectedAreaFilter}
+                    name={"checkpoints"}
+                    defaultSelected="Select Check Points"
+                  />
+                </Box>
+
+                <Box className="w-full">
+                  <LabelSelector
+                    selectorLabel={"Patrol Status"}
+                    itemSource={areas}
+                    setSelectedVal={setSelectedAreaFilter}
+                    selectedVal={selectedAreaFilter}
+                    name={"patrolstatus"}
+                    defaultSelected="Select Patrol Status"
+                  />
                 </Box>
               </Box>
             </Box>
@@ -754,9 +728,7 @@ export default function Patrol() {
                 <Button className="w-32 h-11 bg-white text-[#F66262] border-[1px] border-[#F66262] hover:text-white hover:bg-[#F66262]">
                   Reset
                 </Button>
-                <Button
-                  className="w-32 h-11 enabled:bg-gradient-to-r from-[#00336C] to-[#37B7C3] hover:from-[#2BA441] hover:to-[#A7E5A6] disabled:bg-[#83A2AD]"
-                >
+                <Button className="w-32 h-11 enabled:bg-gradient-to-r from-[#00336C] to-[#37B7C3] hover:from-[#2BA441] hover:to-[#A7E5A6] disabled:bg-[#83A2AD]">
                   Apply
                 </Button>
               </Box>
@@ -766,11 +738,18 @@ export default function Patrol() {
       )}
 
       {openAddContract && (
-        <ContractForm closeModal={handleCloseContractForm} customeraAeas={areas}/>
+        <ContractForm
+          closeModal={handleCloseContractForm}
+          customeraAeas={areas}
+        />
       )}
 
       {openEditContract && (
-        <ContractForm closeModal={handleCloseContractForm} customeraAeas={areas} selectedCustomer={selectedRow}/>
+        <ContractForm
+          closeModal={handleCloseContractForm}
+          customeraAeas={areas}
+          selectedCustomer={selectedRow}
+        />
       )}
     </div>
   );

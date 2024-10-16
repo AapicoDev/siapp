@@ -6,8 +6,6 @@ import {
   InputLabel,
   MenuItem,
   Select,
-  SelectChangeEvent,
-  Typography,
 } from "@mui/material";
 
 interface LabelSelector2Props {
