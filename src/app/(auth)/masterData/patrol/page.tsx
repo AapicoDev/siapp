@@ -343,7 +343,7 @@ export default function Patrol() {
   }, []);
 
   const handleAddNewCust = () => {
-    setShowAddCustModal(true);
+    //setShowAddCustModal(true);
   };
 
   const handleDeleteCust = () => {
@@ -357,7 +357,7 @@ export default function Patrol() {
 
   const handleRowClick = (row: RowData) => {
     setSelectedRow(row);
-    setOpenEditCustModal(true);
+    //setOpenEditCustModal(true);
 
     const custArea = mockArea.filter((a) => a.custId === row.customerId);
     setAreas(initialArea);
@@ -402,7 +402,7 @@ export default function Patrol() {
     setSelectedRow(selecectedRow);
     const custArea = mockArea.filter(a => a.custId === selecectedRow.customerId);
     setCustAreas(custArea);
-    setOpenViewQR(true)
+    //setOpenViewQR(true)
   }
 
   const handleSelected = (index: number) => {

@@ -10,6 +10,7 @@ import {
   TableRow,
   Typography,
   Button as Button2,
+  Grid2,
 } from "@mui/material/";
 import CloseIcon from "@mui/icons-material/Close";
 import Navbar from "@/components/Navbar";
@@ -52,7 +53,7 @@ type RowData = {
   checkPointName: any;
   patroller: string;
   status: string;
-  allCheckpoints: string[],
+  allCheckpoints: number;//string[],
   remark: string;
   image: any[];
 };
@@ -158,7 +159,7 @@ export default function Patrol() {
       round: 0, checkPointName: "",
       checkpointId: "", checkpointNo: undefined,
       patroller: "", status: "",
-      allCheckpoints: [], remark: "",
+      allCheckpoints: 0, remark: "",
       image: []}]);
   //const [editMode, setEditMode] = useState(Array(rowData.length).fill(false)); // Array to track edit state for each row
   const [randomRowData, setRandomRowData] = useState(randomRows);
@@ -219,10 +220,8 @@ export default function Patrol() {
 
   const tableData = async () => {
     const allPatrolRoundData = await getPatrolRoundData();
-    setPatrolRounds(allPatrolRoundData);
     console.log("data = ", allPatrolRoundData);
     const allPatrolCheckpointData = await getAllPatrolCheckpointData();
-    setPatrolCheckpoints(allPatrolCheckpointData);
     console.log("patrolCheckpointData = ", allPatrolCheckpointData);
     const tableData: RowData[] = allPatrolCheckpointData?.documents.map((chkPt)=> {
       return {
@@ -238,7 +237,7 @@ export default function Patrol() {
         checkPointName: chkPt.CheckpointName,
         patroller: chkPt.Patroller,
         status: chkPt.Status,
-        allCheckpoints: allPatrolRoundData?.documents.find(p => p.$id === chkPt.PatrolRoundId)?.PatrolCheckPointId,
+        allCheckpoints: allPatrolCheckpointData?.documents.length,//allPatrolRoundData?.documents.find(p => p.$id === chkPt.PatrolRoundId)?.PatrolCheckPointId,
         remark: chkPt.Remark,
         image: chkPt.Image
       };
@@ -322,7 +321,7 @@ export default function Patrol() {
           <Box className="w-full">
             <Box justifyContent="space-between" className="flex">
               <Box className="space-x-4 py-4 flex w-fit">
-                <Box className="justify-center flex p-1 pb-0 bg-white rounded-lg h-10 w-30 ">
+                <Box className="justify-center flex p-1 pb-0 bg-white rounded-lg h-10 ">
                   <Checkbox
                     className="bg-[#EBF4F6] border-none"
                     checked={isCheckpointPage}
@@ -352,6 +351,7 @@ export default function Patrol() {
                   </Typography>
                   <DatePicker />
                 </Box>
+                <Grid2 size={{xs: 1, sm:4, lg: 12}}>
                 <Input
                   type="text"
                   placeholder="Search..."
@@ -359,10 +359,12 @@ export default function Patrol() {
                     boxShadow: "0px 5px 12px rgba(29, 122, 155, 0.1)",
                     borderRadius: "10px",
                   }}
-                  className="border-none bg-white p-4 mr-2 min-w-80 custom-placeholder"
+                  className="border-none bg-white p-4 mr-2 w-auto custom-placeholder"
                 />
+                </Grid2>
+                
                 <Button
-                  className="w-40 bg-[#1D7A9B] hover:bg-[#D9F0EC] hover:text-[#1D7A9B]"
+                  className="w-auto px-8 bg-[#1D7A9B] hover:bg-[#D9F0EC] hover:text-[#1D7A9B]"
                   onClick={setToggleFilter}
                 >
                   <Filter size={20} style={{ marginRight: "5px" }} /> Filter
@@ -529,7 +531,6 @@ export default function Patrol() {
         </Box>
       </Box>
 
-      {/* Edit/Delete Customer */}
       {openPatrolDetailModal && (
         <PatrolDeatilView
           closeModal={handleClosePatrolDetailView}
