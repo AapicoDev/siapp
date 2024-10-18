@@ -17,6 +17,7 @@ import {
   Button as Button2,
   Icon,
   IconButton,
+  Grid2,
 } from "@mui/material/";
 import CloseIcon from "@mui/icons-material/Close";
 import { Checkbox as Checkbox3 } from "@/components/ui/checkbox3";
@@ -26,7 +27,7 @@ import { useEffect, useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/textboxs/input";
 import styles from "../../../styles.module.css";
-import { Filter } from "iconsax-react";
+import { Filter, SmsTracking } from "iconsax-react";
 import { DatePicker } from "@/components/ui/datePicker";
 import data from "@/app/mockData.json";
 import { PatrolStatus } from "@/components/siapp/PatrolStatus";
@@ -37,9 +38,16 @@ import { TableCorrectiveAction } from "@/components/siapp/TableCorrectiveAction"
 import { LabelSelector } from "@/components/ui/selectors/labelSelector";
 import { IoClose } from "react-icons/io5";
 import { Checkbox as Checkbox2 } from "@/components/ui/checkbox";
-import { getIncidentData, getIncidentTypeData } from "../../../lib/api";
+import {
+  getIncidentData,
+  getIncidentTypeData,
+  updateIncidentStatus,
+} from "../../../lib/api";
+import IncidentDeatilView from "@/components/siapp/IncidentDetailView";
+import { useConfirmDialog } from "../../../../components/ui/alertDialog/confirmDialog";
 
 type RowData = {
+  incidentId: string;
   rowNo: number;
   dateTime: string;
   customerName: string;
@@ -47,6 +55,15 @@ type RowData = {
   topic: string;
   reporter: string;
   status: string;
+  location: string;
+  locationName: string;
+  detail: string;
+  shiftName: string;
+  image: string[];
+  relatedPerson: string[];
+  correctiveDetail: string;
+  approvers: string[];
+  updatedDateTime: string;
 };
 
 type selectedDelete = {
@@ -59,10 +76,11 @@ type incidentType = {
   incidentTypeTH: string;
   incidentTypeEN: string;
   correctiveAction: string;
-  contact: string;
+  contacts: string[];
+  attchments: string[];
 };
 
-export default function Patrol() {
+export default function Incident() {
   //const [editMode, setEditMode] = useState(Array(rows.length).fill(false)); // Array to track edit state for each row
   const [rowData, setRowData] = useState<RowData[]>([
     {
@@ -73,6 +91,16 @@ export default function Patrol() {
       topic: "",
       reporter: "",
       status: "",
+      location: "",
+      locationName: "",
+      detail: "",
+      shiftName: "",
+      image: [],
+      relatedPerson: [],
+      correctiveDetail: "",
+      approvers: [],
+      updatedDateTime: "",
+      incidentId: "",
     },
   ]);
   const [incidentTypes, setIncidentTypes] = useState<incidentType[]>([
@@ -81,7 +109,8 @@ export default function Patrol() {
       incidentTypeTH: "",
       incidentTypeEN: "",
       correctiveAction: "",
-      contact: "",
+      contacts: [],
+      attchments: [],
     },
   ]);
   const [customers, setCustomers] = useState(data.customers);
@@ -89,8 +118,9 @@ export default function Patrol() {
   const [groups, setGroups] = useState(data.groups);
   const [zones, setZones] = useState(data.zones);
   const [selectedRow, setSelectedRow] = useState<RowData | null>(null);
-  const [openAddCustModal, setShowAddCustModal] = useState(false);
-  const [openEditCustModal, setOpenEditCustModal] = useState<boolean>(false);
+  const [openIncidentDeatilView, setOpenIncidentDeatilView] =
+    useState<boolean>(false);
+  const [confirmApprove, setConfirmApprove] = useState<boolean>(false);
   const [openFilterModal, setOpenFilterModal] = useState<boolean>(false);
   const [openAddContract, setOpenAddContract] = useState<boolean>(false);
   const [openEditContract, setOpenEditContract] = useState<boolean>(false);
@@ -110,6 +140,7 @@ export default function Patrol() {
   );
   const [isSelectedAll, setIsSelectedAll] = useState(false);
   const totalItems = rowData.length;
+  const { confirmDialog, ConfirmAlertDialog } = useConfirmDialog();
 
   useEffect(() => {
     const time = new Date().toLocaleString(); //Output format = 10/2/2024, 1:28:36 PM
@@ -117,8 +148,9 @@ export default function Patrol() {
     incidentTypeData();
   }, []);
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
+  const formatDate = (dateString: string, isUTC7: boolean = false) => {
+    let date = new Date(dateString);
+    date = isUTC7 ? new Date(date.getTime() + 7 * 60 * 60 * 1000) : date;
 
     const day = String(date.getUTCDate()).padStart(2, "0"); // Get day and pad with 0 if necessary
     const month = String(date.getUTCMonth() + 1).padStart(2, "0"); // Months are 0-indexed
@@ -134,20 +166,39 @@ export default function Patrol() {
   const tableData = async () => {
     const response = await getIncidentData();
     console.log("incident =", response?.documents);
+    const reOrder = response?.documents.sort((a, b) => {
+      return new Date(b.DateTime).getTime() - new Date(a.DateTime).getTime();
+    });
+    console.log("reOrder Incident Data =", reOrder);
     const tableData: RowData[] =
       response?.documents.map((incident, index) => {
         return {
+          incidentId: incident.$id,
           rowNo: index + 1,
-          dateTime: formatDate(incident.$createdAt),
+          dateTime: formatDate(incident.DateTime, false),
           customerName: incident.Customer,
           incidentType: incident.Incident,
           topic: incident.Topic,
           reporter: incident.Reporter,
           status: incident.Status,
+          location: incident.Location,
+          locationName: incident.LocationName,
+          detail: incident.Detail,
+          shiftName: incident.ShiftName,
+          image: incident.Image,
+          relatedPerson: incident.RelatedPerson,
+          correctiveDetail: incident.CorrectiveDetail,
+          approvers: incident.Approvers,
+          updatedDateTime: formatDate(incident.$updatedAt, true),
         };
       }) || rowData;
     console.log("incident tableData = ", tableData);
     setRowData(tableData);
+    const mapSelect = tableData.map((row) => ({
+      isSelected: false,
+      segId: row.rowNo,
+    }));
+    setSelected(mapSelect);
   };
 
   const incidentTypeData = async () => {
@@ -160,21 +211,33 @@ export default function Patrol() {
           incidentTypeEN: type.IncidentType_EN,
           incidentTypeTH: type.IncidentType_TH,
           correctiveAction: type.CorrectiveAction,
-          contact: type.Contact,
+          contacts: type.Contacts,
+          attchments: type.Attachments,
         };
       }) || incidentTypes;
-    console.log("incident tableData = ", tableData);
+    console.log("mapincidentTypes = ", mapincidentTypes);
     setIncidentTypes(mapincidentTypes);
   };
 
-  const handleApproved = (index: number) => {
+  const handleApproved = async (index: number, row: RowData) => {
     const approveRow = [...rowData];
-    approveRow[index].status =
-      approveRow[index].status === "Pending"
-        ? "Approved"
-        : approveRow[index].status;
-    setRowData(approveRow);
-    console.log("approveRow =", approveRow);
+    if (approveRow[index].status === "Pending") {
+      const confirmApprove = await confirmDialog(
+        "Approve Incident",
+        "Do you want to approve this incident?"
+      );
+      console.log("confirmApprove =", confirmApprove);
+      if (confirmApprove) {
+        approveRow[index].status = "Approved";
+        const dataToSubmit = { ["Status"]: approveRow[index]["status"] };
+        const response = await updateIncidentStatus(
+          row.incidentId,
+          dataToSubmit
+        );
+        tableData();
+        setConfirmApprove(false);
+      }
+    }
   };
 
   const handleAddNewCust = () => {};
@@ -220,6 +283,7 @@ export default function Patrol() {
   };
 
   const handleCheckAll = (checked: boolean) => {
+    console.log("checked =", checked);
     setIsSelectedAll(checked);
     const selectedAll = [...selected];
     selectedAll.forEach((element) => {
@@ -227,6 +291,16 @@ export default function Patrol() {
     });
     setSelected(selectedAll);
   };
+
+  const handleRowClick = async (row: RowData) => {
+    setSelectedRow(row);
+    console.log("row =", row);
+    setOpenIncidentDeatilView(true);
+  };
+
+  function handleCloseIncidentDetailView() {
+    setOpenIncidentDeatilView(false);
+  }
 
   return (
     <div>
@@ -250,7 +324,7 @@ export default function Patrol() {
                     Incident
                   </Typography>
                 </Box>
-                <Box className='justify-center flex p-1 bg-white rounded-lg h-10'>
+                <Box className='justify-center flex p-1 bg-white rounded-lg h-10 w-fit'>
                   <Checkbox
                     className='bg-[#EBF4F6] border-none'
                     checked={!isIncidentPage}
@@ -272,15 +346,18 @@ export default function Patrol() {
                   </Typography>
                   <DatePicker />
                 </Box>
-                <Input
-                  type='text'
-                  placeholder='Search...'
-                  style={{
-                    boxShadow: "0px 5px 12px rgba(29, 122, 155, 0.1)",
-                    borderRadius: "10px",
-                  }}
-                  className='border-none bg-white p-4 mr-2 min-w-80 custom-placeholder'
-                />
+                <Grid2 size={{ xs: 6, md: 12 }}>
+                  <Input
+                    type='text'
+                    placeholder='Search...'
+                    style={{
+                      boxShadow: "0px 5px 12px rgba(29, 122, 155, 0.1)",
+                      borderRadius: "10px",
+                    }}
+                    className='border-none bg-white p-4 mr-2 custom-placeholder'
+                  />
+                </Grid2>
+
                 <Button
                   className='w-40 bg-[#1D7A9B] hover:bg-[#D9F0EC] hover:text-[#1D7A9B]'
                   onClick={setToggleFilter}>
@@ -337,13 +414,23 @@ export default function Patrol() {
                   <TableBody sx={{ flexGrow: 1 }}>
                     {rowData.map((row, index) => (
                       <TableRow
+                        onClick={() => handleRowClick(row)}
                         key={index}
                         className={`${
                           index % 2 === 1 ? `bg-inherit` : `bg-[#EBF4F6]`
-                        }`}>
+                        }`}
+                        sx={{
+                          cursor: "pointer",
+                          "& .MuiTableCell-root": {
+                            padding: "10px 20px 10px 20px", // Customize border color
+                          },
+                          "&:hover": {
+                            backgroundColor: "#DCE9EB", // Optional: Change background color on hover
+                          },
+                        }}>
                         <TableCell align='left'>
                           <Checkbox2
-                            checked={selected[index]?.isSelected}
+                            checked={selected[index].isSelected}
                             onClick={(event) => {
                               event.stopPropagation(); // Prevent row click
                               handleSelected(index);
@@ -378,7 +465,11 @@ export default function Patrol() {
                         <TableCell
                           align='center'
                           className='flex justify-center'>
-                          <IconButton onClick={() => handleApproved(index)}>
+                          <IconButton
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleApproved(index, row);
+                            }}>
                             <TickCircle
                               size={30}
                               variant='Bold'
@@ -416,13 +507,26 @@ export default function Patrol() {
                           <Typography>Total: {totalItems} items</Typography>
                           <Box className='w-fit flex'>
                             <Box className='w-fit p-2'>
+                              <Button
+                                style={{ fontWeight: "bold" }}
+                                className='w-32 h-10 bg-white text-[#4c9bf5] border-[1px] border-[#4c9bf5] hover:text-white hover:bg-[#4c9bf5]'
+                                disabled={true}>
+                                <SmsTracking className='mr-1' />
+                                {/* <SmsTracking className="mr-1"/> */}
+                                Email
+                              </Button>
+                            </Box>
+
+                            <Box className='w-fit p-2'>
                               <GradientButton
+                                disable={true}
                                 content={"Customer Report"}
                                 onBtnClick={handleAddNewCust}
                               />
                             </Box>
                             <Box className='w-fit p-2'>
                               <GradientButton
+                                disable={true}
                                 content={"Summary"}
                                 onBtnClick={handleAddNewCust}
                               />
@@ -442,6 +546,16 @@ export default function Patrol() {
           )}
         </Box>
       </Box>
+
+      {openIncidentDeatilView && (
+        <IncidentDeatilView
+          closeModal={handleCloseIncidentDetailView}
+          selectedIncident={selectedRow || rowData[0]}
+        />
+      )}
+
+      {/* Confirm dialog */}
+      {ConfirmAlertDialog}
 
       {openFilterModal && (
         <div className='fixed inset-0 bg-black bg-opacity-40 flex flex-col'>

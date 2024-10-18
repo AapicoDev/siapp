@@ -32,9 +32,9 @@ export function CheckListStatus({
 
   return (
     <>
-      <Box className={`justify-between flex p-1 ${statusColor} w-fit rounded-lg`}>
-        <Box className="w-full text-center">
-          <Typography className="py-1 px-2 text-white text-[12px]">
+      <Box className={`justify-center items-center w-fit h-full flex p-1 ${statusColor} rounded-lg`}>
+        <Box className="text-center px-[0.5rem]">
+          <Typography sx={{color: "white", fontSize: "14px"}}>
             {statusDesc}
           </Typography>
         </Box>

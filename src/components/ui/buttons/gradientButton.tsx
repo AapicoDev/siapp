@@ -9,11 +9,13 @@ import { Button } from "@/components/ui/buttons/button";
 interface GradientButtonProps {
   onBtnClick: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void; // Button click handler
   content: any;
+  disable?:boolean;
 }
 
-export function GradientButton({ onBtnClick,content }: GradientButtonProps) {
+export function GradientButton({ onBtnClick,content, disable=false }: GradientButtonProps) {
   return (
     <Button
+    disabled={disable}
       onClick={(event) => {
         event.stopPropagation(); // Prevent event propagation
         onBtnClick(event);

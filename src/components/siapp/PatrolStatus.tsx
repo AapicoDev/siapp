@@ -40,7 +40,7 @@ export function PatrolStatus({
     <>
       <Box className={`justify-between flex p-1 ${statusColor} w-[120px] rounded-lg`}>
         <Box className="w-full text-center">
-          <Typography className="py-1 px-2 text-white">
+          <Typography sx={{py:"0.25rem", px: "0.5rem", color: "white"}}>
             {statusDesc}
           </Typography>
         </Box>

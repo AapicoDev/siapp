@@ -16,9 +16,7 @@ import { SaveBtnFooter } from "../ui/buttons/saveBtnFooter";
 import { IoClose } from "react-icons/io5";
 import { PatrolStatus } from "./PatrolStatus";
 import { CheckListStatus } from "./CheckListStatus";
-import {
-  getPatrolCheckList, getMasterRoundData
-} from "../../app/lib/api";
+import { getPatrolCheckList, getMasterRoundData } from "../../app/lib/api";
 import { Row } from "react-day-picker";
 
 type RowData = {
@@ -34,7 +32,7 @@ type RowData = {
   checkPointName: any;
   patroller: string;
   status: string;
-  allCheckpoints: string[];
+  allCheckpoints: number; //string[];
   remark: string;
   image: any[];
 };
@@ -91,23 +89,23 @@ const PatrolDeatilView = ({
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
 
-    const hours = String(date.getUTCHours()).padStart(2, '0');
-    const minutes = String(date.getUTCMinutes()).padStart(2, '0');
-  
+    const hours = String(date.getUTCHours()).padStart(2, "0");
+    const minutes = String(date.getUTCMinutes()).padStart(2, "0");
+
     return `${hours}:${minutes}`;
   };
 
   useEffect(() => {
-    console.log("patrolCheckpoint =", patrolCheckpoint)
+    console.log("patrolCheckpoint =", patrolCheckpoint);
     getCheckListData();
     getRoundDetailData();
-  },[]);
+  }, []);
 
   const getCheckListData = async () => {
     const getCheckList = await getPatrolCheckList(checkpoint.checkpointId);
     setCheckList(getCheckList?.documents);
     console.log("checkList =", getCheckList?.documents);
-  }
+  };
 
   const getRoundDetailData = async () => {
     const response = await getMasterRoundData(checkpoint.areaId);
@@ -115,7 +113,7 @@ const PatrolDeatilView = ({
     const endTime = formatTime(response?.documents[0].endTime);
     setRoundTime(startTime + " - " + endTime);
     console.log("roundTime = ", startTime + " - " + endTime);
-  }
+  };
 
   function handleCloseCustomerForm() {
     closeModal();
@@ -274,7 +272,8 @@ const PatrolDeatilView = ({
                     }}
                     textAlign={"left"}
                   >
-                    {patrolCheckpoint.allCheckpoints.length} Check Point {`${patrolCheckpoint.allCheckpoints.length > 1 ? `s`: ``}`}
+                    {patrolCheckpoint.allCheckpoints} Check Point{" "}
+                    {`${patrolCheckpoint.allCheckpoints > 1 ? `s` : ``}`}
                   </Typography>
                 </div>
               </Box>
@@ -298,7 +297,7 @@ const PatrolDeatilView = ({
                   m: "15px 15px 0px 5px",
                 }}
               >
-              {patrolCheckpoint.checkpointNo}
+                {patrolCheckpoint.checkpointNo}
               </Typography>
               <Box className="w-[75%]">
                 <Typography
@@ -318,10 +317,13 @@ const PatrolDeatilView = ({
                     color: "#2C5079",
                   }}
                 >
-                  {patrolCheckpoint.startDateTime.split("@")[1]} - {patrolCheckpoint.dateTime.split("@")[1] + " "}
-                  ({patrolCheckpoint.useTime.split(" ")[0] === "0" ? "" : patrolCheckpoint.useTime.split(" ")[0]+" hr "}
-                  {patrolCheckpoint.useTime.split(" ")[1]+" min "}
-                  {patrolCheckpoint.useTime.split(" ")[2]+" sec"})
+                  {patrolCheckpoint.startDateTime.split("@")[1]} -{" "}
+                  {patrolCheckpoint.dateTime.split("@")[1] + " "}(
+                  {patrolCheckpoint.useTime.split(" ")[0] === "0"
+                    ? ""
+                    : patrolCheckpoint.useTime.split(" ")[0] + " hr "}
+                  {patrolCheckpoint.useTime.split(" ")[1] + " min "}
+                  {patrolCheckpoint.useTime.split(" ")[2] + " sec"})
                 </Typography>
                 <Typography
                   textAlign="left"
@@ -334,7 +336,7 @@ const PatrolDeatilView = ({
                 </Typography>
               </Box>
               <Box className="flex h-[50%] mt-2">
-                <PatrolStatus status={1} />
+                <PatrolStatus status={patrolCheckpoint.status} />
               </Box>
             </Box>
 
@@ -345,13 +347,13 @@ const PatrolDeatilView = ({
               <Table>
                 <TableHead>
                   <TableRow sx={{ borderBottom: "1px solid #C7D4D7" }}>
-                    <TableCell align="center" className="w-[15%]">
+                    <TableCell align="center" className="w-[10%]">
                       No.
                     </TableCell>
                     <TableCell align="center" className="w-[25%]">
                       Check List
                     </TableCell>
-                    <TableCell align="center" className="w-[20%]">
+                    <TableCell align="center" className="w-[25%]">
                       Status
                     </TableCell>
                     <TableCell align="center" className="w-[20%]">
@@ -370,6 +372,7 @@ const PatrolDeatilView = ({
                         "& .MuiTableCell-root": {
                           padding: "10px 20px 10px 20px", // Customize border color
                           borderBottom: "1px solid #C7D4D7",
+                          verticalAlign: "top",
                         },
                       }}
                     >
@@ -377,19 +380,36 @@ const PatrolDeatilView = ({
                       <TableCell align="center">{row.CheckListName}</TableCell>
 
                       <TableCell
-                        align="center"
                         sx={{
-                          display: "flex",
-                          justifyContent: "center",
                           alignItems: "center",
                         }}
                       >
-                        <CheckListStatus status={row.Status} />
+                        <div className="flex justify-center w-full h-full">
+                          <CheckListStatus status={row.Status} />
+                        </div>
                       </TableCell>
 
-                      <TableCell align="center">{`${row.Image.length > 0 ? `${row.Image.length}` : `-` }`}</TableCell>
+                      <TableCell align="center">
+                        {row.Image.length > 0 ?
+                          (row.Image.map((i: string | undefined, index: any) => (
+                            <Box key={index}>
+                              <img
+                                src={i}
+                                alt="Checklist Img"
+                                style={{
+                                  maxWidth: "100%",
+                                  borderRadius: "10px",
+                                  maxHeight: "200px",
+                                  marginTop: "10px",
+                                }}
+                              />
+                            </Box>
+                          ))) : "-" }
+                      </TableCell>
 
-                      <TableCell align="center">{`${row.Remark != null ? `${row.Remark}` : `-` }`}</TableCell>
+                      <TableCell align="center">{`${
+                        row.Remark != null ? `${row.Remark}` : `-`
+                      }`}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -408,7 +428,9 @@ const PatrolDeatilView = ({
                 รูปภาพเพิ่มเติม
               </Typography>
               <Box textAlign={"left"}>
-                {patrolCheckpoint.image.length > 0 ? patrolCheckpoint.image.length : "-"}
+                {patrolCheckpoint.image.length > 0
+                  ? patrolCheckpoint.image.length
+                  : "-"}
                 {/* <Box className="flex w-[20%] h-[80px] space-x-5 bg-[#F1F4F4] rounded-lg justify-center">
                   <Gallery className="mt-6" />
                 </Box> */}
@@ -433,7 +455,9 @@ const PatrolDeatilView = ({
                   color: "#2C5079",
                 }}
               >
-                {patrolCheckpoint.remark != null ? patrolCheckpoint.remark : "-"}
+                {patrolCheckpoint.remark != null
+                  ? patrolCheckpoint.remark
+                  : "-"}
               </Typography>
             </Box>
           </Box>
