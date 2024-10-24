@@ -96,3 +96,25 @@ export async function fetchOneContactData(databaseId, collectionId, documentId) 
         throw error;
     }
 }
+
+export async function updateDocumentOnServer(databaseId, collectionId, id, data) {
+    console.log(databaseId, collectionId, data, id);
+
+    try {
+        return databases.updateDocument(databaseId, collectionId, id, data)
+    } catch (error) {
+        console.log(error);
+        return null
+    }
+}
+
+export async function deleteDocumentOnServer(databaseId, collectionId, id) {
+    console.log(databaseId, collectionId, id);
+
+    try {
+        return databases.deleteDocument(databaseId, collectionId, id)
+    } catch (error) {
+        console.log(error);
+        return null
+    }
+}

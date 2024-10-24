@@ -18,6 +18,7 @@ import {
   Icon,
   IconButton,
   Grid2,
+  CircularProgress,
 } from "@mui/material/";
 import CloseIcon from "@mui/icons-material/Close";
 import { Checkbox as Checkbox3 } from "@/components/ui/checkbox3";
@@ -72,6 +73,7 @@ type selectedDelete = {
 };
 
 type incidentType = {
+  id: any;
   rowNo: number;
   incidentTypeTH: string;
   incidentTypeEN: string;
@@ -105,6 +107,7 @@ export default function Incident() {
   ]);
   const [incidentTypes, setIncidentTypes] = useState<incidentType[]>([
     {
+      id: "",
       rowNo: 0,
       incidentTypeTH: "",
       incidentTypeEN: "",
@@ -126,12 +129,10 @@ export default function Incident() {
   const [openEditContract, setOpenEditContract] = useState<boolean>(false);
   const [isIncidentPage, setIsIncidentPage] = useState<boolean>(true);
   const [selectedCustomerFilter, setSelectedCustomerFilter] = useState();
-  const [selectedIncidentTypeFilter, setSelectedIncidentTypeFilter] =
-    useState();
+  const [selectedIncidentTypeFilter, setSelectedIncidentTypeFilter] = useState();
   const [isIncidentStatusAll, setIsIncidentStatusAll] = useState(false);
   const [isIncidentStatusSolved, setIsIncidentStatusSolved] = useState(false);
-  const [isIncidentStatusInProcess, setIsIncidentStatusInProcess] =
-    useState(false);
+  const [isIncidentStatusInProcess, setIsIncidentStatusInProcess] = useState(false);
   const [selected, setSelected] = useState<selectedDelete[]>(
     rowData.map((row) => ({
       isSelected: false,
@@ -141,12 +142,13 @@ export default function Incident() {
   const [isSelectedAll, setIsSelectedAll] = useState(false);
   const totalItems = rowData.length;
   const { confirmDialog, ConfirmAlertDialog } = useConfirmDialog();
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   useEffect(() => {
     const time = new Date().toLocaleString(); //Output format = 10/2/2024, 1:28:36 PM
     tableData();
     incidentTypeData();
-  }, []);
+  }, [isIncidentPage]);
 
   const formatDate = (dateString: string, isUTC7: boolean = false) => {
     let date = new Date(dateString);
@@ -164,6 +166,7 @@ export default function Incident() {
   };
 
   const tableData = async () => {
+    setIsLoading(true);
     const response = await getIncidentData();
     console.log("incident =", response?.documents);
     const reOrder = response?.documents.sort((a, b) => {
@@ -199,6 +202,7 @@ export default function Incident() {
       segId: row.rowNo,
     }));
     setSelected(mapSelect);
+    setIsLoading(false);
   };
 
   const incidentTypeData = async () => {
@@ -207,6 +211,7 @@ export default function Incident() {
     const mapincidentTypes: incidentType[] =
       response?.documents.map((type, index) => {
         return {
+          id: type.$id,
           rowNo: index + 1,
           incidentTypeEN: type.IncidentType_EN,
           incidentTypeTH: type.IncidentType_TH,
@@ -235,7 +240,6 @@ export default function Incident() {
           dataToSubmit
         );
         tableData();
-        setConfirmApprove(false);
       }
     }
   };
@@ -360,7 +364,7 @@ export default function Incident() {
                   />
                 </Grid2>
 
-                <Button
+                <Button disabled={true}
                   className="w-40 bg-[#1D7A9B] hover:bg-[#D9F0EC] hover:text-[#1D7A9B]"
                   onClick={setToggleFilter}
                 >
@@ -740,6 +744,12 @@ export default function Incident() {
           </div>
         </div>
       )}
+
+      {isLoading && <div className="fixed inset-0 bg-white bg-opacity-40 flex flex-col items-center justify-center z-indextop">
+        <Box sx={{ display: "flex" }}>
+          <CircularProgress />
+        </Box>
+      </div>}
     </div>
   );
 }

@@ -134,9 +134,9 @@ const IncidentDeatilView = ({
         </Button2>
       </Box>
 
-      <div className="bg-white rounded-b-lg shadow-lg min-h-[694px] max-h-[794px] w-[700px]">
+      <div className="bg-white rounded-b-lg shadow-lg min-h-[614px] max-h-[714px] w-[700px]">
         {/* Body */}
-        <div className="max-h-[718px] overflow-auto">
+        <div className="max-h-[638px] overflow-auto">
           <Box
             className="w-full justify-center px-6 py-2 rounded-t-lg pb-6"
             textAlign="center"
@@ -152,7 +152,7 @@ const IncidentDeatilView = ({
                       masterIncidentTypes?.find(
                         (i) =>
                           i.IncidentType_EN === selectedIncident.incidentType
-                      ).IncidentType_TH
+                      )?.IncidentType_TH
                     }
                   </div>
                   <Typography
@@ -381,7 +381,7 @@ const IncidentDeatilView = ({
                   textDecoration: "underline",
                 }}
               >
-                ภาพเหตุกาณ์
+                ภาพเหตุการณ์
               </Typography>
               <Grid2 container spacing={1}>
                 {selectedIncident.image.length > 0 &&

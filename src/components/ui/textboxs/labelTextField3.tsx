@@ -8,7 +8,6 @@ interface LabelTextFieldProps {
   inputVal: any;
   field: any;
   id: any;
-  id2?: any
   handleChangeVal: (id: any, field: any, value: any,) => void;
 }
 
@@ -16,6 +15,7 @@ export default function LabelTextField3({ label, placeholder, inputVal, field, i
   return (
     <>
       <TextField
+        name={field}
         fullWidth
         label={label}
         size="small"
@@ -42,7 +42,7 @@ export default function LabelTextField3({ label, placeholder, inputVal, field, i
           fontFamily:"Kanit"
         }}
         placeholder={placeholder}
-        onChange={(e) => handleChangeVal(id, field, e.target.value)}
+        onChange={(e) => handleChangeVal(id, field, e)}
         value={inputVal}
       />
     </>

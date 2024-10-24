@@ -47,8 +47,6 @@ export default function CheckBoxDropDown({
 }: CheckBoxDropDownProps) {
   const [selectedItems, setSelectedItems] = React.useState<string[]>([]);
 
-  console.log("selectedVal", selectedVal)
-
   return (
     <div>
       <FormControl focused className="w-full">

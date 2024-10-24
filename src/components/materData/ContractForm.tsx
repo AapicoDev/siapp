@@ -11,6 +11,7 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
+  Grid2,
 } from "@mui/material";
 import TabContext from "@mui/lab/TabContext";
 import TabList from "@mui/lab/TabList";
@@ -48,11 +49,12 @@ import { addDays } from "date-fns";
 import { DateRange } from "react-day-picker";
 import { convert12HourTo24Hour } from "../ui/selectors/timePickerUtils";
 import CheckBoxDropDown from "../ui/checkBoxDropDown";
-import LabelTextField3 from "../ui/textboxs/labelTextField3";
 import AlertToDatail from "./AlertToDetail";
+import { Checkbox as Checkbox3 } from "@/components/ui/checkbox3";
 
 type AreaData = {
   id: number;
+  custId: any;
   name: string;
   totalChkPt: number;
   round: any[];
@@ -82,7 +84,7 @@ type AreaListType = {
 };
 
 type ShiftListType = {
-  id: number;
+  id: any;
   desc: any;
   workdays: any[];
   manpowers: ManpowerType[];
@@ -115,14 +117,22 @@ const mockIsSameDayList = [
   },
 ];
 
+interface ContractFormProps {
+  selectedCustomer: any;
+  closeModal: any;
+  customeraAreas: any[];
+  isEditContract: boolean;
+  custList: any[];
+}
+
 const ContractForm = ({
   selectedCustomer,
   closeModal,
   customeraAreas,
-  isEditFromCustPage,
+  isEditContract,
   custList = [{ id: 1, desc: "" }],
-}: any) => {
-  const [isEdit, setIsEdit] = useState(isEditFromCustPage);
+}: ContractFormProps) => {
+  const [isEdit, setIsEdit] = useState(isEditContract);
   const [customer, setCustomer] = useState(
     selectedCustomer || {
       hrCode: "",
@@ -143,7 +153,9 @@ const ContractForm = ({
   const [customerList, setCustomerList] = useState(
     custList || [{ id: 1, desc: "" }]
   );
-  const [customerAdd, setCustomerAdd] = useState(customerList[0]?.id);
+  const [customerAdd, setCustomerAdd] = useState(
+    customerList.length > 1 ? "" : customerList[0]?.id
+  );
   const [addContractNo, setAddContractNo] = useState("");
   const [tabValue, setTabValue] = useState("1");
   const [areaOpen, setAreaOpen] = useState(Array(areas.length).fill(false)); // Array to track edit state for each row
@@ -199,6 +211,8 @@ const ContractForm = ({
   const [deleteAlertToList, setDeleteAlertToList] = useState<any[]>([]);
   const [showAlertToDeatil, setShowAlertToDeatil] = useState(false);
   const [selectedALertTo, setSelectedALertTo] = useState<PatrolAlertListType>();
+  const [isContractActive, setIsContractActive] = useState(false);
+  const [selectNewFile, setSelectNewFile] = useState<any[]>([]);
 
   useEffect(() => {
     if (!isEdit) {
@@ -206,10 +220,10 @@ const ContractForm = ({
     } else {
       setFormHeader("View / Edit Contract");
     }
-    initialData();
     const initialSeelctedContract = contractListInitial();
-    contractDetail(initialSeelctedContract);
-  }, []);
+      contractDetail(initialSeelctedContract);
+    initialData();
+  }, [areas]);
 
   const initialData = () => {
     areas.forEach((area) => {
@@ -222,7 +236,7 @@ const ContractForm = ({
 
   const contractListInitial = () => {
     const contracts = data.contracts.filter(
-      (c) => c.customerId === customer.customerId && c.isActive === 1
+      (c) => c.customerId === customer.customerId //&& c.isActive
     );
     const mappedContract = contracts.map((contract) => ({
       id: contract.id,
@@ -234,12 +248,44 @@ const ContractForm = ({
     return mappedContract[0]?.id;
   };
 
+  const addNewContractinitial = (selectedCustId: any) => {
+    //Mapped area
+    const customerAreas: AreaData[] = data.areas.filter(area => area.custId === selectedCustId).map((area) => ({
+      id: area.id,
+      custId: area.custId,
+      name: area.name,
+      totalChkPt: 0,
+      round: []
+    }));
+    setAreas(customerAreas);
+    // const mappedAreaList: AreaListType[] = customerAreas.map((area: AreaData) => {
+    //   return {
+    //     areaId: area.id, // Mapping `id` from AreaData
+    //     areaName: area.name, // Mapping `name` from AreaData
+    //     totalChkPt: area.totalChkPt, // Mapping `totalChkPt` from AreaData
+    //     roundList: roundManagement(area.id, selectedContract), // Assigning the filtered round data
+    //     latestRoundID: 0,
+    //   };
+    // });
+    // mappedAreaList.map(
+    //   (a) =>
+    //     (a.latestRoundID = a.roundList.reduce(
+    //       (max, round) => (round.id > max ? round.id : max),
+    //       0
+    //     ))
+    // );
+    // setAreaList(mappedAreaList);
+  };
+
+
   const handleSelectChange = (e: SelectChangeEvent) => {
     const { name, value } = e.target;
     console.log("selected =", e.target);
     console.log("contrtactList =", contractList);
     if (name === "addContractCustomer") {
+      console.log("customerAdd = ", value);
       setCustomerAdd(value);
+      addNewContractinitial(value);
     } else if (name === "selectedContractId") {
       setSelectedContractId(value);
       contractDetail(value);
@@ -274,18 +320,30 @@ const ContractForm = ({
       from: new Date(filteredContract?.startDate || "") || date?.from,
       to: new Date(filteredContract?.finishDate || "") || date?.to,
     });
+    setStartDate(new Date(filteredContract?.startDate || new Date()));
+    setFinishDate(new Date(filteredContract?.finishDate || addDays(new Date(), 1)));
 
     //attachmentList
     const attachments = filteredContract?.attachment;
     setAttachmentList(attachments || attachmentList);
 
+    console.log("filteredContract.isActive =", filteredContract?.isActive);
+    setIsContractActive(filteredContract?.isActive || isContractActive);
+    if (!filteredContract?.isActive) {
+      handleContractInactive(true);
+    }
+    console.log("isContractActive =", isContractActive);
+
     // Shift list
+    const filteredShift = data.shifts?.filter(
+      (s) => s.contractId === selectedContract
+    );
     const mappedShiftList: ShiftListType[] =
-      filteredContract?.shiftList.map((shift) => ({
+      filteredShift.map((shift) => ({
         id: shift.id,
         desc: shift.name,
         workdays: shift.workdays,
-        manpowers: shift.manpowerList || [],
+        manpowers: mappedManpowerOfEachShift(shift.id), //shift.filteredShift
       })) || shiftList;
     setShiftList(mappedShiftList);
     calTotalManPowerOfAllShift(mappedShiftList);
@@ -293,8 +351,12 @@ const ContractForm = ({
     console.log("mappedShiftList =", mappedShiftList);
 
     //Alert to List
+    const filteredAlertTo = data.patrolAlertTo.filter(
+      (al) => al.contractId === selectedContract
+    );
+    console.log("filteredAlertTo =", filteredAlertTo);
     const mappedAlertList: PatrolAlertListType[] =
-      filteredContract?.patrolAlertList.map((alertTo) => ({
+      filteredAlertTo.map((alertTo) => ({
         id: alertTo.id,
         isAsm: alertTo.isAsm,
         name: alertTo.name,
@@ -303,6 +365,7 @@ const ContractForm = ({
         desc: alertTo.name,
       })) || alertToList;
     setAlertToList(mappedAlertList || alertToList);
+    console.log("mappedAlertList =", mappedAlertList);
 
     //asmAlertNames
     const asmAlertNameList = data.employees.map((a) => ({
@@ -311,6 +374,10 @@ const ContractForm = ({
       email: a.email,
     }));
     setAsmAlertNames(asmAlertNameList);
+  };
+
+  const mappedManpowerOfEachShift = (shiftId: any) => {
+    return data.manpowers.filter((m) => m.shiftId === shiftId);
   };
 
   const calTotalManPowerOfAllShift = (shiftList: ShiftListType[]) => {
@@ -332,24 +399,36 @@ const ContractForm = ({
     field: keyof RoundData,
     value: any
   ) => {
-    let isTime = false;
-    if (
-      field === "startTimeHr" ||
-      "startTimeMin" ||
-      "finishTimeHr" ||
-      "finishTimeMin"
-    ) {
-      isTime = true;
-      if (value.length > 2) return;
-    }
+    console.log("field = ", field);
+    console.log("value = ", value);
+    console.log("areaId = ", areaId);
+    console.log("roundId = ", roundId);
+    console.log("areaList =", areaList)
+
+    // let isTime = false;
+    // if (
+    //   field === "startTimeHr" ||
+    //   "startTimeMin" ||
+    //   "finishTimeHr" ||
+    //   "finishTimeMin"
+    // ) {
+    //   isTime = true;
+    //   if (value.length > 2) return;
+    // }
+
+    console.log("before update")
     const updatedAreaList = areaList.map((area) => {
+      console.log("enter update")
       if (area.areaId === areaId) {
         // Update the roundList for the matched areaId
         let updatedRoundData = area.roundList.map((item) =>
           item.id === roundId ? { ...item, [field]: value } : item
         );
 
-        if (isTime) {
+        if ((field === "startTimeHr" ||
+            "startTimeMin" ||
+            "finishTimeHr" ||
+            "finishTimeMin" ) && value.length <= 2) {
           updatedRoundData = calMinutes(roundId, updatedRoundData);
         }
         // Return the updated area object
@@ -364,6 +443,7 @@ const ContractForm = ({
 
     // Set the updated areaList
     setAreaList(updatedAreaList);
+    console.log("updatedAreaList =", updatedAreaList)
   };
 
   const handleFieldShiftListTypeChange = (
@@ -502,7 +582,17 @@ const ContractForm = ({
     const updatedPatrolAlertList = alertToList.map((alertTo) =>
       alertTo.id === patrolAlertId ? { ...alertTo, [field]: value } : alertTo
     );
-    setAlertToList(updatedPatrolAlertList);
+
+    const mappedAlertList: PatrolAlertListType[] =
+    updatedPatrolAlertList.map((alertTo) => ({
+        id: alertTo.id,
+        isAsm: alertTo.isAsm,
+        name: alertTo.name,
+        email: alertTo.isAsm ===1 ? asmAlertNames.find((a) => a.desc === alertTo.name)?.email : alertTo.email,
+        otherPositionId: alertTo.otherPositionId,
+        desc: alertTo.name,
+      })) || alertToList;
+    setAlertToList(mappedAlertList || alertToList);
   };
 
   const addAlertToList = () => {
@@ -513,7 +603,7 @@ const ContractForm = ({
     setAlertToList([
       ...alertToList,
       {
-        id: latestId + 1,
+        id: "al000" + (alertToList.length + 1).toString(),
         isAsm: undefined,
         name: "",
         email: "",
@@ -563,9 +653,9 @@ const ContractForm = ({
           parseInt(item.finishTimeHr, 10) * 60 +
           parseInt(item.finishTimeMin, 10);
         if (item.isSameDay == 1) {
-          if (startHr < finishHr) {
+          if (startHr <= finishHr) {
             mins = finishTotalMins - startTotalMins;
-            console.log(mins);
+            console.log("mins = ", mins);
           } else mins = 0;
         } else {
           if (finishTotalMins < startTotalMins) {
@@ -602,7 +692,7 @@ const ContractForm = ({
               finishTimeMin: "00",
               totalTimeMin: "0",
               isSameDay: undefined,
-              shift: 0,
+              shift: "",
               alertTo: [],
               isNeed: false,
               isStrictOrder: false,
@@ -668,7 +758,9 @@ const ContractForm = ({
 
   const handleDelete = () => {};
 
-  const handleSave = () => {};
+  const handleSave = () => {
+    console.log("alertToList = ", alertToList);
+  };
 
   const handleSubmit = () => {};
 
@@ -725,14 +817,27 @@ const ContractForm = ({
     closeModal(isEdit);
   }
 
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (!files) return;
-
+    const allowedTypes = [
+      "application/pdf",
+      "image/jpeg",
+      "image/png",
+      "image/gif",
+    ];
+    const maxFileSize = 2 * 1024 * 1024; // 2 MB in bytes
+    if (!files) {console.log("!files"); return;};
     const file = files[0];
-
+    if (!allowedTypes.includes(file?.type)) {
+      alert("Only PDF, JPG, PNG, and GIF files are allowed.");
+      return;
+    }
+    if (file.size > maxFileSize) {
+      alert("File size must not exceed 2 MB.");
+      return;
+    }
     // use the file
+    setSelectNewFile([...selectNewFile, file]);
     console.log(file);
   };
 
@@ -744,123 +849,139 @@ const ContractForm = ({
     inputRef.current.click();
   }
 
-  function handleAlertToDetail (alertTo: PatrolAlertListType){
+  function handleAlertToDetail(alertTo: PatrolAlertListType) {
     setSelectedALertTo(alertTo);
     handleDisplayAlertToDetail();
   }
 
-  function handleDisplayAlertToDetail(){
+  function handleDisplayAlertToDetail() {
     setShowAlertToDeatil(!showAlertToDeatil);
   }
+
+  const handleContractInactive = (checked: boolean) => {
+    if (checked) setIsContractActive(false);
+  };
+
+  const handleContractActive = (checked: boolean) => {
+    if (checked) setIsContractActive(true);
+  };
+
+  const handleRemoveNewFile = (fileName: any) => {
+    const remainFile = selectNewFile.filter(f => f.name != fileName);
+    setSelectNewFile(remainFile);
+  };
+
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 flex flex-col items-center justify-center z-indextop">
       {/* Header */}
       {!showAlertToDeatil && (
         <>
-        <Box
-        sx={{
-          display: "flex",
-          width: "700px",
-          backgroundColor: "#D9F0EC",
-          paddingY: "5px",
-          borderRadius: "8px 8px 0px 0px", // Adjust rounded corners as needed
-          justifyContent: "center",
-        }}
-      >
-        <Box sx={{ width: "100%", display: "flex", justifyContent: "center" }}>
-          <Typography
+          <Box
             sx={{
-              width: "fit-content",
-              fontSize: "1.125rem", // text-lg equivalent
-              fontWeight: "bold",
-              color: "#1D7A9B",
-              marginTop: "0.25rem",
-              marginLeft: "78px",
+              display: "flex",
+              width: "700px",
+              backgroundColor: "#D9F0EC",
+              paddingY: "5px",
+              borderRadius: "8px 8px 0px 0px", // Adjust rounded corners as needed
+              justifyContent: "center",
             }}
           >
-            {formHeader}
-          </Typography>
-        </Box>
-        <Button2
-          className="bg-transparent float w-fit"
-          sx={{ position: "relative", right: 0, top: 0, color: "#83A2AD" }}
-          onClick={handleCloseContractForm}
-        >
-          <IoClose size={26} />
-        </Button2>
-      </Box>
-      <div className="bg-white rounded-b-lg shadow-lg min-h-[544px] max-h-[654px] w-[700px]">
-        {/* Body */}
-        <div className="max-h-[528px] min-h-[528px] overflow-auto">
-          <Box className="w-full px-6 py-2 rounded-t-lg pb-6">
-            {/* View / Edit Customer */}
-            {isEdit && (
-              <Box>
-                <Box className="flex w-full space-x-5 pt-2">
-                  <Box className="w-full border-b-2 pb-2 flex">
-                    <Box className="w-[70%]">
-                      <Box className="flex">
-                        <Typography
-                          textAlign="left"
-                          sx={{
-                            fontWeight: "700",
-                            color: "#2C5079",
-                            fontSize: "16px",
-                            paddingBottom: "0.25rem",
-                          }}
-                        >
-                          {`Customer : `}
-                        </Typography>
-                        <Typography
-                          textAlign="left"
-                          sx={{
-                            color: "#2C5079",
-                            fontSize: "16px",
-                            paddingBottom: "0.25rem",
-                            paddingLeft: "0.25rem",
-                          }}
-                        >
-                          {`${customer?.customerName}` + " "}
-                        </Typography>
-                      </Box>
+            <Box
+              sx={{ width: "100%", display: "flex", justifyContent: "center" }}
+            >
+              <Typography
+                sx={{
+                  width: "fit-content",
+                  fontSize: "1.125rem", // text-lg equivalent
+                  fontWeight: "bold",
+                  color: "#1D7A9B",
+                  marginTop: "0.25rem",
+                  marginLeft: "78px",
+                }}
+              >
+                {formHeader}
+              </Typography>
+            </Box>
+            <Button2
+              className="bg-transparent float w-fit"
+              sx={{ position: "relative", right: 0, top: 0, color: "#83A2AD" }}
+              onClick={handleCloseContractForm}
+            >
+              <IoClose size={26} />
+            </Button2>
+          </Box>
+          <div className="bg-white rounded-b-lg shadow-lg min-h-[544px] max-h-[654px] w-[700px]">
+            {/* Body */}
+            <div className="max-h-[528px] min-h-[528px] overflow-auto">
+              <Box className="w-full px-6 py-2 rounded-t-lg pb-6">
+                {/* View / Edit Customer */}
+                {isEdit && (
+                  <Box>
+                    <Box className="flex w-full space-x-5 pt-2">
+                      <Box className="w-full border-b-2 pb-2 flex">
+                        <Box className="w-[70%]">
+                          <Box className="flex">
+                            <Typography
+                              textAlign="left"
+                              sx={{
+                                fontWeight: "700",
+                                color: "#2C5079",
+                                fontSize: "16px",
+                                paddingBottom: "0.25rem",
+                              }}
+                            >
+                              {`Customer : `}
+                            </Typography>
+                            <Typography
+                              textAlign="left"
+                              sx={{
+                                color: "#2C5079",
+                                fontSize: "16px",
+                                paddingBottom: "0.25rem",
+                                paddingLeft: "0.25rem",
+                              }}
+                            >
+                              {`${customer?.customerName}` + " "}
+                            </Typography>
+                          </Box>
 
-                      <Typography
-                        sx={{
-                          color: "#4C9BF5",
-                          textDecorationLine: "underline",
-                          fontSize: "16px",
-                        }}
-                        textAlign={"left"}
-                      >
-                        Total : {contractList.length} contract
-                        {contractList.length > 1 ? "s" : ""}
-                      </Typography>
-                    </Box>
+                          <Typography
+                            sx={{
+                              color: "#4C9BF5",
+                              textDecorationLine: "underline",
+                              fontSize: "16px",
+                            }}
+                            textAlign={"left"}
+                          >
+                            Total : {contractList.length} contract
+                            {contractList.length > 1 ? "s" : ""}
+                          </Typography>
+                        </Box>
 
-                    <Box className="w-[30%] flex justify-end">
-                      <Button
+                        <Box className="w-[30%] flex justify-end">
+                          {/* <Button
                         onClick={addArea}
                         className=" bg-[#1D7A9B] hover:bg-[#D9F0EC] hover:text-[#1D7A9B] px-4"
                       >
                         + New Contract
-                      </Button>
+                      </Button> */}
+                        </Box>
+                      </Box>
                     </Box>
-                  </Box>
-                </Box>
 
-                <Box className="flex w-full space-x-5 pt-2">
-                  <Box className="w-1/2">
-                    <Selector
-                      selectorLabel={"Contract No."}
-                      itemSource={contractList}
-                      handleChange={handleSelectChange}
-                      selectedVal={selectedContractId}
-                      name={"selectedContractId"}
-                    />
-                  </Box>
+                    <Box className="flex w-full space-x-5 pt-2">
+                      <Box className="w-1/2">
+                        <Selector
+                          selectorLabel={"Contract No."}
+                          itemSource={contractList}
+                          handleChange={handleSelectChange}
+                          selectedVal={selectedContractId}
+                          name={"selectedContractId"}
+                        />
+                      </Box>
 
-                  <Box className="w-fit">
+                      {/* <Box className="w-fit">
                     <Typography
                       textAlign="left"
                       sx={{
@@ -877,91 +998,102 @@ const ContractForm = ({
                       setDateRange={setDate}
                       className={`bg-[#D9F0EC] w-full rounded-lg`}
                     />
-                  </Box>
-                </Box>
-
-                <Typography
-                  textAlign="left"
-                  sx={{
-                    fontWeight: "700",
-                    color: "#2C5079",
-                    fontSize: "14px",
-                    paddingBottom: "0.25rem",
-                    marginTop: "0.5rem",
-                  }}
-                >
-                  Attachment
-                </Typography>
-                <Box className="w-full flex space-x-3 ">
-                  {attachmentList.map((attach, index) => (
-                    <Box
-                      key={index}
-                      sx={{ borderRadius: "10px" }}
-                      className="justify-between flex p-1 bg-white max-w-[220px] border-[1px] border-[#4C9BF5]"
-                    >
-                      <Typography
-                        sx={{
-                          color: "#2C5079",
-                          paddingX: "0.5rem",
-                          paddingY: "0.25rem",
-                        }}
-                      >
-                        {attach}
-                      </Typography>
-                      <Trash
-                        size={24}
-                        color="#F66262"
-                        style={{ marginTop: 5 }}
-                        className="cursor-pointer"
-                      />
+                  </Box> */}
+                      <Box className="w-1/2">
+                        <Typography
+                          textAlign="left"
+                          sx={{
+                            fontWeight: "700",
+                            color: "#2C5079",
+                            fontSize: "14px",
+                            paddingBottom: "0.25rem",
+                          }}
+                        >
+                          Contract Status
+                        </Typography>
+                        <Box display={"flex"} className="space-x-2">
+                          <Box
+                            sx={{ borderRadius: "10px" }}
+                            className={`${
+                              isContractActive
+                                ? `bg-[#E2F7E1] border-[#86DC89]`
+                                : `bg-white border-[#2C5079]`
+                            } flex p-1 h-fit border-[1px] w-1/2`}
+                          >
+                            <Checkbox3
+                              onCheckedChange={handleContractActive}
+                              checked={isContractActive}
+                            />
+                            <Typography
+                              sx={{ color: "#2C5079" }}
+                              className="py-1 px-2"
+                            >
+                              Active
+                            </Typography>
+                          </Box>
+                          <Box
+                            sx={{ borderRadius: "10px" }}
+                            className={`${
+                              !isContractActive
+                                ? `bg-[#E2F7E1] border-[#86DC89]`
+                                : `bg-white border-[#2C5079]`
+                            } flex p-1 h-fit border-[1px] w-1/2`}
+                          >
+                            <Checkbox3
+                              onCheckedChange={handleContractInactive}
+                              checked={!isContractActive}
+                            />
+                            <Typography
+                              className="py-1 px-2"
+                              sx={{ color: "#2C5079" }}
+                            >
+                              Inactive
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </Box>
                     </Box>
-                  ))}
-                  <FormControl>
-                    <Button
-                      onClick={handleAddFileClick}
-                      className="w-[82px] bg-[#1D7A9B] hover:bg-[#D9F0EC] hover:text-[#1D7A9B] pr-4"
-                    >
-                      + Add File
-                    </Button>
-                    <input
-                      type="file"
-                      ref={inputRef}
-                      hidden
-                      onChange={handleFileChange}
-                    />
-                  </FormControl>
-                </Box>
-              </Box>
-            )}
 
-            {/* Add New Customer */}
-            {!isEdit && (
-              <Box>
-                <Box className="flex w-full space-x-5 pt-2">
-                  <Box className="w-1/2">
-                    <Selector
-                      selectorLabel={"Customer"}
-                      itemSource={customerList}
-                      handleChange={handleSelectChange}
-                      selectedVal={customerAdd}
-                      name={"addContractCustomer"}
-                    />
-                  </Box>
+                    <Box className="flex w-full space-x-7 pt-2">
+                      <Box className="w-1/2">
+                        <Typography
+                          textAlign="left"
+                          sx={{
+                            fontWeight: "700",
+                            color: "#2C5079",
+                            fontSize: "14px",
+                            paddingBottom: "0.25rem",
+                          }}
+                        >
+                          Start Date
+                        </Typography>
+                        <DatePicker
+                          date={startDate}
+                          setDate={setStartDate}
+                          h={"h-10"}
+                        />
+                      </Box>
 
-                  <Box className="w-1/2">
-                    <Textbox
-                      header="Contract Number"
-                      name="contractNumber"
-                      inputType="text"
-                      placeHolder="Type here..."
-                      value={addContractNo}
-                      handleChange={handleChange}
-                    />
-                  </Box>
-                </Box>
+                      <Box className="w-1/2">
+                        <Typography
+                          textAlign="left"
+                          sx={{
+                            fontWeight: "700",
+                            color: "#2C5079",
+                            fontSize: "14px",
+                            paddingBottom: "0.25rem",
+                          }}
+                        >
+                          End Date
+                        </Typography>
+                        <DatePicker
+                          date={finishDate}
+                          setDate={setFinishDate}
+                          h={"h-10"}
+                        />
+                      </Box>
+                    </Box>
 
-                <Box className="flex w-full space-x-5 pt-2">
-                  <Box className="w-1/2">
                     <Typography
                       textAlign="left"
                       sx={{
@@ -969,882 +1101,1079 @@ const ContractForm = ({
                         color: "#2C5079",
                         fontSize: "14px",
                         paddingBottom: "0.25rem",
+                        marginTop: "0.5rem",
                       }}
                     >
-                      Start Date
+                      Attachment
                     </Typography>
-                    <DatePicker h={"h-10"} />
-                  </Box>
-
-                  <Box className="w-1/2">
                     <Typography
                       textAlign="left"
                       sx={{
-                        fontWeight: "700",
-                        color: "#2C5079",
                         fontSize: "14px",
-                        paddingBottom: "0.25rem",
-                      }}
-                    >
-                      End Date
-                    </Typography>
-                    <DatePicker h={"h-10"} />
-                  </Box>
-                </Box>
-
-                <Typography
-                  textAlign="left"
-                  sx={{
-                    fontWeight: "700",
-                    color: "#2C5079",
-                    fontSize: "14px",
-                    paddingBottom: "0.25rem",
-                    marginTop: "0.5rem",
-                  }}
-                >
-                  Attachment
-                </Typography>
-                <Box className="w-full flex space-x-3 ">
-                  <Button
-                    onClick={addArea}
-                    className="w-[84px] bg-[#1D7A9B] hover:bg-[#D9F0EC] hover:text-[#1D7A9B] pr-4"
-                  >
-                    + Add File
-                  </Button>
-                </Box>
-              </Box>
-            )}
-
-            <Box sx={{ width: "100%" }}>
-              <TabContext value={tabValue}>
-                <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-                  <TabList onChange={handleTabChange} aria-label="areaTabs">
-                    <Tab label="Shift" value="1" />
-                    <Tab label="Manpower" value="2" />
-                    <Tab label="Patrol Alert List" value="3" />
-                    <Tab label="Patrol Round" value="4" />
-                  </TabList>
-                </Box>
-                <TabPanel value="1" sx={{ padding: 0, py: "0.25rem" }}>
-                  <Box className="w-full text-center items-center">
-                    <Typography
-                      sx={{
                         color: "#4C9BF5",
-                        textDecorationLine: "underline",
-                        fontSize: "16px",
-                        mb: "0.25rem",
+                        fontWeight: "700",
+                        paddingTop: "0.5rem",
+                        pb: "0.5rem",
                       }}
                     >
-                      Total shift: {shiftList.length}
+                      Existing Files :
                     </Typography>
-                    {shiftList.map((shift, index) => (
-                      <div className="mb-2" key={index}>
-                        <Box className="flex w-full">
+                    <Grid2 container sx={{ width: "100%", mb: 1 }} spacing={2}>
+                      {attachmentList.map((attach, index) => (
+                        <Grid2 size={4} key={index}>
                           <Box
                             key={index}
-                            sx={{
-                              bgcolor: "#EBF4F6",
-                              width: "100%",
-                              display: "flex",
-                              p: 2,
-                              borderRadius: "10px 0px 0px 10px",
-                            }}
-                            className="space-x-2"
+                            sx={{ borderRadius: "10px" }}
+                            className="justify-between flex p-1 bg-white max-w-[220px] border-[1px] border-[#4C9BF5]"
                           >
-                            <Box
-                              sx={{
-                                width: "50%",
-                                bgcolor: "white",
-                                borderRadius: "10px",
-                              }}
-                            >
-                              <LabelTextField2
-                                label={"Shift name"}
-                                placeholder={"Type here..."}
-                                inputVal={shift.desc}
-                                field={"desc"}
-                                id={shift.id}
-                                handleChangeVal={handleFieldShiftListTypeChange}
-                              />
-                            </Box>
-                            <Box
-                              sx={{
-                                maxWidth: "50%",
-                                width: "50%",
-                                bgcolor: "white",
-                                borderRadius: "10px",
-                              }}
-                            >
-                              <CheckBoxDropDown
-                                itemSource={data.daysOfWeek}
-                                label="Working Days"
-                                unit="วัน"
-                                selectedVal={shift.workdays}
-                                handleChangeVal={handleFieldShiftListTypeChange}
-                                id={shift.id}
-                                field={"workdays"}
-                                desc="จำนวน"
-                                maxLength={8}
-                                maxDiaplay={7}
-                              />
-                            </Box>
-                          </Box>
-                          <Box className="h-[72px]">
-                            <Button
-                              onClick={() => removeShift(shift.id)}
-                              className="bg-[#F66262] rounded-r-lg rounded-l-none h-full px-2"
-                            >
-                              <Trash color="white" />
-                            </Button>
-                          </Box>
-                        </Box>
-                      </div>
-                    ))}
-                    <Box className="flex">
-                      <AddButton onAddBtnClick={(e) => addShift()} />
-                    </Box>
-                  </Box>
-                </TabPanel>
-                <TabPanel value="2" sx={{ padding: 0, py: "0.25rem" }}>
-                  <Box className="w-full text-center items-center">
-                    <Typography
-                      sx={{
-                        color: "#4C9BF5",
-                        textDecorationLine: "underline",
-                        fontSize: "16px",
-                        mb: "0.25rem",
-                      }}
-                    >
-                      Total manpower: {totalManpower}
-                    </Typography>
-
-                    {shiftList.map((shift, index) => (
-                      <div className="mb-2" key={index}>
-                        <Accordion sx={{ bgcolor: "#EBF4F6", mb: "0.5rem" }}>
-                          <AccordionSummary
-                            sx={{ borderBottom: "1px solid #C7D4D7" }}
-                            expandIcon={<FaSortDown />}
-                            aria-controls={`panel${index}-content`}
-                            id={`panel${index}-header`}
-                          >
-                            <Box className="w-full flex justify-between">
-                              <Typography
-                                sx={{
-                                  fontSize: "14px",
-                                  color: "#1D7A9B",
-                                  fontWeight: 700,
-                                }}
-                              >
-                                {shift.desc}
-                              </Typography>
-                              <Typography
-                                sx={{
-                                  color: "#F66262",
-                                  textDecorationLine: "underline",
-                                  fontSize: "16px",
-                                  mr: 3,
-                                }}
-                              >
-                                {shift.manpowers.length} role
-                                {shift.manpowers.length > 1 ? "s" : ""}
-                              </Typography>
-                            </Box>
-                          </AccordionSummary>
-                          <AccordionDetails>
-                            {shift.manpowers.map((manpower, index) => (
-                              <Box sx={{ display: "flex" }} key={index}>
-                                <Box
-                                  key={index}
-                                  sx={{
-                                    bgcolor: "white",
-                                    width: "100%",
-                                    display: "flex",
-                                    p: 2,
-                                    mb: 1.5,
-                                    borderRadius: "10px",
-                                  }}
-                                >
-                                  <Box
-                                    sx={{
-                                      width: "100%",
-                                    }}
-                                    className="space-y-4"
-                                  >
-                                    <Box
-                                      sx={{ display: "flex", mr: 0.5 }}
-                                      className="space-x-2"
-                                    >
-                                      <Box sx={{ width: "42%" }}>
-                                        <LabelTextField2
-                                          label={"ตำแหน่งของลูกค้า"}
-                                          placeholder={"Type here..."}
-                                          inputVal={manpower.nameInReport}
-                                          handleChangeVal={
-                                            handleFieldManpowerTypeChange
-                                          }
-                                          field={"nameInReport"}
-                                          id={shift.id}
-                                          id2={manpower.id}
-                                        />
-                                      </Box>
-                                      <Box sx={{ width: "42%" }}>
-                                        <LabelSelector3
-                                          selectorLabel={"ตำแหน่ง"}
-                                          itemSource={data.roles}
-                                          handleSelectedVal={
-                                            handleFieldManpowerTypeChange
-                                          }
-                                          selectedVal={manpower.roleId}
-                                          field={"roleId"}
-                                          defaultSelected="select"
-                                          id={shift.id}
-                                          id2={manpower.id}
-                                        />
-                                      </Box>
-                                      <Box sx={{ width: "16%" }}>
-                                        <LabelTextField2
-                                          label={"จำนวน"}
-                                          placeholder={"Type here..."}
-                                          inputVal={manpower.quantity}
-                                          handleChangeVal={
-                                            handleFieldManpowerTypeChange
-                                          }
-                                          field={"quantity"}
-                                          id={shift.id}
-                                          id2={manpower.id}
-                                        />
-                                      </Box>
-                                    </Box>
-                                  </Box>
-                                </Box>
-                                <Box
-                                  key={`${manpower}-${index}`}
-                                  className="h-[72px]"
-                                >
-                                  <Button
-                                    onClick={() =>
-                                      removeManpower(shift.id, manpower.id)
-                                    }
-                                    className="bg-[#F66262] rounded-r-lg rounded-l-none h-full px-2"
-                                  >
-                                    <Trash color="white" />
-                                  </Button>
-                                </Box>
-                              </Box>
-                            ))}
-
-                            <Box
-                              sx={{
-                                display: "flex",
-                                width: "100%",
-                                justifyContent: "space-between",
-                              }}
-                            >
-                              <AddButton
-                                onAddBtnClick={(e) => addManpower(shift.id)}
-                              />
-                              <Typography
-                                sx={{
-                                  color: "#4C9BF5",
-                                  textDecorationLine: "underline",
-                                  fontSize: "16px",
-                                  mt: 1,
-                                }}
-                              >
-                                Total manpower:{" "}
-                                {shift.manpowers.reduce((sum, mp) => {
-                                  return (sum += mp.quantity);
-                                }, 0)}
-                              </Typography>
-                            </Box>
-                          </AccordionDetails>
-                        </Accordion>
-                      </div>
-                    ))}
-                  </Box>
-                </TabPanel>
-                <TabPanel value="3" sx={{ padding: 0, py: "0.25rem" }}>
-                  <Box className="w-full text-center items-center">
-                    <Typography
-                      sx={{
-                        color: "#4C9BF5",
-                        textDecorationLine: "underline",
-                        fontSize: "16px",
-                        mb: "0.25rem",
-                      }}
-                    >
-                      Total Alert: {alertToList.length}
-                    </Typography>
-                    {alertToList.map((alertTo, index) => (
-                      <div className="mb-2" key={`${alertTo} - ${index}`}>
-                        <Box
-                          sx={{
-                            bgcolor: "#EBF4F6",
-                            p: 2,
-                            borderRadius: "10px 0px 0px 10px",
-                            width: "100%",
-                          }}
-                          className="space-y-4"
-                        >
-                          <Box
-                            key={`${alertTo} - ${index}-contentBox`}
-                            className="space-x-2 flex"
-                          >
-                            <Box className="w-11 h-10 bg-[#37B7C3] rounded-lg justify-center text-white pt-2">
-                              {index + 1}
-                            </Box>
-                            <Box
-                              sx={{
-                                width: "40%",
-                                bgcolor: "white",
-                                borderRadius: "10px",
-                              }}
-                            >
-                              <LabelSelector3
-                                selectorLabel={"สังกัด"}
-                                itemSource={[
-                                  { id: 1, desc: "ASM" },
-                                  { id: 2, desc: "ลูกค้า" },
-                                ]}
-                                selectedVal={alertTo.isAsm}
-                                field={"isAsm"}
-                                id={alertTo.id}
-                                handleSelectedVal={
-                                  handleFieldPatrolAlertListTypeChange
-                                }
-                              />
-                            </Box>
-                            <Box
-                              sx={{
-                                width: "40%",
-                                bgcolor: "white",
-                                borderRadius: "10px",
-                              }}
-                            >
-                              {" "}
-                              {alertTo.isAsm === 2 ? (
-                                <LabelTextField2
-                                  label={"ชื่อ นามสกุล"}
-                                  placeholder={"Type here..."}
-                                  inputVal={alertTo.name}
-                                  field={"name"}
-                                  id={alertTo.id}
-                                  handleChangeVal={
-                                    handleFieldPatrolAlertListTypeChange
-                                  }
-                                />
-                              ) : (
-                                <LabelSelector3
-                                  selectorLabel={"ชื่อ นามสกุล"}
-                                  itemSource={asmAlertNames}
-                                  selectedVal={alertTo.name}
-                                  field={"name"}
-                                  id={alertTo.id}
-                                  handleSelectedVal={
-                                    handleFieldPatrolAlertListTypeChange
-                                  }
-                                />
-                              )}
-                            </Box>
-                            <Button
-                              onClick={() => removeAlertToList(alertTo.id)}
-                              className="bg-[#F66262] rounded-lg h-full px-2"
-                            >
-                              <Trash color="white" />
-                            </Button>
-                          </Box>
-                          <Box key={index} className="space-x-2 flex">
-                            <Box
-                              sx={{
-                                ml: "9%",
-                                width: "40%",
-                                bgcolor: "white",
-                                borderRadius: "10px",
-                              }}
-                            >
-                              <LabelTextField2
-                                label={"Email"}
-                                placeholder={"Type here..."}
-                                inputVal={
-                                  alertTo.isAsm === 1
-                                    ? asmAlertNames.find(
-                                        (a) => a.desc === alertTo.name
-                                      )?.email || ""
-                                    : alertTo.email
-                                }
-                                field={"email"}
-                                id={alertTo.id}
-                                handleChangeVal={
-                                  handleFieldPatrolAlertListTypeChange
-                                }
-                                disable={alertTo.isAsm === 1 ? true : false}
-                              />
-                            </Box>
-                            <Box
-                              sx={{
-                                width: "40%",
-                                bgcolor: "white",
-                                borderRadius: "10px",
-                              }}
-                            >
-                              <CheckBoxDropDown
-                                itemSource={data.roles}
-                                label={"ตำแหน่งอื่นๆ ที่ต้องการรับ Alert"}
-                                unit={"ตำแหน่ง"}
-                                selectedVal={alertTo.otherPositionId}
-                                id={alertTo.id}
-                                field={"otherPositionId"}
-                                handleChangeVal={
-                                  handleFieldPatrolAlertListTypeChange
-                                }
-                                desc={"เลือก"}
-                                maxLength={data.roles.length}
-                                maxDiaplay={data.roles.length}
-                              />
-                            </Box>
-                          </Box>
-                          <Button
-                            className="flex text-[#1D7A9B] bg-transparent hover:bg-transparent underline w-full pt-0 justify-center"
-                            onClick={()=>handleAlertToDetail(alertTo)}
-                          >
-                            ดู Area & Round ที่รับ Alert
-                            <GoArrowUpRight size={24} color="#1D7A9B" style={{ marginTop: 5 }}/>
-                          </Button>
-                        </Box>
-                      </div>
-                    ))}
-                    <Box className="flex">
-                      <AddButton onAddBtnClick={(e) => addAlertToList()} />
-                    </Box>
-                  </Box>
-                </TabPanel>
-                <TabPanel value="4" sx={{ padding: 0, py: "0.25rem" }}>
-                  <Box className="w-full text-center items-center">
-                    <Typography
-                      sx={{
-                        color: "#4C9BF5",
-                        textDecorationLine: "underline",
-                        fontSize: "16px",
-                        mb: "0.25rem",
-                      }}
-                    >
-                      Total: {areas.length} area{areas.length > 1 ? "s" : ""}
-                    </Typography>
-
-                    {areaList.map((area, index) => (
-                      <div className="mb-2" key={index}>
-                        <Accordion sx={{ bgcolor: "#EBF4F6", mb: "0.5rem" }}>
-                          <AccordionSummary
-                            sx={{ borderBottom: "1px solid #C7D4D7" }}
-                            expandIcon={<FaSortDown />}
-                            aria-controls={`panel${index}-content`}
-                            id={`panel${index}-header`}
-                          >
-                            <Box className="w-full flex justify-between">
-                              <Typography
-                                sx={{
-                                  fontSize: "14px",
-                                  color: "#1D7A9B",
-                                  fontWeight: 700,
-                                }}
-                              >
-                                {area.areaName}
-                              </Typography>
-                            </Box>
-                          </AccordionSummary>
-                          <AccordionDetails>
                             <Typography
                               sx={{
                                 color: "#2C5079",
-                                textDecorationLine: "underline",
-                                fontSize: "14px",
-                                fontWeight: 700,
-                                pb: 1,
+                                ml: "0.25rem",
+                                paddingY: "0.25rem",
+                                width: "90%"
                               }}
                             >
-                              Patrol Round
+                              {attach.length > 18 ? attach.substring(0, 18)+"..." : attach}
                             </Typography>
-                            {area.roundList.map((round, index) => (
+                            <Trash
+                              size={22}
+                              color="#F66262"
+                              style={{ marginTop: 5 }}
+                              className="cursor-pointer"
+                            />
+                          </Box>
+                        </Grid2>
+                      ))}
+                    </Grid2>
+                    {selectNewFile.length > 0 && (
+                      <Typography
+                        textAlign="left"
+                        sx={{
+                          fontSize: "14px",
+                          color: "#4C9BF5",
+                          fontWeight: "700",
+                          paddingTop: "0.5rem",
+                          pb: "0.5rem",
+                        }}
+                      >
+                        New Upload Files :
+                      </Typography>
+                    )}
+                    <Grid2 container sx={{ width: "100%", mb:1.5 }} spacing={2}>
+                      {selectNewFile.map((file, index) => (
+                        <Grid2 size={4} key={index}>
+                          <Box className="justify-between flex p-1 bg-white border-[1px] border-[#4C9BF5] rounded-lg">
+                          <Typography className="py-1 pl-1 text-[#2C5079] w-[90%]">
+                              {file.name.length > 17
+                                ? file.name.substring(0, 17) + "..."
+                                : file.name}
+                            </Typography>
+                            <Trash
+                              onClick={() => handleRemoveNewFile(file.name)}
+                              size={22}
+                              color="#F66262"
+                              style={{ marginTop: 5 }}
+                              className="cursor-pointer"
+                            />
+                          </Box>
+                        </Grid2>
+                      ))}
+                    </Grid2>
+                    <Box className="w-full flex space-x-3 mb-2">
+                      <FormControl>
+                        <Button
+                          onClick={handleAddFileClick}
+                          className="w-[82px] bg-[#1D7A9B] hover:bg-[#D9F0EC] hover:text-[#1D7A9B] pr-4"
+                        >
+                          + Add File
+                        </Button>
+                        <input
+                          type="file"
+                          ref={inputRef}
+                          hidden
+                          onChange={handleFileChange}
+                        />
+                      </FormControl>
+                    </Box>
+                  </Box>
+                )}
+
+                {/* Add New Customer */}
+                {!isEdit && (
+                  <Box>
+                    <Box className="flex w-full space-x-5 pt-2">
+                      <Box className="w-1/2">
+                        <Selector
+                          selectorLabel={"Customer"}
+                          itemSource={customerList}
+                          handleChange={handleSelectChange}
+                          selectedVal={customerAdd}
+                          name={"addContractCustomer"}
+                        />
+                      </Box>
+
+                      <Box className="w-1/2">
+                        <Textbox
+                          header="Contract Number"
+                          name="contractNumber"
+                          inputType="text"
+                          placeHolder="Type here..."
+                          value={addContractNo}
+                          handleChange={handleChange}
+                        />
+                      </Box>
+                    </Box>
+
+                    <Box className="flex w-full space-x-5 pt-2">
+                      <Box className="w-1/2">
+                        <Typography
+                          textAlign="left"
+                          sx={{
+                            fontWeight: "700",
+                            color: "#2C5079",
+                            fontSize: "14px",
+                            paddingBottom: "0.25rem",
+                          }}
+                        >
+                          Start Date
+                        </Typography>
+                        <DatePicker date={startDate} setDate={setStartDate} h={"h-10"} />
+                      </Box>
+
+                      <Box className="w-1/2">
+                        <Typography
+                          textAlign="left"
+                          sx={{
+                            fontWeight: "700",
+                            color: "#2C5079",
+                            fontSize: "14px",
+                            paddingBottom: "0.25rem",
+                          }}
+                        >
+                          End Date
+                        </Typography>
+                        <DatePicker h={"h-10"} date={finishDate} setDate={setFinishDate}/>
+                      </Box>
+                    </Box>
+
+                    <Typography
+                      textAlign="left"
+                      sx={{
+                        fontWeight: "700",
+                        color: "#2C5079",
+                        fontSize: "14px",
+                        paddingBottom: "0.25rem",
+                        marginTop: "0.5rem",
+                      }}
+                    >
+                      Attachment
+                    </Typography>
+                    <Grid2 container sx={{ width: "100%", mb:1.5 }} spacing={2}>
+                      {selectNewFile.map((file, index) => (
+                        <Grid2 size={4} key={index}>
+                          <Box className="justify-between flex p-1 bg-white border-[1px] border-[#4C9BF5] rounded-lg">
+                            <Typography className="py-1 pl-1 text-[#2C5079] w-[90%]">
+                              {file.name.length > 17
+                                ? file.name.substring(0, 17) + "..."
+                                : file.name}
+                            </Typography>
+                            <Trash
+                              onClick={() => handleRemoveNewFile(file.name)}
+                              size={22}
+                              color="#F66262"
+                              style={{ marginTop: 5 }}
+                              className="cursor-pointer"
+                            />
+                          </Box>
+                        </Grid2>
+                      ))}
+                    </Grid2>
+                    <Box className="w-full flex space-x-3 mb-2">
+                      <FormControl>
+                        <Button
+                          onClick={handleAddFileClick}
+                          className="w-[82px] bg-[#1D7A9B] hover:bg-[#D9F0EC] hover:text-[#1D7A9B] pr-4"
+                        >
+                          + Add File
+                        </Button>
+                        <input
+                          type="file"
+                          ref={inputRef}
+                          hidden
+                          onChange={handleFileChange}
+                        />
+                      </FormControl>
+                    </Box>
+                  </Box>
+                )}
+
+                <Box sx={{ width: "100%" }}>
+                  <TabContext value={tabValue}>
+                    <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+                      <TabList onChange={handleTabChange} aria-label="areaTabs">
+                        <Tab label="Shift" value="1" />
+                        <Tab label="Manpower" value="2" />
+                        <Tab label="Patrol Alert List" value="3" />
+                        <Tab label="Patrol Round" value="4" />
+                      </TabList>
+                    </Box>
+                    <TabPanel value="1" sx={{ padding: 0, py: "0.25rem" }}>
+                      <Box className="w-full text-center items-center">
+                        <Typography
+                          sx={{
+                            color: "#4C9BF5",
+                            textDecorationLine: "underline",
+                            fontSize: "16px",
+                            mb: "0.25rem",
+                          }}
+                        >
+                          Total shift: {shiftList.length}
+                        </Typography>
+                        {shiftList.map((shift, index) => (
+                          <div className="mb-2" key={index}>
+                            <Box className="flex w-full">
                               <Box
                                 key={index}
                                 sx={{
-                                  bgcolor: "white",
+                                  bgcolor: "#EBF4F6",
                                   width: "100%",
                                   display: "flex",
                                   p: 2,
-                                  mb: 1.5,
-                                  borderRadius: "10px",
+                                  borderRadius: "10px 0px 0px 10px",
                                 }}
+                                className="space-x-2"
                               >
                                 <Box
                                   sx={{
-                                    width: "90%",
+                                    width: "50%",
+                                    bgcolor: "white",
+                                    borderRadius: "10px",
                                   }}
-                                  className="space-y-4"
                                 >
-                                  <Box
-                                    sx={{ display: "flex", mr: 0.5 }}
-                                    className="space-x-3"
-                                  >
-                                    <Box sx={{ width: "15%" }}>
-                                      <LabelTextField2
-                                        label={"รอบที่"}
-                                        placeholder={""}
-                                        inputVal={round.number}
-                                        handleChangeVal={
-                                          handleFieldDataInRoundChange
-                                        }
-                                        field={"number"}
-                                        id={area.areaId}
-                                        id2={round.id}
-                                      />
-                                    </Box>
-                                    <Box sx={{ width: "30%" }}>
-                                      <FloatingLabelBox
-                                        labelAlign={"left"}
-                                        label={"ตั้งแต่"}
-                                        field={
-                                          <Box
-                                            sx={{
-                                              display: "flex",
-                                              color: "#2C5079",
-                                            }}
-                                          >
-                                            <Clock
-                                              className="w-[24%] mt-2 ml-2"
-                                              size={20}
-                                            />
-                                            <Input
-                                              value={round.startTimeHr}
-                                              className="p-0 ml-1 w-[26%] border-none text-center text-[14px]"
-                                              type="number"
-                                              min={0}
-                                              max={24}
-                                              onChange={(e) =>
-                                                handleFieldDataInRoundChange(
-                                                  area.areaId,
-                                                  round.id,
-                                                  "startTimeHr",
-                                                  e.target.value
-                                                )
-                                              }
-                                              onBlur={(e) => {
-                                                const value = handleInputHour(
-                                                  e.target.value,
-                                                  "hr"
-                                                );
-                                                handleFieldDataInRoundChange(
-                                                  area.areaId,
-                                                  round.id,
-                                                  "startTimeHr",
-                                                  value
-                                                );
-                                              }}
-                                            />
-                                            <Typography
-                                              sx={{ fontSize: "18px", mt: 0.5 }}
-                                            >
-                                              :
-                                            </Typography>
-                                            <Input
-                                              value={round.startTimeMin}
-                                              className="p-0 w-[25%] border-none text-center mr-1 text-[14px]"
-                                              onChange={(e) =>
-                                                handleFieldDataInRoundChange(
-                                                  area.areaId,
-                                                  round.id,
-                                                  "startTimeMin",
-                                                  e.target.value
-                                                )
-                                              }
-                                              onBlur={(e) => {
-                                                const value = handleInputHour(
-                                                  e.target.value,
-                                                  "min"
-                                                );
-                                                handleFieldDataInRoundChange(
-                                                  area.areaId,
-                                                  round.id,
-                                                  "startTimeMin",
-                                                  value
-                                                );
-                                              }}
-                                            />
-                                          </Box>
-                                        }
-                                      />
-                                    </Box>
-                                    <Box sx={{ width: "30%" }}>
-                                      <FloatingLabelBox
-                                        labelAlign={"left"}
-                                        label={"ถึง"}
-                                        field={
-                                          <Box
-                                            sx={{
-                                              display: "flex",
-                                              color: "#2C5079",
-                                            }}
-                                          >
-                                            <Clock
-                                              className="w-[25%] mt-2 ml-2"
-                                              size={20}
-                                            />
-                                            <Input
-                                              value={round.finishTimeHr}
-                                              className="p-0 w-[25%] border-none text-center text-[14px]"
-                                              onChange={(e) =>
-                                                handleFieldDataInRoundChange(
-                                                  area.areaId,
-                                                  round.id,
-                                                  "finishTimeHr",
-                                                  e.target.value
-                                                )
-                                              }
-                                              onBlur={(e) => {
-                                                const value = handleInputHour(
-                                                  e.target.value,
-                                                  "hr"
-                                                );
-                                                handleFieldDataInRoundChange(
-                                                  area.areaId,
-                                                  round.id,
-                                                  "finishTimeHr",
-                                                  value
-                                                );
-                                              }}
-                                            />
-                                            <Typography
-                                              sx={{ fontSize: "18px", mt: 0.5 }}
-                                            >
-                                              :
-                                            </Typography>
-                                            <Input
-                                              value={round.finishTimeMin}
-                                              className="p-0 w-[25%] border-none text-center mr-1 text-[14px]"
-                                              onChange={(e) =>
-                                                handleFieldDataInRoundChange(
-                                                  area.areaId,
-                                                  round.id,
-                                                  "finishTimeMin",
-                                                  e.target.value
-                                                )
-                                              }
-                                              onBlur={(e) => {
-                                                const value = handleInputHour(
-                                                  e.target.value,
-                                                  "min"
-                                                );
-                                                handleFieldDataInRoundChange(
-                                                  area.areaId,
-                                                  round.id,
-                                                  "finishTimeMin",
-                                                  value
-                                                );
-                                              }}
-                                            />
-                                          </Box>
-                                        }
-                                      />
-                                    </Box>
-                                    <Box
-                                      sx={{
-                                        width: "25%",
-                                        border: "1px solid #2C5079",
-                                        borderRadius: "10px",
-                                        bgcolor: "#EBF4F6",
-                                      }}
-                                    >
-                                      <Typography
-                                        sx={{
-                                          color: "#2C5079",
-                                          mt: 1,
-                                        }}
-                                      >
-                                        {round.totalTimeMin} minutes
-                                      </Typography>
-                                    </Box>
-                                  </Box>
-
-                                  <Box
-                                    sx={{ display: "flex", mr: 0.5 }}
-                                    className="space-x-3"
-                                  >
-                                    <Box sx={{ width: "50%" }}>
-                                      <LabelSelector3
-                                        selectorLabel={"ของวัน"}
-                                        itemSource={isSameDayList}
-                                        handleSelectedVal={
-                                          handleFieldDataInRoundChange
-                                        }
-                                        selectedVal={round.isSameDay}
-                                        field={"isSameDay"}
-                                        defaultSelected="เลือก"
-                                        id={area.areaId}
-                                        id2={round.id}
-                                      />
-                                    </Box>
-                                    <Box sx={{ width: "50%" }}>
-                                      <LabelSelector3
-                                        selectorLabel={"ผลัด"}
-                                        itemSource={shiftList}
-                                        handleSelectedVal={
-                                          handleFieldDataInRoundChange
-                                        }
-                                        selectedVal={round.shift}
-                                        field={"shift"}
-                                        defaultSelected="เลือก"
-                                        id={area.areaId}
-                                        id2={round.id}
-                                      />
-                                    </Box>
-                                  </Box>
-
-                                  <Box
-                                    sx={{ display: "flex", mr: 0.5 }}
-                                    className="space-x-3"
-                                  >
-                                    <Box sx={{ width: "50%", display: "flex" }}>
-                                      <Box
-                                        sx={{
-                                          width: "45%",
-                                          display: "flex",
-                                          textAlign: "left",
-                                        }}
-                                      >
-                                        <Checkbox
-                                          className="w-9 h-9 mt-1"
-                                          checked={round.isNeed}
-                                          onCheckedChange={(e) =>
-                                            handleFieldDataInRoundChange(
-                                              area.areaId,
-                                              round.id,
-                                              "isNeed",
-                                              !round.isNeed
-                                            )
-                                          }
-                                        />
-                                        <Typography className="pl-1 pt-2 text-[#2C5079] text-[15px]">
-                                          บังคับเดิน
-                                        </Typography>
-                                      </Box>
-                                      <Box
-                                        sx={{ width: "55%", display: "flex" }}
-                                      >
-                                        <Checkbox
-                                          className="w-9 h-9 mt-1"
-                                          checked={round.isStrictOrder}
-                                          onCheckedChange={(e) =>
-                                            handleFieldDataInRoundChange(
-                                              area.areaId,
-                                              round.id,
-                                              "isStrictOrder",
-                                              !round.isStrictOrder
-                                            )
-                                          }
-                                        />
-                                        <Typography className="pl-1 pt-2 text-[#2C5079] text-[15px]">
-                                          เดินตามลำดับ
-                                        </Typography>
-                                      </Box>
-                                    </Box>
-                                    <Box sx={{ width: "50%" }}>
-                                      <CheckBoxDropDown
-                                        itemSource={alertToList}
-                                        label={"Alert to"}
-                                        unit={""}
-                                        selectedVal={round.alertTo}
-                                        id={area.areaId}
-                                        id2={round.id}
-                                        field={"alertTo"}
-                                        handleChangeVal={
-                                          handleFieldDataInRoundChange
-                                        }
-                                        desc={"เลือก"}
-                                        maxLength={alertToList.length}
-                                        maxDiaplay={alertToList.length}
-                                      />
-                                    </Box>
-                                  </Box>
+                                  <LabelTextField2
+                                    label={"Shift name"}
+                                    placeholder={"Type here..."}
+                                    inputVal={shift.desc}
+                                    field={"desc"}
+                                    id={shift.id}
+                                    handleChangeVal={
+                                      handleFieldShiftListTypeChange
+                                    }
+                                  />
                                 </Box>
-
+                                <Box
+                                  sx={{
+                                    maxWidth: "50%",
+                                    width: "50%",
+                                    bgcolor: "white",
+                                    borderRadius: "10px",
+                                  }}
+                                >
+                                  <CheckBoxDropDown
+                                    itemSource={data.daysOfWeek}
+                                    label="Working Days"
+                                    unit="วัน"
+                                    selectedVal={shift.workdays}
+                                    handleChangeVal={
+                                      handleFieldShiftListTypeChange
+                                    }
+                                    id={shift.id}
+                                    field={"workdays"}
+                                    desc="จำนวน"
+                                    maxLength={8}
+                                    maxDiaplay={7}
+                                  />
+                                </Box>
+                              </Box>
+                              <Box className="h-[72px]">
                                 <Button
-                                  onClick={() =>
-                                    removeRound(area.areaId, round.id)
-                                  }
-                                  className="bg-[#F66262] rounded-lg w-14 h-full"
+                                  onClick={() => removeShift(shift.id)}
+                                  className="bg-[#F66262] rounded-r-lg rounded-l-none h-full px-2"
                                 >
                                   <Trash color="white" />
                                 </Button>
                               </Box>
-                            ))}
+                            </Box>
+                          </div>
+                        ))}
+                        <Box className="flex">
+                          <AddButton onAddBtnClick={(e) => addShift()} />
+                        </Box>
+                      </Box>
+                    </TabPanel>
+                    <TabPanel value="2" sx={{ padding: 0, py: "0.25rem" }}>
+                      <Box className="w-full text-center items-center">
+                        <Typography
+                          sx={{
+                            color: "#4C9BF5",
+                            textDecorationLine: "underline",
+                            fontSize: "16px",
+                            mb: "0.25rem",
+                          }}
+                        >
+                          Total manpower: {totalManpower}
+                        </Typography>
 
+                        {shiftList.map((shift, index) => (
+                          <div className="mb-2" key={index}>
+                            <Accordion
+                              sx={{ bgcolor: "#EBF4F6", mb: "0.5rem" }}
+                            >
+                              <AccordionSummary
+                                sx={{ borderBottom: "1px solid #C7D4D7" }}
+                                expandIcon={<FaSortDown />}
+                                aria-controls={`panel${index}-content`}
+                                id={`panel${index}-header`}
+                              >
+                                <Box className="w-full flex justify-between">
+                                  <Typography
+                                    sx={{
+                                      fontSize: "14px",
+                                      color: "#1D7A9B",
+                                      fontWeight: 700,
+                                    }}
+                                  >
+                                    {shift.desc}
+                                  </Typography>
+                                  <Typography
+                                    sx={{
+                                      color: "#F66262",
+                                      textDecorationLine: "underline",
+                                      fontSize: "16px",
+                                      mr: 3,
+                                    }}
+                                  >
+                                    {shift.manpowers.length} role
+                                    {shift.manpowers.length > 1 ? "s" : ""}
+                                  </Typography>
+                                </Box>
+                              </AccordionSummary>
+                              <AccordionDetails>
+                                {shift.manpowers.map((manpower, index) => (
+                                  <Box sx={{ display: "flex" }} key={index}>
+                                    <Box
+                                      key={index}
+                                      sx={{
+                                        bgcolor: "white",
+                                        width: "100%",
+                                        display: "flex",
+                                        p: 2,
+                                        mb: 1.5,
+                                        borderRadius: "10px",
+                                      }}
+                                    >
+                                      <Box
+                                        sx={{
+                                          width: "100%",
+                                        }}
+                                        className="space-y-4"
+                                      >
+                                        <Box
+                                          sx={{ display: "flex", mr: 0.5 }}
+                                          className="space-x-2"
+                                        >
+                                          <Box sx={{ width: "42%" }}>
+                                            <LabelTextField2
+                                              label={"ตำแหน่งของลูกค้า"}
+                                              placeholder={"Type here..."}
+                                              inputVal={manpower.nameInReport}
+                                              handleChangeVal={
+                                                handleFieldManpowerTypeChange
+                                              }
+                                              field={"nameInReport"}
+                                              id={shift.id}
+                                              id2={manpower.id}
+                                            />
+                                          </Box>
+                                          <Box sx={{ width: "42%" }}>
+                                            <LabelSelector3
+                                              selectorLabel={"ตำแหน่ง"}
+                                              itemSource={data.roles}
+                                              handleSelectedVal={
+                                                handleFieldManpowerTypeChange
+                                              }
+                                              selectedVal={manpower.roleId}
+                                              field={"roleId"}
+                                              defaultSelected="select"
+                                              id={shift.id}
+                                              id2={manpower.id}
+                                            />
+                                          </Box>
+                                          <Box sx={{ width: "16%" }}>
+                                            <LabelTextField2
+                                              label={"จำนวน"}
+                                              placeholder={"Type here..."}
+                                              inputVal={manpower.quantity}
+                                              handleChangeVal={
+                                                handleFieldManpowerTypeChange
+                                              }
+                                              field={"quantity"}
+                                              id={shift.id}
+                                              id2={manpower.id}
+                                            />
+                                          </Box>
+                                        </Box>
+                                      </Box>
+                                    </Box>
+                                    <Box
+                                      key={`${manpower}-${index}`}
+                                      className="h-[72px]"
+                                    >
+                                      <Button
+                                        onClick={() =>
+                                          removeManpower(shift.id, manpower.id)
+                                        }
+                                        className="bg-[#F66262] rounded-r-lg rounded-l-none h-full px-2"
+                                      >
+                                        <Trash color="white" />
+                                      </Button>
+                                    </Box>
+                                  </Box>
+                                ))}
+
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    width: "100%",
+                                    justifyContent: "space-between",
+                                  }}
+                                >
+                                  <AddButton
+                                    onAddBtnClick={(e) => addManpower(shift.id)}
+                                  />
+                                  <Typography
+                                    sx={{
+                                      color: "#4C9BF5",
+                                      textDecorationLine: "underline",
+                                      fontSize: "16px",
+                                      mt: 1,
+                                    }}
+                                  >
+                                    Total manpower:{" "}
+                                    {shift.manpowers.reduce((sum, mp) => {
+                                      return (sum += mp.quantity);
+                                    }, 0)}
+                                  </Typography>
+                                </Box>
+                              </AccordionDetails>
+                            </Accordion>
+                          </div>
+                        ))}
+                      </Box>
+                    </TabPanel>
+                    <TabPanel value="3" sx={{ padding: 0, py: "0.25rem" }}>
+                      <Box className="w-full text-center items-center">
+                        <Typography
+                          sx={{
+                            color: "#4C9BF5",
+                            textDecorationLine: "underline",
+                            fontSize: "16px",
+                            mb: "0.25rem",
+                          }}
+                        >
+                          Total Alert: {alertToList.length}
+                        </Typography>
+                        {alertToList.map((alertTo, index) => (
+                          <div className="mb-2" key={`${alertTo} - ${index}`}>
                             <Box
                               sx={{
-                                display: "flex",
+                                bgcolor: "#EBF4F6",
+                                p: 2,
+                                borderRadius: "10px 0px 0px 10px",
                                 width: "100%",
-                                justifyContent: "space-between",
                               }}
+                              className="space-y-4"
                             >
-                              <AddButton
-                                onAddBtnClick={(e) => addRound(area.areaId)}
-                              />
-                              <Typography
-                                sx={{
-                                  color: "#4C9BF5",
-                                  textDecorationLine: "underline",
-                                  fontSize: "16px",
-                                  mt: 1,
-                                }}
+                              <Box
+                                key={`${alertTo} - ${index}-contentBox`}
+                                className="space-x-2 flex"
                               >
-                                Total: {area.roundList.length} round
-                                {area.roundList.length > 1 ? "s" : ""}
-                              </Typography>
+                                <Box className="w-11 h-10 bg-[#37B7C3] rounded-lg justify-center text-white pt-2">
+                                  {index + 1}
+                                </Box>
+                                <Box
+                                  sx={{
+                                    width: "40%",
+                                    bgcolor: "white",
+                                    borderRadius: "10px",
+                                  }}
+                                >
+                                  <LabelSelector3
+                                    selectorLabel={"สังกัด"}
+                                    itemSource={[
+                                      { id: 1, desc: "ASM" },
+                                      { id: 2, desc: "ลูกค้า" },
+                                    ]}
+                                    selectedVal={alertTo.isAsm}
+                                    field={"isAsm"}
+                                    id={alertTo.id}
+                                    handleSelectedVal={
+                                      handleFieldPatrolAlertListTypeChange
+                                    }
+                                  />
+                                </Box>
+                                <Box
+                                  sx={{
+                                    width: "40%",
+                                    bgcolor: "white",
+                                    borderRadius: "10px",
+                                  }}
+                                >
+                                  {" "}
+                                  {alertTo.isAsm === 2 ? (
+                                    <LabelTextField2
+                                      label={"ชื่อ นามสกุล"}
+                                      placeholder={"Type here..."}
+                                      inputVal={alertTo.name}
+                                      field={"name"}
+                                      id={alertTo.id}
+                                      handleChangeVal={
+                                        handleFieldPatrolAlertListTypeChange
+                                      }
+                                    />
+                                  ) : (
+                                    <LabelSelector3
+                                      selectorLabel={"ชื่อ นามสกุล"}
+                                      itemSource={asmAlertNames}
+                                      selectedVal={alertTo.name}
+                                      field={"name"}
+                                      id={alertTo.id}
+                                      handleSelectedVal={
+                                        handleFieldPatrolAlertListTypeChange
+                                      }
+                                    />
+                                  )}
+                                </Box>
+                                <Button
+                                  onClick={() => removeAlertToList(alertTo.id)}
+                                  className="bg-[#F66262] rounded-lg h-full px-2"
+                                >
+                                  <Trash color="white" />
+                                </Button>
+                              </Box>
+                              <Box key={index} className="space-x-2 flex">
+                                <Box
+                                  sx={{
+                                    ml: "9%",
+                                    width: "40%",
+                                    bgcolor: "white",
+                                    borderRadius: "10px",
+                                  }}
+                                >
+                                  <LabelTextField2
+                                    label={"Email"}
+                                    placeholder={"Type here..."}
+                                    inputVal={
+                                      alertTo.isAsm === 1
+                                        ? asmAlertNames.find(
+                                            (a) => a.desc === alertTo.name
+                                          )?.email || ""
+                                        : alertTo.email
+                                    }
+                                    field={"email"}
+                                    id={alertTo.id}
+                                    handleChangeVal={
+                                      handleFieldPatrolAlertListTypeChange
+                                    }
+                                    disable={alertTo.isAsm === 1 ? true : false}
+                                  />
+                                </Box>
+                                <Box
+                                  sx={{
+                                    width: "40%",
+                                    bgcolor: "white",
+                                    borderRadius: "10px",
+                                  }}
+                                >
+                                  <CheckBoxDropDown
+                                    itemSource={data.roles}
+                                    label={"ตำแหน่งอื่นๆ ที่ต้องการรับ Alert"}
+                                    unit={"ตำแหน่ง"}
+                                    selectedVal={alertTo.otherPositionId}
+                                    id={alertTo.id}
+                                    field={"otherPositionId"}
+                                    handleChangeVal={
+                                      handleFieldPatrolAlertListTypeChange
+                                    }
+                                    desc={"เลือก"}
+                                    maxLength={data.roles.length}
+                                    maxDiaplay={data.roles.length}
+                                  />
+                                </Box>
+                              </Box>
+                              <Button
+                                className="flex text-[#1D7A9B] bg-transparent hover:bg-transparent underline w-full pt-0 justify-center"
+                                onClick={() => handleAlertToDetail(alertTo)}
+                              >
+                                ดู Area & Round ที่รับ Alert
+                                <GoArrowUpRight
+                                  size={22}
+                                  color="#1D7A9B"
+                                  style={{ marginTop: 3 }}
+                                />
+                              </Button>
                             </Box>
-                          </AccordionDetails>
-                        </Accordion>
-                      </div>
-                    ))}
-                  </Box>
-                </TabPanel>
-              </TabContext>
-            </Box>
-          </Box>
-        </div>
+                          </div>
+                        ))}
+                        <Box className="flex">
+                          <AddButton onAddBtnClick={(e) => addAlertToList()} />
+                        </Box>
+                      </Box>
+                    </TabPanel>
+                    <TabPanel value="4" sx={{ padding: 0, py: "0.25rem" }}>
+                      <Box className="w-full text-center items-center">
+                        <Typography
+                          sx={{
+                            color: "#4C9BF5",
+                            textDecorationLine: "underline",
+                            fontSize: "16px",
+                            mb: "0.25rem",
+                          }}
+                        >
+                          Total: {areas.length} area
+                          {areas.length > 1 ? "s" : ""}
+                        </Typography>
 
-        {/* Footer */}
-        {!isEdit && (
-          <Box className="flex w-full justify-center px-6 space-x-4 border-t-2 pt-4 pb-4">
-            <CancelBtn onCancelBtnClick={handleCloseContractForm} />
-            <SubmitBtn onSubmitBtnClick={handleSubmit} />
-          </Box>
-        )}
-        {isEdit && (
-          <Box className="flex w-full justify-between px-6 border-t-2 pt-4 pb-4">
-            <Button
-              className="flex text-[#2C5079] pt-2 bg-transparent hover:bg-transparent underline"
-              onClick={handleUndo}
-            >
-              <VscRefresh
-                style={{ transform: "rotate(-60deg) scaleX(-1)" }}
-                size={24}
-              />
-              Undo all changes
-            </Button>
-            <Box className="space-x-4">
-              <DeleteBtnFooter
-                onDeleteBtnFooterClick={handleDelete}
-                disable={false}
-              />
-              <SaveBtnFooter onSaveBtnFooterClick={handleSave} />
-            </Box>
-          </Box>
-        )}
-      </div>
+                        {areaList.map((area, index) => (
+                          <div className="mb-2" key={index}>
+                            <Accordion
+                              sx={{ bgcolor: "#EBF4F6", mb: "0.5rem" }}
+                            >
+                              <AccordionSummary
+                                sx={{ borderBottom: "1px solid #C7D4D7" }}
+                                expandIcon={<FaSortDown />}
+                                aria-controls={`panel${index}-content`}
+                                id={`panel${index}-header`}
+                              >
+                                <Box className="w-full flex justify-between">
+                                  <Typography
+                                    sx={{
+                                      fontSize: "14px",
+                                      color: "#1D7A9B",
+                                      fontWeight: 700,
+                                    }}
+                                  >
+                                    {area.areaName}
+                                  </Typography>
+                                </Box>
+                              </AccordionSummary>
+                              <AccordionDetails>
+                                <Typography
+                                  sx={{
+                                    color: "#2C5079",
+                                    textDecorationLine: "underline",
+                                    fontSize: "14px",
+                                    fontWeight: 700,
+                                    pb: 1,
+                                  }}
+                                >
+                                  Patrol Round
+                                </Typography>
+                                {area.roundList.map((round, index) => (
+                                  <Box
+                                    key={index}
+                                    sx={{
+                                      bgcolor: "white",
+                                      width: "100%",
+                                      display: "flex",
+                                      p: 2,
+                                      mb: 1.5,
+                                      borderRadius: "10px",
+                                    }}
+                                  >
+                                    <Box
+                                      sx={{
+                                        width: "90%",
+                                      }}
+                                      className="space-y-4"
+                                    >
+                                      <Box
+                                        sx={{ display: "flex", mr: 0.5 }}
+                                        className="space-x-3"
+                                      >
+                                        <Box sx={{ width: "15%" }}>
+                                          <LabelTextField2
+                                            label={"รอบที่"}
+                                            placeholder={""}
+                                            inputVal={round.number}
+                                            handleChangeVal={
+                                              handleFieldDataInRoundChange
+                                            }
+                                            field={"number"}
+                                            id={area.areaId}
+                                            id2={round.id}
+                                          />
+                                        </Box>
+                                        <Box sx={{ width: "30%" }}>
+                                          <FloatingLabelBox
+                                            labelAlign={"left"}
+                                            label={"ตั้งแต่"}
+                                            field={
+                                              <Box
+                                                sx={{
+                                                  display: "flex",
+                                                  color: "#2C5079",
+                                                }}
+                                              >
+                                                <Clock
+                                                  className="w-[24%] mt-2 ml-2"
+                                                  size={20}
+                                                />
+                                                <Input
+                                                  value={round.startTimeHr}
+                                                  className="p-0 ml-1 w-[26%] border-none text-center text-[14px]"
+                                                  type="number"
+                                                  min={0}
+                                                  max={24}
+                                                  onChange={(e) =>
+                                                    handleFieldDataInRoundChange(
+                                                      area.areaId,
+                                                      round.id,
+                                                      "startTimeHr",
+                                                      e.target.value
+                                                    )
+                                                  }
+                                                  onBlur={(e) => {
+                                                    const value =
+                                                      handleInputHour(
+                                                        e.target.value,
+                                                        "hr"
+                                                      );
+                                                    handleFieldDataInRoundChange(
+                                                      area.areaId,
+                                                      round.id,
+                                                      "startTimeHr",
+                                                      value
+                                                    );
+                                                  }}
+                                                />
+                                                <Typography
+                                                  sx={{
+                                                    fontSize: "18px",
+                                                    mt: 0.5,
+                                                  }}
+                                                >
+                                                  :
+                                                </Typography>
+                                                <Input
+                                                  value={round.startTimeMin}
+                                                  className="p-0 w-[25%] border-none text-center mr-1 text-[14px]"
+                                                  onChange={(e) =>
+                                                    handleFieldDataInRoundChange(
+                                                      area.areaId,
+                                                      round.id,
+                                                      "startTimeMin",
+                                                      e.target.value
+                                                    )
+                                                  }
+                                                  onBlur={(e) => {
+                                                    const value =
+                                                      handleInputHour(
+                                                        e.target.value,
+                                                        "min"
+                                                      );
+                                                    handleFieldDataInRoundChange(
+                                                      area.areaId,
+                                                      round.id,
+                                                      "startTimeMin",
+                                                      value
+                                                    );
+                                                  }}
+                                                />
+                                              </Box>
+                                            }
+                                          />
+                                        </Box>
+                                        <Box sx={{ width: "30%" }}>
+                                          <FloatingLabelBox
+                                            labelAlign={"left"}
+                                            label={"ถึง"}
+                                            field={
+                                              <Box
+                                                sx={{
+                                                  display: "flex",
+                                                  color: "#2C5079",
+                                                }}
+                                              >
+                                                <Clock
+                                                  className="w-[25%] mt-2 ml-2"
+                                                  size={20}
+                                                />
+                                                <Input
+                                                  value={round.finishTimeHr}
+                                                  className="p-0 w-[25%] border-none text-center text-[14px]"
+                                                  onChange={(e) =>
+                                                    handleFieldDataInRoundChange(
+                                                      area.areaId,
+                                                      round.id,
+                                                      "finishTimeHr",
+                                                      e.target.value
+                                                    )
+                                                  }
+                                                  onBlur={(e) => {
+                                                    const value =
+                                                      handleInputHour(
+                                                        e.target.value,
+                                                        "hr"
+                                                      );
+                                                    handleFieldDataInRoundChange(
+                                                      area.areaId,
+                                                      round.id,
+                                                      "finishTimeHr",
+                                                      value
+                                                    );
+                                                  }}
+                                                />
+                                                <Typography
+                                                  sx={{
+                                                    fontSize: "18px",
+                                                    mt: 0.5,
+                                                  }}
+                                                >
+                                                  :
+                                                </Typography>
+                                                <Input
+                                                  value={round.finishTimeMin}
+                                                  className="p-0 w-[25%] border-none text-center mr-1 text-[14px]"
+                                                  onChange={(e) =>
+                                                    handleFieldDataInRoundChange(
+                                                      area.areaId,
+                                                      round.id,
+                                                      "finishTimeMin",
+                                                      e.target.value
+                                                    )
+                                                  }
+                                                  onBlur={(e) => {
+                                                    const value =
+                                                      handleInputHour(
+                                                        e.target.value,
+                                                        "min"
+                                                      );
+                                                    handleFieldDataInRoundChange(
+                                                      area.areaId,
+                                                      round.id,
+                                                      "finishTimeMin",
+                                                      value
+                                                    );
+                                                  }}
+                                                />
+                                              </Box>
+                                            }
+                                          />
+                                        </Box>
+                                        <Box
+                                          sx={{
+                                            width: "25%",
+                                            border: "1px solid #2C5079",
+                                            borderRadius: "10px",
+                                            bgcolor: "#EBF4F6",
+                                          }}
+                                        >
+                                          <Typography
+                                            sx={{
+                                              color: "#2C5079",
+                                              mt: 1,
+                                            }}
+                                          >
+                                            {round.totalTimeMin} minutes
+                                          </Typography>
+                                        </Box>
+                                      </Box>
+
+                                      <Box
+                                        sx={{ display: "flex", mr: 0.5 }}
+                                        className="space-x-3"
+                                      >
+                                        <Box sx={{ width: "50%" }}>
+                                          <LabelSelector3
+                                            selectorLabel={"ของวัน"}
+                                            itemSource={isSameDayList}
+                                            handleSelectedVal={
+                                              handleFieldDataInRoundChange
+                                            }
+                                            selectedVal={round.isSameDay}
+                                            field={"isSameDay"}
+                                            defaultSelected="เลือก"
+                                            id={area.areaId}
+                                            id2={round.id}
+                                          />
+                                        </Box>
+                                        <Box sx={{ width: "50%" }}>
+                                          <LabelSelector3
+                                            selectorLabel={"ผลัด"}
+                                            itemSource={shiftList}
+                                            handleSelectedVal={
+                                              handleFieldDataInRoundChange
+                                            }
+                                            selectedVal={round.shift}
+                                            field={"shift"}
+                                            defaultSelected="เลือก"
+                                            id={area.areaId}
+                                            id2={round.id}
+                                          />
+                                        </Box>
+                                      </Box>
+
+                                      <Box
+                                        sx={{ display: "flex", mr: 0.5 }}
+                                        className="space-x-3"
+                                      >
+                                        <Box
+                                          sx={{ width: "50%", display: "flex" }}
+                                        >
+                                          <Box
+                                            sx={{
+                                              width: "45%",
+                                              display: "flex",
+                                              textAlign: "left",
+                                            }}
+                                          >
+                                            <Checkbox
+                                              className="w-9 h-9 mt-1"
+                                              checked={round.isNeed}
+                                              onCheckedChange={(e) =>
+                                                handleFieldDataInRoundChange(
+                                                  area.areaId,
+                                                  round.id,
+                                                  "isNeed",
+                                                  !round.isNeed
+                                                )
+                                              }
+                                            />
+                                            <Typography className="pl-1 pt-2 text-[#2C5079] text-[15px]">
+                                              บังคับเดิน
+                                            </Typography>
+                                          </Box>
+                                          <Box
+                                            sx={{
+                                              width: "55%",
+                                              display: "flex",
+                                            }}
+                                          >
+                                            <Checkbox
+                                              className="w-9 h-9 mt-1"
+                                              checked={round.isStrictOrder}
+                                              onCheckedChange={(e) =>
+                                                handleFieldDataInRoundChange(
+                                                  area.areaId,
+                                                  round.id,
+                                                  "isStrictOrder",
+                                                  !round.isStrictOrder
+                                                )
+                                              }
+                                            />
+                                            <Typography className="pl-1 pt-2 text-[#2C5079] text-[15px]">
+                                              เดินตามลำดับ
+                                            </Typography>
+                                          </Box>
+                                        </Box>
+                                        <Box sx={{ width: "50%" }}>
+                                          <CheckBoxDropDown
+                                            itemSource={alertToList}
+                                            label={"Alert to"}
+                                            unit={""}
+                                            selectedVal={round.alertTo}
+                                            id={area.areaId}
+                                            id2={round.id}
+                                            field={"alertTo"}
+                                            handleChangeVal={
+                                              handleFieldDataInRoundChange
+                                            }
+                                            desc={"เลือก"}
+                                            maxLength={alertToList.length}
+                                            maxDiaplay={alertToList.length}
+                                          />
+                                        </Box>
+                                      </Box>
+                                    </Box>
+
+                                    <Button
+                                      onClick={() =>
+                                        removeRound(area.areaId, round.id)
+                                      }
+                                      className="bg-[#F66262] rounded-lg w-14 h-full"
+                                    >
+                                      <Trash color="white" />
+                                    </Button>
+                                  </Box>
+                                ))}
+
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    width: "100%",
+                                    justifyContent: "space-between",
+                                  }}
+                                >
+                                  <AddButton
+                                    onAddBtnClick={(e) => addRound(area.areaId)}
+                                  />
+                                  <Typography
+                                    sx={{
+                                      color: "#4C9BF5",
+                                      textDecorationLine: "underline",
+                                      fontSize: "16px",
+                                      mt: 1,
+                                    }}
+                                  >
+                                    Total: {area.roundList.length} round
+                                    {area.roundList.length > 1 ? "s" : ""}
+                                  </Typography>
+                                </Box>
+                              </AccordionDetails>
+                            </Accordion>
+                          </div>
+                        ))}
+                      </Box>
+                    </TabPanel>
+                  </TabContext>
+                </Box>
+              </Box>
+            </div>
+
+            {/* Footer */}
+            {!isEdit && (
+              <Box className="flex w-full justify-center px-6 space-x-4 border-t-2 pt-4 pb-4">
+                <CancelBtn onCancelBtnClick={handleCloseContractForm} />
+                <SubmitBtn onSubmitBtnClick={handleSubmit} />
+              </Box>
+            )}
+
+            {isEdit && (
+              <Box className="flex w-full justify-between px-6 border-t-2 pt-4 pb-4">
+                <Button
+                  className="flex text-[#2C5079] pt-2 bg-transparent hover:bg-transparent underline"
+                  onClick={handleUndo}
+                >
+                  <VscRefresh
+                    style={{ transform: "rotate(-60deg) scaleX(-1)" }}
+                    size={24}
+                  />
+                  Undo all changes
+                </Button>
+                <Box className="space-x-4">
+                  <DeleteBtnFooter
+                    onDeleteBtnFooterClick={handleDelete}
+                    disable={false}
+                  />
+                  <SaveBtnFooter onSaveBtnFooterClick={handleSave} />
+                </Box>
+              </Box>
+            )}
+          </div>
         </>
       )}
 
-      {showAlertToDeatil && (<AlertToDatail closeModal={handleDisplayAlertToDetail} selectedAlertTo={selectedALertTo}
-                              areaList={areaList} shiftList={shiftList} /> )}
+      {showAlertToDeatil && (
+        <AlertToDatail
+          closeModal={handleDisplayAlertToDetail}
+          selectedAlertTo={selectedALertTo}
+          areaList={areaList}
+          shiftList={shiftList}
+          setAreaList={setAreaList}
+        />
+      )}
     </div>
   );
 };

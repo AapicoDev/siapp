@@ -7,10 +7,11 @@ import { Input } from "@/components/ui/textboxs/input";
 import { Button } from "@/components/ui/buttons/button";
 
 interface AddButtonProps {
+    content?: any;
     onAddBtnClick: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void; // Button click handler
   }
 
-export function AddButton({ onAddBtnClick }: AddButtonProps) {
+export function AddButton({ onAddBtnClick, content="+ Add" }: AddButtonProps) {
 
   return (
       <Button
@@ -21,7 +22,7 @@ export function AddButton({ onAddBtnClick }: AddButtonProps) {
           }}
         className="w-[84px] bg-[#1D7A9B] hover:bg-[#D9F0EC] hover:text-[#1D7A9B] px-6"
       >
-        + Add
+        {content}
       </Button>
   );
 }
