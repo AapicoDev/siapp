@@ -11,6 +11,7 @@ import {
   Typography,
   Button as Button2,
   Grid2,
+  CircularProgress,
 } from "@mui/material/";
 import CloseIcon from "@mui/icons-material/Close";
 import Navbar from "@/components/Navbar";
@@ -37,7 +38,7 @@ import { GradientButton } from "@/components/ui/buttons/gradientButton";
 import PatrolDeatilView from "@/components/siapp/PatrolDetailView";
 import {
   getPatrolRoundData,
-  getAllPatrolCheckpointData
+  getAllPatrolCheckpointData,
 } from "../../../lib/api";
 
 type RowData = {
@@ -53,20 +54,27 @@ type RowData = {
   checkPointName: any;
   patroller: string;
   status: string;
-  allCheckpoints: number;//string[],
+  allCheckpoints: number; //string[],
   remark: string;
   image: any[];
 };
 
 type RandomRowData = {
-  date: string;
-  start: string;
-  end: string;
-  customerId: number;
-  areaId: any;
+  endDateTime: string;
+  startDateTime: string;
+  useTime: string;
+  customerName: string;
+  areaId: string;
+  areaName: any;
   round: any;
-  checkPointId: any;
+  checkpointId: string;
+  checkpointNo: any;
+  checkPointName: any;
   patroller: string;
+  status: string;
+  allCheckpoints: number; //string[],
+  remark: string;
+  image: any[];
 };
 
 const rows = [
@@ -108,59 +116,89 @@ const rows = [
   },
 ];
 
+// const randomRows: RandomRowData[] = [
+//   {
+//     date: "10/2/2024",
+//     start: "11:52:06",
+//     end: "12:52:06",
+//     customerId: 1,
+//     areaId: "0001",
+//     round: 1,
+//     checkPointId: 1,
+//     patroller: "Name Surname (Position)",
+//   },
+//   {
+//     date: "10/2/2024",
+//     start: "11:52:06",
+//     end: "12:52:06",
+//     customerId: 2,
+//     areaId: 2,
+//     round: 1,
+//     checkPointId: 2,
+//     patroller: "Name Surname (Position)",
+//   },
+//   {
+//     date: "10/2/2024",
+//     start: "11:52:06",
+//     end: "12:52:06",
+//     customerId: 3,
+//     areaId: 3,
+//     round: 2,
+//     checkPointId: 3,
+//     patroller: "Name Surname (Position)",
+//   },
+//   {
+//     date: "10/2/2024",
+//     start: "11:52:06",
+//     end: "12:52:06",
+//     customerId: 4,
+//     areaId: 4,
+//     round: 1,
+//     checkPointId: 4,
+//     patroller: "Name Surname (Position)",
+//   },
+// ];
+
 const randomRows: RandomRowData[] = [
   {
-    date: "10/2/2024",
-    start: "11:52:06",
-    end: "12:52:06",
-    customerId: 1,
-    areaId: 1,
+    endDateTime: "Wed Oct 09 2024 18:00:00 GMT+0700 (GMT+07:00)",
+    startDateTime: "Wed Oct 09 2024 18:00:00 GMT+0700 (GMT+07:00)",
+    useTime: "12",
+    customerName: "cust1",
+    areaId: "0001",
+    areaName: "area1",
     round: 1,
-    checkPointId: 1,
-    patroller: "Name Surname (Position)",
-  },
-  {
-    date: "10/2/2024",
-    start: "11:52:06",
-    end: "12:52:06",
-    customerId: 2,
-    areaId: 2,
-    round: 1,
-    checkPointId: 2,
-    patroller: "Name Surname (Position)",
-  },
-  {
-    date: "10/2/2024",
-    start: "11:52:06",
-    end: "12:52:06",
-    customerId: 3,
-    areaId: 3,
-    round: 2,
-    checkPointId: 3,
-    patroller: "Name Surname (Position)",
-  },
-  {
-    date: "10/2/2024",
-    start: "11:52:06",
-    end: "12:52:06",
-    customerId: 4,
-    areaId: 4,
-    round: 1,
-    checkPointId: 4,
-    patroller: "Name Surname (Position)",
+    checkpointId: "0001",
+    checkpointNo: 1,
+    checkPointName: "checkpoint1",
+    patroller: "Name Surname",
+    status: "OnTime",
+    allCheckpoints: 1, //string[],
+    remark: "remark",
+    image: ["textImg"],
   },
 ];
 
 export default function Patrol() {
   const [rowData, setRowData] = useState<RowData[]>([
-    { dateTime: "",
-      startDateTime: "", useTime: "",
-      customerName: "", areaName: "",areaId: "",
-      round: 0, checkPointName: "",
-      checkpointId: "", checkpointNo: undefined,
-      patroller: "", status: "",
-      allCheckpoints: 0, remark: "",
-      image: []}]);
+    {
+      dateTime: "",
+      startDateTime: "",
+      useTime: "",
+      customerName: "",
+      areaName: "",
+      areaId: "",
+      round: 0,
+      checkPointName: "",
+      checkpointId: "",
+      checkpointNo: undefined,
+      patroller: "",
+      status: "",
+      allCheckpoints: 0,
+      remark: "",
+      image: [],
+    },
+  ]);
   //const [editMode, setEditMode] = useState(Array(rowData.length).fill(false)); // Array to track edit state for each row
   const [randomRowData, setRandomRowData] = useState(randomRows);
   const [customers, setCustomers] = useState(data.customers);
@@ -172,7 +210,8 @@ export default function Patrol() {
   const [zones, setZones] = useState(data.zones);
   const [selectedRow, setSelectedRow] = useState<RowData>();
   const [openAddCustModal, setShowAddCustModal] = useState(false);
-  const [openPatrolDetailModal, setOpenPatrolDetailModal] = useState<boolean>(false);
+  const [openPatrolDetailModal, setOpenPatrolDetailModal] =
+    useState<boolean>(false);
   const [openFilterModal, setOpenFilterModal] = useState<boolean>(false);
   const [selectedSegmentFilter, setSelectedSegmentFilter] = useState();
   const [selectedGroupFilter, setSelectedGroupFilter] = useState();
@@ -188,6 +227,7 @@ export default function Patrol() {
   const totalItems = rowData.length;
   const [patrolRounds, setPatrolRounds] = useState<any>();
   const [patrolCheckpoints, setPatrolCheckpoints] = useState<any>();
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   useEffect(() => {
     tableData();
@@ -195,19 +235,19 @@ export default function Patrol() {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-  
-    const day = String(date.getUTCDate()).padStart(2, '0'); // Get day and pad with 0 if necessary
-    const month = String(date.getUTCMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+
+    const day = String(date.getUTCDate()).padStart(2, "0"); // Get day and pad with 0 if necessary
+    const month = String(date.getUTCMonth() + 1).padStart(2, "0"); // Months are 0-indexed
     const year = date.getUTCFullYear();
 
-    const hours = String(date.getUTCHours()).padStart(2, '0');
-    const minutes = String(date.getUTCMinutes()).padStart(2, '0');
-    const seconds = String(date.getUTCSeconds()).padStart(2, '0');
-  
+    const hours = String(date.getUTCHours()).padStart(2, "0");
+    const minutes = String(date.getUTCMinutes()).padStart(2, "0");
+    const seconds = String(date.getUTCSeconds()).padStart(2, "0");
+
     return `${day}/${month}/${year}\n@${hours}:${minutes}:${seconds}`;
   };
 
-  function calCheckpointDiffTime(start :any, end: any){
+  function calCheckpointDiffTime(start: any, end: any) {
     const startTime = new Date(start);
     const endTime = new Date(end);
     const diffMs = endTime.getTime() - startTime.getTime();
@@ -215,37 +255,47 @@ export default function Patrol() {
     const hours = Math.floor(diffMs / (1000 * 60 * 60));
     const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
-    return hours+" " + minutes+ " " + seconds;
-  };
+    return hours + " " + minutes + " " + seconds;
+  }
 
   const tableData = async () => {
+    setIsLoading(true);
     const allPatrolRoundData = await getPatrolRoundData();
     console.log("data = ", allPatrolRoundData);
     const allPatrolCheckpointData = await getAllPatrolCheckpointData();
     console.log("patrolCheckpointData = ", allPatrolCheckpointData);
-    const tableData: RowData[] = allPatrolCheckpointData?.documents.map((chkPt)=> {
-      return {
-        dateTime: formatDate(chkPt.EndTime),
-        startDateTime: formatDate(chkPt.StartTime),
-        useTime: calCheckpointDiffTime(chkPt.StartTime, chkPt.EndTime),
-        customerName: allPatrolRoundData?.documents.find(p => p.$id === chkPt.PatrolRoundId)?.Customer,
-        areaId: allPatrolRoundData?.documents.find(p => p.$id === chkPt.PatrolRoundId)?.AreaId,
-        areaName: allPatrolRoundData?.documents.find(p => p.$id === chkPt.PatrolRoundId)?.Area,
-        round: allPatrolRoundData?.documents.find(p => p.$id === chkPt.PatrolRoundId)?.Round,
-        checkpointId: chkPt.$id,
-        checkpointNo: chkPt.CheckpointNumber,
-        checkPointName: chkPt.CheckpointName,
-        patroller: chkPt.Patroller,
-        status: chkPt.Status,
-        allCheckpoints: allPatrolCheckpointData?.documents.length,//allPatrolRoundData?.documents.find(p => p.$id === chkPt.PatrolRoundId)?.PatrolCheckPointId,
-        remark: chkPt.Remark,
-        image: chkPt.Image
-      };
-      
-    }) || rowData
+    const tableData: RowData[] =
+      allPatrolCheckpointData?.documents.map((chkPt) => {
+        return {
+          dateTime: formatDate(chkPt.EndTime),
+          startDateTime: formatDate(chkPt.StartTime),
+          useTime: calCheckpointDiffTime(chkPt.StartTime, chkPt.EndTime),
+          customerName: allPatrolRoundData?.documents.find(
+            (p) => p.$id === chkPt.PatrolRoundId
+          )?.Customer,
+          areaId: allPatrolRoundData?.documents.find(
+            (p) => p.$id === chkPt.PatrolRoundId
+          )?.AreaId,
+          areaName: allPatrolRoundData?.documents.find(
+            (p) => p.$id === chkPt.PatrolRoundId
+          )?.Area,
+          round: allPatrolRoundData?.documents.find(
+            (p) => p.$id === chkPt.PatrolRoundId
+          )?.Round,
+          checkpointId: chkPt.$id,
+          checkpointNo: chkPt.CheckpointNumber,
+          checkPointName: chkPt.CheckpointName,
+          patroller: chkPt.Patroller,
+          status: chkPt.Status,
+          allCheckpoints: allPatrolCheckpointData?.documents.length, //allPatrolRoundData?.documents.find(p => p.$id === chkPt.PatrolRoundId)?.PatrolCheckPointId,
+          remark: chkPt.Remark,
+          image: chkPt.Image,
+        };
+      }) || rowData;
     console.log("tableData", tableData);
     setRowData(tableData);
-  }
+    setIsLoading(false);
+  };
 
   const handleAddNewCust = () => {
     setShowAddCustModal(true);
@@ -259,10 +309,6 @@ export default function Patrol() {
   function handleClosePatrolDetailView() {
     setOpenPatrolDetailModal(false);
     //setRowData(rows);
-  }
-
-  function handleCloseViewQr() {
-    setOpenViewQR(false);
   }
 
   function handleRoundFilter(operation: any) {
@@ -306,10 +352,10 @@ export default function Patrol() {
 
   const handleRowClick = async (row: RowData) => {
     setSelectedRow(row);
-    console.log("row =",row)
+    console.log("row =", row);
 
     setOpenPatrolDetailModal(true);
-  }
+  };
 
   return (
     <div>
@@ -327,7 +373,10 @@ export default function Patrol() {
                     checked={isCheckpointPage}
                     onCheckedChange={handleSelectChkPtPage}
                   />
-                  <Typography sx={{fontWeight: "700", color: "#1D7A9B"}} className="py-1 px-2">
+                  <Typography
+                    sx={{ fontWeight: "700", color: "#1D7A9B" }}
+                    className="py-1 px-2"
+                  >
                     Check Point
                   </Typography>
                 </Box>
@@ -337,7 +386,10 @@ export default function Patrol() {
                     checked={!isCheckpointPage}
                     onCheckedChange={handleSelectRandomPage}
                   />
-                  <Typography sx={{fontWeight: "700", color: "#1D7A9B"}} className="py-1 px-2">
+                  <Typography
+                    sx={{ fontWeight: "700", color: "#1D7A9B" }}
+                    className="py-1 px-2"
+                  >
                     Random
                   </Typography>
                 </Box>
@@ -351,19 +403,19 @@ export default function Patrol() {
                   </Typography>
                   <DatePicker />
                 </Box>
-                <Grid2 size={{xs: 1, sm:4, lg: 12}}>
-                <Input
-                  type="text"
-                  placeholder="Search..."
-                  style={{
-                    boxShadow: "0px 5px 12px rgba(29, 122, 155, 0.1)",
-                    borderRadius: "10px",
-                  }}
-                  className="border-none bg-white p-4 mr-2 w-auto custom-placeholder"
-                />
+                <Grid2 size={{ xs: 1, sm: 4, lg: 12 }}>
+                  <Input
+                    type="text"
+                    placeholder="Search..."
+                    style={{
+                      boxShadow: "0px 5px 12px rgba(29, 122, 155, 0.1)",
+                      borderRadius: "10px",
+                    }}
+                    className="border-none bg-white p-4 mr-2 w-auto custom-placeholder"
+                  />
                 </Grid2>
-                
-                <Button
+
+                <Button disabled={true}
                   className="w-auto px-8 bg-[#1D7A9B] hover:bg-[#D9F0EC] hover:text-[#1D7A9B]"
                   onClick={setToggleFilter}
                 >
@@ -374,160 +426,166 @@ export default function Patrol() {
           </Box>
 
           {isCheckpointPage && (
-            <TableContainer
-              className="h-screen bg-white p-2"
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                borderRadius: "15px 15px 0px 0px",
-                boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
-              }}
-            >
-              <Table>
-                <TableHead>
-                  <TableRow
-                    sx={{ borderBottom: "1px solid #C7D4D7" }}
-                    className={`${styles.table}`}
-                  >
-                    <TableCell align="center" className="w-[6%]">
-                      Date & Time
-                    </TableCell>
-                    <TableCell align="center" className="w-[22%]">
-                      Customer
-                    </TableCell>
-                    <TableCell align="center" className="w-[20%]">
-                      Area
-                    </TableCell>
-                    <TableCell align="center" className="w-[12%]">
-                      Round
-                    </TableCell>
-                    <TableCell align="center" className="w-[16%]">
-                      Check Point
-                    </TableCell>
-                    {/* Edit button col */}
-                    <TableCell align="center" className="w-[11%]">
-                      Patroller
-                    </TableCell>
-                    <TableCell align="center" className="w-[13%]">
-                      Status
-                    </TableCell>
-                  </TableRow>
-                </TableHead>
-
-                {/* Allow the TableBody to grow and fill vertical space */}
-                <TableBody sx={{ flexGrow: 1 }}>
-                  {rowData.map((row, index) => (
+            <>
+              <TableContainer
+                className="h-screen bg-white p-2"
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  borderRadius: "15px 15px 0px 0px",
+                  boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
+                }}
+              >
+                <Table>
+                  <TableHead>
                     <TableRow
-                    onClick={() => handleRowClick(row)} // Row click handler
-                    key={index}
-                    className={`${index % 2 === 1 ? `bg-inherit` : `bg-[#EBF4F6]`}`}
-                    sx={{
-                      cursor: "pointer",
-                      "& .MuiTableCell-root": {
-                        padding: "10px 20px 10px 20px", // Customize border color
-                      },
-                      "&:hover": {
-                        backgroundColor: "#DCE9EB", // Optional: Change background color on hover
-                      },
-                    }}
+                      sx={{ borderBottom: "1px solid #C7D4D7" }}
+                      className={`${styles.table}`}
                     >
-                      <TableCell align="center">{row.dateTime}</TableCell>
+                      <TableCell align="center" className="w-[6%]">
+                        Date & Time
+                      </TableCell>
+                      <TableCell align="center" className="w-[22%]">
+                        Customer
+                      </TableCell>
+                      <TableCell align="center" className="w-[20%]">
+                        Area
+                      </TableCell>
+                      <TableCell align="center" className="w-[12%]">
+                        Round
+                      </TableCell>
+                      <TableCell align="center" className="w-[19%]">
+                        Check Point
+                      </TableCell>
+                      {/* Edit button col */}
+                      <TableCell align="center" className="w-[11%]">
+                        Patroller
+                      </TableCell>
+                      <TableCell align="center" className="w-[10%]">
+                        Status
+                      </TableCell>
+                    </TableRow>
+                  </TableHead>
 
-                      {/* Customer */}
-                      <TableCell align="center">
-                        {/* {
+                  {/* Allow the TableBody to grow and fill vertical space */}
+                  <TableBody sx={{ flexGrow: 1 }}>
+                    {rowData.map((row, index) => (
+                      <TableRow
+                        onClick={() => handleRowClick(row)} // Row click handler
+                        key={index}
+                        className={`${
+                          index % 2 === 1 ? `bg-inherit` : `bg-[#EBF4F6]`
+                        }`}
+                        sx={{
+                          cursor: "pointer",
+                          "& .MuiTableCell-root": {
+                            padding: "10px 20px 10px 20px", // Customize border color
+                          },
+                          "&:hover": {
+                            backgroundColor: "#DCE9EB", // Optional: Change background color on hover
+                          },
+                        }}
+                      >
+                        <TableCell align="center">{row.dateTime}</TableCell>
+
+                        {/* Customer */}
+                        <TableCell align="center">
+                          {/* {
                           customers.find((c) => c.id === row.customerId)
                             ?.customerName
-                        } */}{row.customerName}
-                      </TableCell>
+                        } */}
+                          {row.customerName}
+                        </TableCell>
 
-                      {/* Area */}
-                      <TableCell align="center">
-                        {/* {row.areaId === null
+                        {/* Area */}
+                        <TableCell align="center">
+                          {/* {row.areaId === null
                           ? "-"
                           : areas.find((a) => a.id === row.areaId)?.name} */}
                           {row.areaName}
-                      </TableCell>
+                        </TableCell>
 
-                      {/* Round */}
-                      <TableCell align="center">
-                        {row.round === null ? "-" : row.round}
-                      </TableCell>
+                        {/* Round */}
+                        <TableCell align="center">
+                          {row.round === null ? "-" : row.round}
+                        </TableCell>
 
-                      {/* checkpoint name */}
-                      <TableCell align="center">
-                        {/* {row.checkPointId === null
+                        {/* checkpoint name */}
+                        <TableCell align="center">
+                          {/* {row.checkPointId === null
                           ? "-"
                           : checkpoints.find((ch) => ch.id === row.checkPointId)
-                              ?.chkPtName} */}{row.checkPointName}
-                      </TableCell>
+                              ?.chkPtName} */}
+                          {row.checkPointName}
+                        </TableCell>
 
-                      {/* Patroller */}
-                      <TableCell align="center">
-                        {row.patroller === null ? "-" : row.patroller}
-                      </TableCell>
+                        {/* Patroller */}
+                        <TableCell align="center">
+                          {row.patroller === null ? "-" : row.patroller}
+                        </TableCell>
 
-                      {/* Status */}
-                      <TableCell align="center" className="flex justify-center">
-                        <PatrolStatus status={row.status}/>
+                        {/* Status */}
+                        <TableCell
+                          align="center"
+                          className="flex justify-center"
+                        >
+                          <PatrolStatus status={row.status} />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+
+              {/* TableFooter*/}
+              <TableContainer
+                className="bg-white border-t"
+                sx={{
+                  borderRadius: "0px 0px 15px 15px",
+                  boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
+                }}
+              >
+                <Table>
+                  <TableFooter className="w-full">
+                    <TableRow>
+                      <TableCell colSpan={6}>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            width: "100%",
+                          }}
+                        >
+                          <Typography>Total: {totalItems} items</Typography>
+                          {isCheckpointPage && (
+                            <Box className="w-fit flex">
+                              <Box className="w-fit p-2">
+                                <GradientButton
+                                  content={"Customer Report"}
+                                  onBtnClick={handleAddNewCust}
+                                  disable={true}
+                                />
+                              </Box>
+                              <Box className="w-fit p-2">
+                                <GradientButton
+                                  content={"Summary"}
+                                  onBtnClick={handleAddNewCust}
+                                  disable={true}
+                                />
+                              </Box>
+                            </Box>
+                          )}
+                        </Box>
                       </TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                  </TableFooter>
+                </Table>
+              </TableContainer>
+            </>
           )}
 
-          {!isCheckpointPage && (
-            <TablePatrolRandom
-              randomData={randomRowData}
-              areas={areas}
-              checkpoints={checkpoints}
-            />
-          )}
-
-          {/* TableFooter*/}
-          <TableContainer
-            className="bg-white border-t"
-            sx={{
-              borderRadius: "0px 0px 15px 15px",
-              boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
-            }}
-          >
-            <Table>
-              <TableFooter className="w-full">
-                <TableRow>
-                  <TableCell colSpan={6}>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        width: "100%",
-                      }}
-                    >
-                      <Typography>Total: {totalItems} items</Typography>
-                      {isCheckpointPage && (
-                      <Box className="w-fit flex">
-                            <Box className="w-fit p-2">
-                              <GradientButton
-                                content={"Customer Report"}
-                                onBtnClick={handleAddNewCust}
-                              />
-                            </Box>
-                            <Box className="w-fit p-2">
-                              <GradientButton
-                                content={"Summary"}
-                                onBtnClick={handleAddNewCust}
-                              />
-                            </Box>
-                          </Box>)}
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              </TableFooter>
-            </Table>
-          </TableContainer>
+          {!isCheckpointPage && <TablePatrolRandom />}
         </Box>
       </Box>
 
@@ -694,7 +752,8 @@ export default function Patrol() {
 
                   <Box className=" w-[80%] justify-center flex p-1 rounded-lg border-[1px] border-[#2C5079] bg-[#EBF4F6]">
                     <Typography className="text-[#2C5079] text-sm px-4 pt-1">
-                      {checkPointFilter === 0 ? "--" : checkPointFilter} Check Points
+                      {checkPointFilter === 0 ? "--" : checkPointFilter} Check
+                      Points
                     </Typography>
                   </Box>
                 </Box>
@@ -738,20 +797,11 @@ export default function Patrol() {
         </div>
       )}
 
-      {openAddContract && (
-        <ContractForm
-          closeModal={handleCloseContractForm}
-          customeraAeas={areas}
-        />
-      )}
-
-      {openEditContract && (
-        <ContractForm
-          closeModal={handleCloseContractForm}
-          customeraAeas={areas}
-          selectedCustomer={selectedRow}
-        />
-      )}
+      {isLoading && <div className="fixed inset-0 bg-white bg-opacity-40 flex flex-col items-center justify-center z-indextop">
+        <Box sx={{ display: "flex" }}>
+          <CircularProgress />
+        </Box>
+      </div>}
     </div>
   );
 }

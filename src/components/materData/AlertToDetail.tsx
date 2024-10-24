@@ -19,6 +19,7 @@ import { DeleteBtnFooter } from "../ui/buttons/deleteBtnFooter";
 import { SaveBtnFooter } from "../ui/buttons/saveBtnFooter";
 import { FaSortDown } from "react-icons/fa6";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useEffect, useState } from "react";
 
 type ShiftListType = {
   id: number;
@@ -62,11 +63,18 @@ type detailType = {
     
 };
 
+type selectedDelete = {
+  isSelected: boolean;
+  roundId: any;
+};
+
+
 interface AlertToDatailProps {
   closeModal: () => void;
   selectedAlertTo: any;
   areaList: AreaListType[];
   shiftList: ShiftListType[];
+  setAreaList: (value: any) => void;
 }
 
 const AlertToDatail = ({
@@ -74,18 +82,83 @@ const AlertToDatail = ({
   selectedAlertTo,
   areaList,
   shiftList,
+  setAreaList
+  
 }: AlertToDatailProps) => {
 
+  const [selected, setSelected] = useState<selectedDelete[]>(
+    areaList.flatMap(area => 
+      area.roundList
+      .filter(round => round.alertTo.includes(selectedAlertTo.id))
+      .map(round => ({
+        roundId: round.id,
+        isSelected: false
+      }))
+    )
+  );
+  const [areas, setAreas] = useState<AreaListType[]>(areaList);
+  const [isEnbleSave, setIsEnbleSave] = useState<boolean>(false);
+  const [isEnbleUndo, setIsEnbleUndo] = useState<boolean>(true);
 
   function handleCloseAlertToDetail() {
     closeModal();
   }
 
-  const handleUndo = () => {};
+  useEffect(() => {
+    setSelected( areas.flatMap(area => 
+      area.roundList
+      .filter(round => round.alertTo.includes(selectedAlertTo.id))
+      .map(round => ({
+        roundId: round.id,
+        isSelected: false
+      }))
+    ))
+  }, [areas]);
 
-  const handleDelete = () => {};
+  const handleUndo = () => {
+    setAreas(areaList);
+    setAreaList(areaList);
+    setIsEnbleSave(false);
+    console.log("shiftList", shiftList);
+    console.log("areaList = ", areaList)
+  };
 
-  const handleSave = () => {};
+  const handleDelete = () => {
+    const filterRound = selected.filter(select => select.isSelected).map(s =>s.roundId);
+    const removedAlertToFromRoundInArea = areaList.map(area => ({
+        ...area,
+        roundList: area.roundList.map(round => {
+          if (filterRound.includes(round.id)) {
+            console.log("filterRound include")
+            return {
+              ...round,
+              alertTo: round.alertTo.filter((a: string) => a !== selectedAlertTo.id) // Explicitly type 'a' as string
+            };
+          }
+          return round; // Return the round unchanged if condition is not met
+        })
+      }))
+    console.log("selectedAlertTo = ", selectedAlertTo)
+    console.log("filterRound = ", filterRound)
+    setAreas(removedAlertToFromRoundInArea);
+    setIsEnbleSave(true);
+  };
+
+  const handleSave = () => {
+    setAreaList(areas);
+    setIsEnbleUndo(false);
+    console.log("selectedAlertTo = ", selectedAlertTo)
+    console.log("selected =", selected);
+    console.log("areaList =", areaList);
+  };
+
+  const handleSelected = (roundId: any) => {
+    const newSelected = [...selected];
+    const index = newSelected.findIndex(s => s.roundId === roundId);
+    newSelected[index].isSelected = !newSelected[index].isSelected;
+    setSelected(newSelected);
+    console.log("newSelected =", newSelected);
+  };
 
   return (
     <>
@@ -137,7 +210,7 @@ const AlertToDatail = ({
         {/* Body */}
         <div className="max-h-[528px] min-h-[528px] overflow-auto">
           <Box className="w-full px-6 py-2 rounded-t-lg pb-6">
-            {areaList.map((area, index) => (
+            {areas.map((area, index) => (
               <div className="mb-2" key={index}>
                 <Accordion sx={{ mb: "0.5rem" }}>
                   <AccordionSummary
@@ -178,8 +251,9 @@ const AlertToDatail = ({
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        {shiftList.map((row, index) => (
-                          <TableRow
+                        {area.roundList?.map((round, index) => (
+                          round.alertTo?.includes(selectedAlertTo.id) ? 
+                          (<TableRow
                             key={index}
                             className={`${
                               index % 2 === 1 ? `bg-inherit` : `bg-[#EBF4F6]`
@@ -196,18 +270,21 @@ const AlertToDatail = ({
                                 checked={undefined}
                                 onClick={(event) => {
                                   event.stopPropagation(); // Prevent row click
-                                  //handleSelected(index);
+                                  handleSelected(round.id);
                                 }}
                               />
                             </TableCell>
 
-                            <TableCell align="center">shift</TableCell>
+                            <TableCell align="center">
+                              {shiftList.find(s => s.id === round.shift)?.desc}
+                            </TableCell>
 
-                            <TableCell align="center">Round</TableCell>
+                            <TableCell align="center">{round.number}</TableCell>
 
-                            <TableCell align="center">Time</TableCell>
-                          </TableRow>
-                        ))}
+                            <TableCell align="center">
+                              {round.startTimeHr}:{round.startTimeMin} - {round.finishTimeHr}:{round.finishTimeMin}
+                              </TableCell>
+                          </TableRow>) : <TableRow key={index}></TableRow>))}
                       </TableBody>
                     </Table>
                   </AccordionDetails>
@@ -220,6 +297,7 @@ const AlertToDatail = ({
           <Button
             className="flex text-[#2C5079] pt-2 bg-transparent hover:bg-transparent underline"
             onClick={handleUndo}
+            disabled={!isEnbleUndo}
           >
             <VscRefresh
               style={{ transform: "rotate(-60deg) scaleX(-1)" }}
@@ -230,9 +308,9 @@ const AlertToDatail = ({
           <Box className="space-x-4">
             <DeleteBtnFooter
               onDeleteBtnFooterClick={handleDelete}
-              disable={false}
+              disable={!selected.some(s => s.isSelected)}
             />
-            <SaveBtnFooter onSaveBtnFooterClick={handleSave} />
+            <SaveBtnFooter onSaveBtnFooterClick={handleSave} disableBtn={!isEnbleSave}/>
           </Box>
         </Box>
       </div>

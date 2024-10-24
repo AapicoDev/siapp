@@ -11,6 +11,7 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
+  Grid2,
 } from "@mui/material";
 import TabContext from "@mui/lab/TabContext";
 import TabList from "@mui/lab/TabList";
@@ -48,11 +49,12 @@ import { addDays } from "date-fns";
 import { DateRange } from "react-day-picker";
 import { convert12HourTo24Hour } from "../ui/selectors/timePickerUtils";
 import CheckBoxDropDown from "../ui/checkBoxDropDown";
-import LabelTextField3 from "../ui/textboxs/labelTextField3";
 import AlertToDatail from "./AlertToDetail";
+import { Checkbox as Checkbox3 } from "@/components/ui/checkbox3";
 
 type AreaData = {
   id: number;
+  custId: any;
   name: string;
   totalChkPt: number;
   round: any[];
@@ -82,7 +84,7 @@ type AreaListType = {
 };
 
 type ShiftListType = {
-  id: number;
+  id: any;
   desc: any;
   workdays: any[];
   manpowers: ManpowerType[];
@@ -115,14 +117,22 @@ const mockIsSameDayList = [
   },
 ];
 
+interface ContractFormProps {
+  selectedCustomer?: any;
+  closeModal: any;
+  customeraAreas: any[];
+  isEditContract?: boolean;
+  custList?: any[];
+}
+
 const ContractForm = ({
   selectedCustomer,
   closeModal,
   customeraAreas,
-  isEditFromCustPage,
+  isEditContract,
   custList = [{ id: 1, desc: "" }],
-}: any) => {
-  const [isEdit, setIsEdit] = useState(isEditFromCustPage);
+}: ContractFormProps) => {
+  const [isEdit, setIsEdit] = useState(isEditContract);
   const [customer, setCustomer] = useState(
     selectedCustomer || {
       hrCode: "",
@@ -143,7 +153,9 @@ const ContractForm = ({
   const [customerList, setCustomerList] = useState(
     custList || [{ id: 1, desc: "" }]
   );
-  const [customerAdd, setCustomerAdd] = useState(customerList[0]?.id);
+  const [customerAdd, setCustomerAdd] = useState(
+    customerList.length > 1 ? "" : customerList[0]?.id
+  );
   const [addContractNo, setAddContractNo] = useState("");
   const [tabValue, setTabValue] = useState("1");
   const [areaOpen, setAreaOpen] = useState(Array(areas.length).fill(false)); // Array to track edit state for each row
@@ -199,6 +211,8 @@ const ContractForm = ({
   const [deleteAlertToList, setDeleteAlertToList] = useState<any[]>([]);
   const [showAlertToDeatil, setShowAlertToDeatil] = useState(false);
   const [selectedALertTo, setSelectedALertTo] = useState<PatrolAlertListType>();
+  const [isContractActive, setIsContractActive] = useState(false);
+  const [selectNewFile, setSelectNewFile] = useState<any[]>([]);
 
   useEffect(() => {
     if (!isEdit) {
@@ -206,10 +220,10 @@ const ContractForm = ({
     } else {
       setFormHeader("View / Edit Contract");
     }
-    initialData();
     const initialSeelctedContract = contractListInitial();
     contractDetail(initialSeelctedContract);
-  }, []);
+    initialData();
+  }, [areas]);
 
   const initialData = () => {
     areas.forEach((area) => {
@@ -222,7 +236,7 @@ const ContractForm = ({
 
   const contractListInitial = () => {
     const contracts = data.contracts.filter(
-      (c) => c.customerId === customer.customerId && c.isActive === 1
+      (c) => c.customerId === customer.customerId //&& c.isActive
     );
     const mappedContract = contracts.map((contract) => ({
       id: contract.id,
@@ -234,12 +248,45 @@ const ContractForm = ({
     return mappedContract[0]?.id;
   };
 
+  const addNewContractinitial = (selectedCustId: any) => {
+    //Mapped area
+    const customerAreas: AreaData[] = data.areas
+      .filter((area) => area.custId === selectedCustId)
+      .map((area) => ({
+        id: area.id,
+        custId: area.custId,
+        name: area.name,
+        totalChkPt: 0,
+        round: [],
+      }));
+    setAreas(customerAreas);
+    // const mappedAreaList: AreaListType[] = customerAreas.map((area: AreaData) => {
+    //   return {
+    //     areaId: area.id, // Mapping `id` from AreaData
+    //     areaName: area.name, // Mapping `name` from AreaData
+    //     totalChkPt: area.totalChkPt, // Mapping `totalChkPt` from AreaData
+    //     roundList: roundManagement(area.id, selectedContract), // Assigning the filtered round data
+    //     latestRoundID: 0,
+    //   };
+    // });
+    // mappedAreaList.map(
+    //   (a) =>
+    //     (a.latestRoundID = a.roundList.reduce(
+    //       (max, round) => (round.id > max ? round.id : max),
+    //       0
+    //     ))
+    // );
+    // setAreaList(mappedAreaList);
+  };
+
   const handleSelectChange = (e: SelectChangeEvent) => {
     const { name, value } = e.target;
     console.log("selected =", e.target);
     console.log("contrtactList =", contractList);
     if (name === "addContractCustomer") {
+      console.log("customerAdd = ", value);
       setCustomerAdd(value);
+      addNewContractinitial(value);
     } else if (name === "selectedContractId") {
       setSelectedContractId(value);
       contractDetail(value);
@@ -274,18 +321,32 @@ const ContractForm = ({
       from: new Date(filteredContract?.startDate || "") || date?.from,
       to: new Date(filteredContract?.finishDate || "") || date?.to,
     });
+    setStartDate(new Date(filteredContract?.startDate || new Date()));
+    setFinishDate(
+      new Date(filteredContract?.finishDate || addDays(new Date(), 1))
+    );
 
     //attachmentList
     const attachments = filteredContract?.attachment;
     setAttachmentList(attachments || attachmentList);
 
+    console.log("filteredContract.isActive =", filteredContract?.isActive);
+    setIsContractActive(filteredContract?.isActive || isContractActive);
+    if (!filteredContract?.isActive) {
+      handleContractInactive(true);
+    }
+    console.log("isContractActive =", isContractActive);
+
     // Shift list
+    const filteredShift = data.shifts?.filter(
+      (s) => s.contractId === selectedContract
+    );
     const mappedShiftList: ShiftListType[] =
-      filteredContract?.shiftList.map((shift) => ({
+      filteredShift.map((shift) => ({
         id: shift.id,
         desc: shift.name,
         workdays: shift.workdays,
-        manpowers: shift.manpowerList || [],
+        manpowers: mappedManpowerOfEachShift(shift.id), //shift.filteredShift
       })) || shiftList;
     setShiftList(mappedShiftList);
     calTotalManPowerOfAllShift(mappedShiftList);
@@ -293,8 +354,12 @@ const ContractForm = ({
     console.log("mappedShiftList =", mappedShiftList);
 
     //Alert to List
+    const filteredAlertTo = data.patrolAlertTo.filter(
+      (al) => al.contractId === selectedContract
+    );
+    console.log("filteredAlertTo =", filteredAlertTo);
     const mappedAlertList: PatrolAlertListType[] =
-      filteredContract?.patrolAlertList.map((alertTo) => ({
+      filteredAlertTo.map((alertTo) => ({
         id: alertTo.id,
         isAsm: alertTo.isAsm,
         name: alertTo.name,
@@ -303,6 +368,7 @@ const ContractForm = ({
         desc: alertTo.name,
       })) || alertToList;
     setAlertToList(mappedAlertList || alertToList);
+    console.log("mappedAlertList =", mappedAlertList);
 
     //asmAlertNames
     const asmAlertNameList = data.employees.map((a) => ({
@@ -311,6 +377,10 @@ const ContractForm = ({
       email: a.email,
     }));
     setAsmAlertNames(asmAlertNameList);
+  };
+
+  const mappedManpowerOfEachShift = (shiftId: any) => {
+    return data.manpowers.filter((m) => m.shiftId === shiftId);
   };
 
   const calTotalManPowerOfAllShift = (shiftList: ShiftListType[]) => {
@@ -332,24 +402,39 @@ const ContractForm = ({
     field: keyof RoundData,
     value: any
   ) => {
-    let isTime = false;
-    if (
-      field === "startTimeHr" ||
-      "startTimeMin" ||
-      "finishTimeHr" ||
-      "finishTimeMin"
-    ) {
-      isTime = true;
-      if (value.length > 2) return;
-    }
+    console.log("field = ", field);
+    console.log("value = ", value);
+    console.log("areaId = ", areaId);
+    console.log("roundId = ", roundId);
+    console.log("areaList =", areaList);
+
+    // let isTime = false;
+    // if (
+    //   field === "startTimeHr" ||
+    //   "startTimeMin" ||
+    //   "finishTimeHr" ||
+    //   "finishTimeMin"
+    // ) {
+    //   isTime = true;
+    //   if (value.length > 2) return;
+    // }
+
+    console.log("before update");
     const updatedAreaList = areaList.map((area) => {
+      console.log("enter update");
       if (area.areaId === areaId) {
         // Update the roundList for the matched areaId
         let updatedRoundData = area.roundList.map((item) =>
           item.id === roundId ? { ...item, [field]: value } : item
         );
 
-        if (isTime) {
+        if (
+          (field === "startTimeHr" ||
+            "startTimeMin" ||
+            "finishTimeHr" ||
+            "finishTimeMin") &&
+          value.length <= 2
+        ) {
           updatedRoundData = calMinutes(roundId, updatedRoundData);
         }
         // Return the updated area object
@@ -364,6 +449,7 @@ const ContractForm = ({
 
     // Set the updated areaList
     setAreaList(updatedAreaList);
+    console.log("updatedAreaList =", updatedAreaList);
   };
 
   const handleFieldShiftListTypeChange = (
@@ -502,7 +588,20 @@ const ContractForm = ({
     const updatedPatrolAlertList = alertToList.map((alertTo) =>
       alertTo.id === patrolAlertId ? { ...alertTo, [field]: value } : alertTo
     );
-    setAlertToList(updatedPatrolAlertList);
+
+    const mappedAlertList: PatrolAlertListType[] =
+      updatedPatrolAlertList.map((alertTo) => ({
+        id: alertTo.id,
+        isAsm: alertTo.isAsm,
+        name: alertTo.name,
+        email:
+          alertTo.isAsm === 1
+            ? asmAlertNames.find((a) => a.desc === alertTo.name)?.email
+            : alertTo.email,
+        otherPositionId: alertTo.otherPositionId,
+        desc: alertTo.name,
+      })) || alertToList;
+    setAlertToList(mappedAlertList || alertToList);
   };
 
   const addAlertToList = () => {
@@ -513,7 +612,7 @@ const ContractForm = ({
     setAlertToList([
       ...alertToList,
       {
-        id: latestId + 1,
+        id: "al000" + (alertToList.length + 1).toString(),
         isAsm: undefined,
         name: "",
         email: "",
@@ -563,9 +662,9 @@ const ContractForm = ({
           parseInt(item.finishTimeHr, 10) * 60 +
           parseInt(item.finishTimeMin, 10);
         if (item.isSameDay == 1) {
-          if (startHr < finishHr) {
+          if (startHr <= finishHr) {
             mins = finishTotalMins - startTotalMins;
-            console.log(mins);
+            console.log("mins = ", mins);
           } else mins = 0;
         } else {
           if (finishTotalMins < startTotalMins) {
@@ -602,7 +701,7 @@ const ContractForm = ({
               finishTimeMin: "00",
               totalTimeMin: "0",
               isSameDay: undefined,
-              shift: 0,
+              shift: "",
               alertTo: [],
               isNeed: false,
               isStrictOrder: false,
@@ -668,7 +767,9 @@ const ContractForm = ({
 
   const handleDelete = () => {};
 
-  const handleSave = () => {};
+  const handleSave = () => {
+    console.log("alertToList = ", alertToList);
+  };
 
   const handleSubmit = () => {};
 
@@ -725,14 +826,30 @@ const ContractForm = ({
     closeModal(isEdit);
   }
 
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (!files) return;
-
+    const allowedTypes = [
+      "application/pdf",
+      "image/jpeg",
+      "image/png",
+      "image/gif",
+    ];
+    const maxFileSize = 2 * 1024 * 1024; // 2 MB in bytes
+    if (!files) {
+      console.log("!files");
+      return;
+    }
     const file = files[0];
-
+    if (!allowedTypes.includes(file?.type)) {
+      alert("Only PDF, JPG, PNG, and GIF files are allowed.");
+      return;
+    }
+    if (file.size > maxFileSize) {
+      alert("File size must not exceed 2 MB.");
+      return;
+    }
     // use the file
+    setSelectNewFile([...selectNewFile, file]);
     console.log(file);
   };
 
@@ -752,6 +869,19 @@ const ContractForm = ({
   function handleDisplayAlertToDetail() {
     setShowAlertToDeatil(!showAlertToDeatil);
   }
+
+  const handleContractInactive = (checked: boolean) => {
+    if (checked) setIsContractActive(false);
+  };
+
+  const handleContractActive = (checked: boolean) => {
+    if (checked) setIsContractActive(true);
+  };
+
+  const handleRemoveNewFile = (fileName: any) => {
+    const remainFile = selectNewFile.filter((f) => f.name != fileName);
+    setSelectNewFile(remainFile);
+  };
 
   return (
     <div className='fixed inset-0 bg-black bg-opacity-40 flex flex-col items-center justify-center z-indextop'>
@@ -834,11 +964,12 @@ const ContractForm = ({
                         </Box>
 
                         <Box className='w-[30%] flex justify-end'>
-                          <Button
-                            onClick={addArea}
-                            className=' bg-[#1D7A9B] hover:bg-[#D9F0EC] hover:text-[#1D7A9B] px-4'>
-                            + New Contract
-                          </Button>
+                          {/* <Button
+                        onClick={addArea}
+                        className=" bg-[#1D7A9B] hover:bg-[#D9F0EC] hover:text-[#1D7A9B] px-4"
+                      >
+                        + New Contract
+                      </Button> */}
                         </Box>
                       </Box>
                     </Box>
@@ -854,7 +985,25 @@ const ContractForm = ({
                         />
                       </Box>
 
-                      <Box className='w-fit'>
+                      {/* <Box className="w-fit">
+                    <Typography
+                      textAlign="left"
+                      sx={{
+                        fontWeight: "700",
+                        color: "#2C5079",
+                        fontSize: "14px",
+                        paddingBottom: "0.25rem",
+                      }}
+                    >
+                      Start Date - End Date
+                    </Typography>
+                    <DatePickerWithRange
+                      dateRange={date}
+                      setDateRange={setDate}
+                      className={`bg-[#D9F0EC] w-full rounded-lg`}
+                    />
+                  </Box> */}
+                      <Box className='w-1/2'>
                         <Typography
                           textAlign='left'
                           sx={{
@@ -863,12 +1012,81 @@ const ContractForm = ({
                             fontSize: "14px",
                             paddingBottom: "0.25rem",
                           }}>
-                          Start Date - End Date
+                          Contract Status
                         </Typography>
-                        <DatePickerWithRange
-                          dateRange={date}
-                          setDateRange={setDate}
-                          className={`bg-[#D9F0EC] w-full rounded-lg`}
+                        <Box display={"flex"} className='space-x-2'>
+                          <Box
+                            sx={{ borderRadius: "10px" }}
+                            className={`${
+                              isContractActive
+                                ? `bg-[#E2F7E1] border-[#86DC89]`
+                                : `bg-white border-[#2C5079]`
+                            } flex p-1 h-fit border-[1px] w-1/2`}>
+                            <Checkbox3
+                              onCheckedChange={handleContractActive}
+                              checked={isContractActive}
+                            />
+                            <Typography
+                              sx={{ color: "#2C5079" }}
+                              className='py-1 px-2'>
+                              Active
+                            </Typography>
+                          </Box>
+                          <Box
+                            sx={{ borderRadius: "10px" }}
+                            className={`${
+                              !isContractActive
+                                ? `bg-[#E2F7E1] border-[#86DC89]`
+                                : `bg-white border-[#2C5079]`
+                            } flex p-1 h-fit border-[1px] w-1/2`}>
+                            <Checkbox3
+                              onCheckedChange={handleContractInactive}
+                              checked={!isContractActive}
+                            />
+                            <Typography
+                              className='py-1 px-2'
+                              sx={{ color: "#2C5079" }}>
+                              Inactive
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </Box>
+                    </Box>
+
+                    <Box className='flex w-full space-x-7 pt-2'>
+                      <Box className='w-1/2'>
+                        <Typography
+                          textAlign='left'
+                          sx={{
+                            fontWeight: "700",
+                            color: "#2C5079",
+                            fontSize: "14px",
+                            paddingBottom: "0.25rem",
+                          }}>
+                          Start Date
+                        </Typography>
+                        <DatePicker
+                          date={startDate}
+                          setDate={setStartDate}
+                          h={"h-10"}
+                        />
+                      </Box>
+
+                      <Box className='w-1/2'>
+                        <Typography
+                          textAlign='left'
+                          sx={{
+                            fontWeight: "700",
+                            color: "#2C5079",
+                            fontSize: "14px",
+                            paddingBottom: "0.25rem",
+                          }}>
+                          End Date
+                        </Typography>
+                        <DatePicker
+                          date={finishDate}
+                          setDate={setFinishDate}
+                          h={"h-10"}
                         />
                       </Box>
                     </Box>
@@ -884,28 +1102,82 @@ const ContractForm = ({
                       }}>
                       Attachment
                     </Typography>
-                    <Box className='w-full flex space-x-3 '>
+                    <Typography
+                      textAlign='left'
+                      sx={{
+                        fontSize: "14px",
+                        color: "#4C9BF5",
+                        fontWeight: "700",
+                        paddingTop: "0.5rem",
+                        pb: "0.5rem",
+                      }}>
+                      Existing Files :
+                    </Typography>
+                    <Grid2 container sx={{ width: "100%", mb: 1 }} spacing={2}>
                       {attachmentList.map((attach, index) => (
-                        <Box
-                          key={index}
-                          sx={{ borderRadius: "10px" }}
-                          className='justify-between flex p-1 bg-white max-w-[220px] border-[1px] border-[#4C9BF5]'>
-                          <Typography
-                            sx={{
-                              color: "#2C5079",
-                              paddingX: "0.5rem",
-                              paddingY: "0.25rem",
-                            }}>
-                            {attach}
-                          </Typography>
-                          <Trash
-                            size={24}
-                            color='#F66262'
-                            style={{ marginTop: 5 }}
-                            className='cursor-pointer'
-                          />
-                        </Box>
+                        <Grid2 size={4} key={index}>
+                          <Box
+                            key={index}
+                            sx={{ borderRadius: "10px" }}
+                            className='justify-between flex p-1 bg-white max-w-[220px] border-[1px] border-[#4C9BF5]'>
+                            <Typography
+                              sx={{
+                                color: "#2C5079",
+                                ml: "0.25rem",
+                                paddingY: "0.25rem",
+                                width: "90%",
+                              }}>
+                              {attach.length > 18
+                                ? attach.substring(0, 18) + "..."
+                                : attach}
+                            </Typography>
+                            <Trash
+                              size={22}
+                              color='#F66262'
+                              style={{ marginTop: 5 }}
+                              className='cursor-pointer'
+                            />
+                          </Box>
+                        </Grid2>
                       ))}
+                    </Grid2>
+                    {selectNewFile.length > 0 && (
+                      <Typography
+                        textAlign='left'
+                        sx={{
+                          fontSize: "14px",
+                          color: "#4C9BF5",
+                          fontWeight: "700",
+                          paddingTop: "0.5rem",
+                          pb: "0.5rem",
+                        }}>
+                        New Upload Files :
+                      </Typography>
+                    )}
+                    <Grid2
+                      container
+                      sx={{ width: "100%", mb: 1.5 }}
+                      spacing={2}>
+                      {selectNewFile.map((file, index) => (
+                        <Grid2 size={4} key={index}>
+                          <Box className='justify-between flex p-1 bg-white border-[1px] border-[#4C9BF5] rounded-lg'>
+                            <Typography className='py-1 pl-1 text-[#2C5079] w-[90%]'>
+                              {file.name.length > 17
+                                ? file.name.substring(0, 17) + "..."
+                                : file.name}
+                            </Typography>
+                            <Trash
+                              onClick={() => handleRemoveNewFile(file.name)}
+                              size={22}
+                              color='#F66262'
+                              style={{ marginTop: 5 }}
+                              className='cursor-pointer'
+                            />
+                          </Box>
+                        </Grid2>
+                      ))}
+                    </Grid2>
+                    <Box className='w-full flex space-x-3 mb-2'>
                       <FormControl>
                         <Button
                           onClick={handleAddFileClick}
@@ -961,7 +1233,11 @@ const ContractForm = ({
                           }}>
                           Start Date
                         </Typography>
-                        <DatePicker h={"h-10"} />
+                        <DatePicker
+                          date={startDate}
+                          setDate={setStartDate}
+                          h={"h-10"}
+                        />
                       </Box>
 
                       <Box className='w-1/2'>
@@ -975,7 +1251,11 @@ const ContractForm = ({
                           }}>
                           End Date
                         </Typography>
-                        <DatePicker h={"h-10"} />
+                        <DatePicker
+                          h={"h-10"}
+                          date={finishDate}
+                          setDate={setFinishDate}
+                        />
                       </Box>
                     </Box>
 
@@ -990,12 +1270,43 @@ const ContractForm = ({
                       }}>
                       Attachment
                     </Typography>
-                    <Box className='w-full flex space-x-3 '>
-                      <Button
-                        onClick={addArea}
-                        className='w-[84px] bg-[#1D7A9B] hover:bg-[#D9F0EC] hover:text-[#1D7A9B] pr-4'>
-                        + Add File
-                      </Button>
+                    <Grid2
+                      container
+                      sx={{ width: "100%", mb: 1.5 }}
+                      spacing={2}>
+                      {selectNewFile.map((file, index) => (
+                        <Grid2 size={4} key={index}>
+                          <Box className='justify-between flex p-1 bg-white border-[1px] border-[#4C9BF5] rounded-lg'>
+                            <Typography className='py-1 pl-1 text-[#2C5079] w-[90%]'>
+                              {file.name.length > 17
+                                ? file.name.substring(0, 17) + "..."
+                                : file.name}
+                            </Typography>
+                            <Trash
+                              onClick={() => handleRemoveNewFile(file.name)}
+                              size={22}
+                              color='#F66262'
+                              style={{ marginTop: 5 }}
+                              className='cursor-pointer'
+                            />
+                          </Box>
+                        </Grid2>
+                      ))}
+                    </Grid2>
+                    <Box className='w-full flex space-x-3 mb-2'>
+                      <FormControl>
+                        <Button
+                          onClick={handleAddFileClick}
+                          className='w-[82px] bg-[#1D7A9B] hover:bg-[#D9F0EC] hover:text-[#1D7A9B] pr-4'>
+                          + Add File
+                        </Button>
+                        <input
+                          type='file'
+                          ref={inputRef}
+                          hidden
+                          onChange={handleFileChange}
+                        />
+                      </FormControl>
                     </Box>
                   </Box>
                 )}
@@ -1374,9 +1685,9 @@ const ContractForm = ({
                                 onClick={() => handleAlertToDetail(alertTo)}>
                                 ดู Area & Round ที่รับ Alert
                                 <GoArrowUpRight
-                                  size={24}
+                                  size={22}
                                   color='#1D7A9B'
-                                  style={{ marginTop: 5 }}
+                                  style={{ marginTop: 3 }}
                                 />
                               </Button>
                             </Box>
@@ -1786,6 +2097,7 @@ const ContractForm = ({
                 <SubmitBtn onSubmitBtnClick={handleSubmit} />
               </Box>
             )}
+
             {isEdit && (
               <Box className='flex w-full justify-between px-6 border-t-2 pt-4 pb-4'>
                 <Button
@@ -1816,6 +2128,7 @@ const ContractForm = ({
           selectedAlertTo={selectedALertTo}
           areaList={areaList}
           shiftList={shiftList}
+          setAreaList={setAreaList}
         />
       )}
     </div>

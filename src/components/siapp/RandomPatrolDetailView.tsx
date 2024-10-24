@@ -19,102 +19,69 @@ import { PatrolStatus } from "./PatrolStatus";
 import { CheckListStatus } from "./CheckListStatus";
 import { getPatrolCheckList, getMasterRoundData } from "../../app/lib/api";
 import { Row } from "react-day-picker";
+import { formatDate } from "date-fns";
 
-type RowData = {
-  dateTime: string;
-  startDateTime: string;
-  useTime: string;
-  customerName: string;
-  areaId: string;
-  areaName: any;
-  round: any;
-  checkpointId: string;
-  checkpointNo: any;
-  checkPointName: any;
-  patroller: string;
-  status: string;
-  allCheckpoints: number; //string[];
-  remark: string;
-  image: any[];
-};
+type RandomRowData = {
+    startDateTime: string;
+    endDateTime: string;
+    customerName: string;
+    areaName: any;
+    checkpointId: string;
+    checkPointName: any;
+    patroller: string;
+    remark: string;
+    reasonId: string;
+    reason: string;
+    image: any[];
+    latestEdit: string;
+  };
 
-const segments = [
-  {
-    id: 1,
-    desc: "Building",
-  },
-  {
-    id: 2,
-    desc: "Education",
-  },
-  {
-    id: 3,
-    desc: "Industrial",
-  },
-  {
-    id: 4,
-    desc: "Resident",
-  },
-];
-
-interface PatrolDeatilViewProps {
-  checkpoint: RowData;
+interface RandomPatrolDeatilViewProps {
+  checkpoint: RandomRowData;
   closeModal: () => void;
 }
 
-const PatrolDeatilView = ({
+const RandomPatrolDeatilView = ({
   checkpoint,
   closeModal,
-}: PatrolDeatilViewProps) => {
+}: RandomPatrolDeatilViewProps) => {
   const [isEdit, setIsEdit] = useState(false);
-  const [formHeader, setFormHeader] = useState("View Check Point Patrol");
-  const [patrolCheckpoint, setPatrolCheckpoint] = useState(
+  const [formHeader, setFormHeader] = useState("View Random Patrol");
+  const [randomPatrolCheckpoint, setRandomPatrolCheckpoint] = useState(
     checkpoint || {
-      dateTime: "",
-      customerName: "",
-      areaName: "",
-      round: 0,
-      checkPointName: "",
-      checkpointId: "",
-      checkpointNo: undefined,
-      patroller: "",
-      status: "",
-      allCheckpoints: [],
-      remark: "",
-      image: [],
+        startDateTime: "",
+        endDateTime: "",
+        customerName: "",
+        areaId: "",
+        areaName: "",
+        checkpointId: "",
+        checkPointName: "",
+        patroller: "",
+        remark: "",
+        image: [],
     }
   );
   const [checkList, setCheckList] = useState<any[]>();
   const [roundTime, setRoundTime] = useState<any>();
   const [openMapDetailView, setOpenMapDetailView] = useState<boolean>(false);
 
-  const formatTime = (dateString: string) => {
+  const formatTime = (dateString: string, isUTC7: boolean = false) => {
     const date = new Date(dateString);
-
-    const hours = String(date.getUTCHours()).padStart(2, "0");
+    const hours = String( isUTC7 ? date.getUTCHours() + 7 : date.getUTCHours()).padStart(2, "0");
     const minutes = String(date.getUTCMinutes()).padStart(2, "0");
-
     return `${hours}:${minutes}`;
   };
 
   useEffect(() => {
-    console.log("patrolCheckpoint =", patrolCheckpoint);
+    console.log("randomPatrolCheckpoint =", randomPatrolCheckpoint);
     getCheckListData();
-    getRoundDetailData();
+    console.log("checkpoint =", checkpoint);
   }, []);
 
   const getCheckListData = async () => {
     const getCheckList = await getPatrolCheckList(checkpoint.checkpointId);
     setCheckList(getCheckList?.documents);
     console.log("checkList =", getCheckList?.documents);
-  };
-
-  const getRoundDetailData = async () => {
-    const response = await getMasterRoundData(checkpoint.areaId);
-    const startTime = formatTime(response?.documents[0].startTime);
-    const endTime = formatTime(response?.documents[0].endTime);
-    setRoundTime(startTime + " - " + endTime);
-    console.log("roundTime = ", startTime + " - " + endTime);
   };
 
   function handleCloseCustomerForm() {
@@ -198,7 +165,7 @@ const PatrolDeatilView = ({
                           paddingTop: "0.25rem",
                         }}
                       >
-                        {patrolCheckpoint.customerName}
+                        {randomPatrolCheckpoint.customerName}
                       </Typography>
                     </div>
                     <div className="flex">
@@ -222,7 +189,7 @@ const PatrolDeatilView = ({
                           paddingTop: "0.25rem",
                         }}
                       >
-                        {patrolCheckpoint.areaName}
+                        {randomPatrolCheckpoint.areaName}
                       </Typography>
                     </div>
                     <div className="flex">
@@ -246,7 +213,7 @@ const PatrolDeatilView = ({
                           paddingTop: "0.25rem",
                         }}
                       >
-                        {patrolCheckpoint.dateTime.split("@")[0]}
+                        {formatDate(randomPatrolCheckpoint.endDateTime, "dd/MM/yyyy")}
                       </Typography>
                     </div>
                     <div className="flex">
@@ -260,30 +227,18 @@ const PatrolDeatilView = ({
                           fontWeight: 700,
                         }}
                       >
-                        Round {patrolCheckpoint.round}
-                      </Typography>
-                      <Typography
-                        textAlign="left"
-                        sx={{
-                          fontSize: "14px",
-                          color: "#2C5079",
-                          paddingTop: "0.25rem",
-                        }}
-                      >
-                        ({roundTime})
+                        Reason {randomPatrolCheckpoint.reason}
                       </Typography>
                     </div>
                     <div>
                       <Typography
                         sx={{
-                          color: "#4C9BF5",
-                          textDecorationLine: "underline",
+                          color: "#83A2AD",
                           fontSize: "14px",
                         }}
                         textAlign={"left"}
                       >
-                        {patrolCheckpoint.allCheckpoints} Check Point
-                        {`${patrolCheckpoint.allCheckpoints > 1 ? `s` : ``}`}
+                        Latest Edit : {formatDate(randomPatrolCheckpoint.latestEdit,"dd/MM/yyyy")+ "@" + formatTime(randomPatrolCheckpoint.latestEdit, true)}
                       </Typography>
                     </div>
                   </Box>
@@ -297,24 +252,6 @@ const PatrolDeatilView = ({
                 </Box>
 
                 <Box className="flex w-full bg-[#EBF4F6] rounded-lg mb-3 p-2">
-                  <Typography
-                    textAlign="center"
-                    sx={{
-                      width: "2rem",
-                      height: "1.9rem",
-                      fontSize: "14px",
-                      color: "white",
-                      bgcolor: "#1D7A9B",
-                      borderRadius: "9999px",
-                      pt: 0.3,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      m: "15px 15px 0px 5px",
-                    }}
-                  >
-                    {patrolCheckpoint.checkpointNo}
-                  </Typography>
                   <Box className="w-[75%]">
                     <Typography
                       textAlign="left"
@@ -324,7 +261,7 @@ const PatrolDeatilView = ({
                         fontWeight: 700,
                       }}
                     >
-                      {patrolCheckpoint.checkPointName}
+                      {randomPatrolCheckpoint.checkPointName}
                     </Typography>
                     <Typography
                       textAlign="left"
@@ -333,13 +270,8 @@ const PatrolDeatilView = ({
                         color: "#2C5079",
                       }}
                     >
-                      {patrolCheckpoint.startDateTime.split("@")[1]} -{" "}
-                      {patrolCheckpoint.dateTime.split("@")[1] + " "}(
-                      {patrolCheckpoint.useTime.split(" ")[0] === "0"
-                        ? ""
-                        : patrolCheckpoint.useTime.split(" ")[0] + " hr "}
-                      {patrolCheckpoint.useTime.split(" ")[1] + " min "}
-                      {patrolCheckpoint.useTime.split(" ")[2] + " sec"})
+                      {formatTime(randomPatrolCheckpoint.startDateTime)} -{" "}
+                      {formatTime(randomPatrolCheckpoint.endDateTime) + " "}
                     </Typography>
                     <Typography
                       textAlign="left"
@@ -348,11 +280,8 @@ const PatrolDeatilView = ({
                         color: "#1D7A9B",
                       }}
                     >
-                      {patrolCheckpoint.patroller} (Role)
+                      {randomPatrolCheckpoint.patroller} (Role)
                     </Typography>
-                  </Box>
-                  <Box className="flex h-[50%] mt-2">
-                    <PatrolStatus status={patrolCheckpoint.status} />
                   </Box>
                 </Box>
 
@@ -393,7 +322,7 @@ const PatrolDeatilView = ({
                           }}
                         >
                           <TableCell align="center">
-                            {row.CheckListNo}
+                            {index + 1}
                           </TableCell>
                           <TableCell align="center">
                             {row.CheckListName}
@@ -452,8 +381,8 @@ const PatrolDeatilView = ({
                   </Typography>
                   <Box textAlign={"left"}>
                     <Grid2 container spacing={1}>
-                      {patrolCheckpoint.image.length > 0
-                        ? patrolCheckpoint.image.map((img, index) => (
+                      {randomPatrolCheckpoint.image?.length > 0
+                        ? randomPatrolCheckpoint.image.map((img, index) => (
                             <Grid2
                               key={index}
                               size={3}
@@ -478,7 +407,7 @@ const PatrolDeatilView = ({
                               />
                             </Grid2>
                           ))
-                        : patrolCheckpoint.image.length === 0
+                        : randomPatrolCheckpoint.image?.length === 0 || randomPatrolCheckpoint.image === undefined
                         ? "-"
                         : ""}
                     </Grid2>
@@ -503,8 +432,8 @@ const PatrolDeatilView = ({
                       color: "#2C5079",
                     }}
                   >
-                    {patrolCheckpoint.remark != null
-                      ? patrolCheckpoint.remark
+                    {randomPatrolCheckpoint.remark != null
+                      ? randomPatrolCheckpoint.remark
                       : "-"}
                   </Typography>
                 </Box>
@@ -616,4 +545,4 @@ const PatrolDeatilView = ({
   );
 };
 
-export default PatrolDeatilView;
+export default RandomPatrolDeatilView;

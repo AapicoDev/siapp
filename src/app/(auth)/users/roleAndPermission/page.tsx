@@ -72,7 +72,7 @@ const initialArea: AreaData[] = [
 ];
 
 export default function UsersPage() {
-  const [rowData, setRowData] = useState(data.roles); 
+  const [rowData, setRowData] = useState(data.roles);
   const [editMode, setEditMode] = useState(Array(rowData.length).fill(false));
   const [roles, setRoles] = useState(data.roles);
   const [status, setStatus] = useState(data.activeStatus);
@@ -99,7 +99,9 @@ export default function UsersPage() {
       id: row.id,
     }))
   );
-  const [permissionSelected, setPermissionSelected] = useState<selectedDelete[]>(
+  const [permissionSelected, setPermissionSelected] = useState<
+    selectedDelete[]
+  >(
     permissions.map((row) => ({
       isSelected: false,
       id: row.id,
@@ -121,18 +123,22 @@ export default function UsersPage() {
   };
 
   const handleRowClick = (index: any, row: RowData) => {
-    if(!editMode.some((item) => item === true)){
+    if (!editMode.some((item) => item === true)) {
       const newEditMode = [...editMode];
       newEditMode[index] = true;
       setEditMode(newEditMode);
 
-      const filteredPermissions = data.permissions.filter(permission => row.permissions.includes(permission.id));
+      const filteredPermissions = data.permissions.filter((permission) =>
+        row.permissions.includes(permission.id)
+      );
       setPermissions(filteredPermissions);
     }
   };
 
   const handleSave = () => {
-    const newEditMode = editMode.map((element) => (element === true ? false : element));
+    const newEditMode = editMode.map((element) =>
+      element === true ? false : element
+    );
     console.log("neweditMode =", newEditMode);
     setEditMode(newEditMode);
     setPermissions(data.permissions);
@@ -191,7 +197,9 @@ export default function UsersPage() {
     const newSelected = [...permissionSelected];
     newSelected[index].isSelected = !permissionSelected[index].isSelected;
     setPermissionSelected(newSelected);
-    const isCheckAll = !permissionSelected.some((item) => item.isSelected === false);
+    const isCheckAll = !permissionSelected.some(
+      (item) => item.isSelected === false
+    );
     if (isCheckAll) {
       setIsPermissionSelectedAll(true);
     } else {
@@ -236,22 +244,21 @@ export default function UsersPage() {
   return (
     <div>
       <Navbar menu={"Users"} submenu={"Roles & Permissions"} />
-      <Box className="px-2">
+      <Box className='px-2'>
         {/* Main Content */}
         <Box px={2} pb={2}>
           {/* Sub Header */}
-          <Box mb={2} className="w-full flex justify-center">
+          <Box mb={2} className='w-full flex justify-center'>
             <Box
               sx={{
                 bgcolor: "white",
                 borderRadius: "10px",
                 boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
               }}
-              justifyContent="space-between"
-              className="space-x-4 p-4 flex w-[80%]"
-            >
-              <Box className="flex w-full space-x-4">
-                <Box className="w-40 bg-[#D9F0EC] rounded-lg flex text-[#37B7C3] py-2 px-4">
+              justifyContent='space-between'
+              className='space-x-4 p-4 flex w-[80%]'>
+              <Box className='flex w-full space-x-4'>
+                <Box className='w-40 bg-[#D9F0EC] rounded-lg flex text-[#37B7C3] py-2 px-4'>
                   <Filter
                     size={16}
                     style={{ marginRight: "5px", marginTop: "3px" }}
@@ -291,32 +298,31 @@ export default function UsersPage() {
           </Box>
 
           {/* Tables */}
-          <Box className="w-full flex">
+          <Box className='w-full flex'>
             {/* Role Table */}
-            <Box className="w-[50%] pr-4">
+            <Box className='w-[50%] pr-4'>
               <TableContainer
-                className="h-screen bg-white"
+                className='h-screen bg-white'
                 sx={{
                   display: "flex",
                   flexDirection: "column",
                   borderRadius: "15px 15px 0px 0px",
                   boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
-                }}
-              >
+                }}>
                 <Table>
                   <TableHead>
                     <TableRow sx={{ borderBottom: "1px solid #C7D4D7" }}>
-                      <TableCell align="left" className="w-[10%]">
+                      <TableCell align='left' className='w-[10%]'>
                         <Checkbox2
-                          className="mt-1 mb-2 border-[#C7D4D7]"
+                          className='mt-1 mb-2 border-[#C7D4D7]'
                           checked={isSelectedAll}
                           onCheckedChange={handleCheckAll}
                         />
                       </TableCell>
-                      <TableCell align="center" className="w-[60%]">
+                      <TableCell align='center' className='w-[60%]'>
                         Role
                       </TableCell>
-                      <TableCell align="center" className="w-[30%]">
+                      <TableCell align='center' className='w-[30%]'>
                         Permissions
                       </TableCell>
                     </TableRow>
@@ -342,36 +348,34 @@ export default function UsersPage() {
                           "&:hover": {
                             backgroundColor: "#DCE9EB", // Optional: Change background color on hover
                           },
-                        }}
-                      >
-                        <TableCell align="left">
+                        }}>
+                        <TableCell align='left'>
                           <Checkbox2
                             checked={selected[index].isSelected}
                             onClick={(event) => {
                               event.stopPropagation(); // Prevent row click
                               handleSelected(index);
-                            }} className="mb-2 border-[#C7D4D7]"
+                            }}
+                            className='mb-2 border-[#C7D4D7]'
                           />
                         </TableCell>
-                        <TableCell align="center" className="max-w-48">
+                        <TableCell align='center' className='max-w-48'>
                           {editMode[index] ? (
                             <Input
-                              type="text"
+                              type='text'
                               className={`${styles.textBoxCell}`}
                               value={row.desc}
                               onChange={(e) =>
-                                handleInputChange(
-                                  index,
-                                  "desc",
-                                  e.target.value
-                                )
+                                handleInputChange(index, "desc", e.target.value)
                               }
                             />
                           ) : (
                             `${row.desc}`
                           )}
                         </TableCell>
-                        <TableCell align="center">{row.permissions.length}</TableCell>
+                        <TableCell align='center'>
+                          {row.permissions.length}
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -380,14 +384,13 @@ export default function UsersPage() {
 
               {/* TableFooter*/}
               <TableContainer
-                className="bg-white border-t"
+                className='bg-white border-t'
                 sx={{
                   borderRadius: "0px 0px 15px 15px",
                   boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
-                }}
-              >
+                }}>
                 <Table>
-                  <TableFooter className="w-full">
+                  <TableFooter className='w-full'>
                     <TableRow>
                       <TableCell colSpan={6}>
                         <Box
@@ -396,10 +399,9 @@ export default function UsersPage() {
                             justifyContent: "space-between",
                             alignItems: "center",
                             width: "100%",
-                          }}
-                        >
+                          }}>
                           <Typography>Total: {totalItems} items</Typography>
-                          <Box className="flex w-[80%]">
+                          <Box className='flex w-[80%]'>
                             <DeleteButton
                               onDeleteBtnClick={handleDeleteCust}
                               disable={
@@ -407,17 +409,15 @@ export default function UsersPage() {
                               }
                             />
                             {editMode.some((item) => item === true) ? (
-                              <Box className="flex w-[30%]">
-                                <SaveButton
-                              onSaveBtnClick={handleSave}
-                            /></Box>
-                              
+                              <Box className='flex w-[30%]'>
+                                <SaveButton onSaveBtnClick={handleSave} />
+                              </Box>
                             ) : (
-                              <Box className="flex w-[30%]">
-                              <GradientButton
-                                content={"+ New"}
-                                onBtnClick={handleAddNewCust}
-                              />
+                              <Box className='flex w-[30%]'>
+                                <GradientButton
+                                  content={"+ New"}
+                                  onBtnClick={handleAddNewCust}
+                                />
                               </Box>
                             )}
                           </Box>
@@ -430,27 +430,26 @@ export default function UsersPage() {
             </Box>
 
             {/* Permissions Table */}
-            <Box className="w-[50%]">
+            <Box className='w-[50%]'>
               <TableContainer
-                className="h-screen bg-white"
+                className='h-screen bg-white'
                 sx={{
                   display: "flex",
                   flexDirection: "column",
                   borderRadius: "15px 15px 0px 0px",
                   boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
-                }}
-              >
+                }}>
                 <Table>
                   <TableHead>
                     <TableRow sx={{ borderBottom: "1px solid #C7D4D7" }}>
-                      <TableCell align="left" className="w-[15%]">
+                      <TableCell align='left' className='w-[15%]'>
                         <Checkbox2
-                          className="mt-1 mb-2 border-[#C7D4D7]"
+                          className='mt-1 mb-2 border-[#C7D4D7]'
                           checked={isPermissionSelectedAll}
                           onCheckedChange={handlePermissionSelectAll}
                         />
                       </TableCell>
-                      <TableCell align="center" className="w-[85%]">
+                      <TableCell align='center' className='w-[85%]'>
                         Permission
                       </TableCell>
                     </TableRow>
@@ -467,18 +466,18 @@ export default function UsersPage() {
                             : `${
                                 index % 2 === 1 ? `bg-inherit` : `bg-[#EBF4F6]`
                               }`
-                        }
-                      >
-                        <TableCell align="left">
+                        }>
+                        <TableCell align='left'>
                           <Checkbox2
                             checked={permissionSelected[index].isSelected}
                             onClick={(event) => {
                               event.stopPropagation();
                               handlePermissionSelected(index);
-                            }} className="mb-2 border-[#C7D4D7]"
+                            }}
+                            className='mb-2 border-[#C7D4D7]'
                           />
                         </TableCell>
-                        <TableCell align="center">{row.desc}</TableCell>
+                        <TableCell align='center'>{row.desc}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -487,14 +486,13 @@ export default function UsersPage() {
 
               {/* TableFooter*/}
               <TableContainer
-                className="bg-white border-t"
+                className='bg-white border-t'
                 sx={{
                   borderRadius: "0px 0px 15px 15px",
                   boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
-                }}
-              >
+                }}>
                 <Table>
-                  <TableFooter className="w-full">
+                  <TableFooter className='w-full'>
                     <TableRow>
                       <TableCell colSpan={6}>
                         <Box
@@ -503,22 +501,22 @@ export default function UsersPage() {
                             justifyContent: "space-between",
                             alignItems: "center",
                             width: "100%",
-                          }}
-                        >
+                          }}>
                           <Typography>Total: {totalItems} items</Typography>
                           <Box>
                             <DeleteButton
                               onDeleteBtnClick={handleDeleteCust}
                               disable={
-                                !permissionSelected.some((item) => item.isSelected)
+                                !permissionSelected.some(
+                                  (item) => item.isSelected
+                                )
                               }
                             />
                             <Button
                               style={{ marginLeft: "auto", fontWeight: "bold" }}
-                              className="w-48 enabled:bg-gradient-to-r from-[#00336C] to-[#37B7C3] hover:from-[#4C9BF5] hover:to-[#D8EAFF] 
-                                 hover:text-[#00336C] disabled:bg-[#83A2AD]"
-                              onClick={() => handleAddNewCust()}
-                            >
+                              className='w-48 enabled:bg-gradient-to-r from-[#00336C] to-[#37B7C3] hover:from-[#4C9BF5] hover:to-[#D8EAFF] 
+                                 hover:text-[#00336C] disabled:bg-[#83A2AD]'
+                              onClick={() => handleAddNewCust()}>
                               + New
                             </Button>
                           </Box>
@@ -561,14 +559,14 @@ export default function UsersPage() {
       {openAddContract && (
         <ContractForm
           closeModal={handleCloseContractForm}
-          customeraAeas={areas}
+          customeraAreas={areas}
         />
       )}
 
       {openEditContract && (
         <ContractForm
           closeModal={handleCloseContractForm}
-          customeraAeas={areas}
+          customeraAreas={areas}
           selectedCustomer={selectedRow}
         />
       )}

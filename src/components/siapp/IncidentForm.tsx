@@ -5,19 +5,13 @@ import {
   Typography,
   Button as Button2,
   FormControl,
-  Select,
-  MenuItem,
-  InputLabel,
-  SelectChangeEvent,
   TextareaAutosize,
   Grid2,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import { Input } from "@/components/ui/textboxs/input";
-import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/buttons/button";
 import { Trash } from "iconsax-react";
-import { ChangeEvent, useEffect, useState } from "react";
+import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { VscRefresh } from "react-icons/vsc";
 import { Selector } from "../ui/selectors/selector";
 import { Textbox } from "../ui/textboxs/textbox";
@@ -27,172 +21,228 @@ import { SaveBtnFooter } from "../ui/buttons/saveBtnFooter";
 import { IoClose } from "react-icons/io5";
 import LabelTextField3 from "../ui/textboxs/labelTextField3";
 import { GoArrowUpRight } from "react-icons/go";
+import {
+    addNewIncidentType, updateIncidentType
+} from "../../app/lib/api";
+import { useConfirmDialog } from "../../components/ui/alertDialog/confirmDialog";
 
-type RowData = {
-  hrCode: string;
-  customerId: any;
-  departmentId: any;
-  segmentId: any;
-  groupId: any;
-  zoneId: any;
-  qrCode: any;
-  contractId: any;
-  code: string;
-  isActive: boolean;
-  customerName: string;
+type IncidentType = {
+  id: any;
+  rowNo: number;
+  incidentTypeTH: string;
+  incidentTypeEN: string;
+  correctiveAction: string;
+  contacts: string[];
+  attchments: string[];
 };
 
-type AreaData = {
-  id: number;
-  name: string;
+type contactType = {
+  id: any;
+  nameSurname: string;
+  tel: string;
+  email: string;
 };
-
-const segments = [
-  {
-    id: 1,
-    desc: "Building",
-  },
-  {
-    id: 2,
-    desc: "Education",
-  },
-  {
-    id: 3,
-    desc: "Industrial",
-  },
-  {
-    id: 4,
-    desc: "Resident",
-  },
-];
-
-const groups = [
-  {
-    id: 1,
-    desc: "General Guard",
-  },
-  {
-    id: 2,
-    desc: "Cargo",
-  },
-  {
-    id: 3,
-    desc: "Cleaning",
-  },
-];
-
-const zones = [
-  {
-    id: 1,
-    desc: "BMR",
-  },
-  {
-    id: 2,
-    desc: "RO1",
-  },
-  {
-    id: 3,
-    desc: "SVN",
-  },
-  {
-    id: 4,
-    desc: "RO2",
-  },
-];
 
 interface IncidentFormProps {
-  editCustomer: any;
+  selectedIncidentType: IncidentType;
   customeraAeas: any;
   closeModal: () => void;
+  setIsAddOrUpdateSuccess: (value: any) => void;
 }
 
 const IncidentForm = ({
-  editCustomer,
+  selectedIncidentType,
   closeModal,
-  customeraAeas,
+  setIsAddOrUpdateSuccess,
 }: IncidentFormProps) => {
+
   const [isEdit, setIsEdit] = useState(false);
-  const [areas, setAreas] = useState<AreaData[]>(customeraAeas);
+  const [contacts, setContacts] = useState<contactType[]>([
+    // {
+    //   id: 0,
+    //   nameSurname: "",
+    //   tel: "",
+    //   email: "",
+    // },
+  ]);
   const [formHeader, setFormHeader] = useState("");
   const [isFocused, setIsFocused] = useState(false);
-  const [formData, setFormData] = useState(
-    editCustomer || {
-      hrCode: "",
-      customerId: null,
-      departmentId: "",
-      segmentId: "",
-      groupId: "",
-      zoneId: "",
-      qrCode: "",
-      contractId: "",
-      code: "",
-      isActive: true,
-      customerName: "",
+  const [formData, setFormData] = useState<IncidentType>(
+    selectedIncidentType || {
+      id: "",
+      rowNo: 0,
+      incidentTypeTH: "",
+      incidentTypeEN: "",
+      correctiveAction: "",
+      contacts: [],
+      attchments: [],
     }
   );
+  const [mappedContacts, setMappedContacts] = useState<contactType[]>([
+    // {
+    //   id: 0,
+    //   nameSurname: "",
+    //   tel: "",
+    //   email: "",
+    // },
+  ]);
+  const [mappedFileName, setMappedFileName] = useState<any[]>([]);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const [selectNewFile, setSelectNewFile] = useState<any[]>([]);
+  const { confirmDialog, ConfirmAlertDialog } = useConfirmDialog();
 
   useEffect(() => {
-    if (editCustomer === undefined) {
+    if (selectedIncidentType === undefined) {
       setFormHeader("+ New Incident Type");
       setIsEdit(false);
     } else {
-      setFormHeader("View / Edit Incident Type");
       setIsEdit(true);
+      setFormHeader("View / Edit Incident Type");
+      const mapContacts =
+        selectedIncidentType.contacts?.map((contact, index) => {
+          const splitVal = contact.split(";;");
+          console.log("splitVal = ", splitVal);
+          return {
+            id: index,
+            nameSurname: splitVal[0],
+            tel: splitVal[1],
+            email: splitVal[2],
+          };
+        }) || contacts;
+      console.log("mappedContacts =", mapContacts);
+      setContacts(mapContacts);
+      setMappedContacts(mapContacts);
+      const filesName = selectedIncidentType.attchments.map((file) => {
+        const split = file.split(";;");
+        return {
+          fileName: split[0],
+          fileUrl: split[1],
+        };
+      });
+      console.log("filesName =", filesName);
+      setMappedFileName(filesName);
     }
-  });
+  }, []);
 
-  const handleSelectChange = (e: SelectChangeEvent) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    const allowedTypes = [
+      "application/pdf",
+      "image/jpeg",
+      "image/png",
+      "image/gif",
+    ];
+    const maxFileSize = 2 * 1024 * 1024; // 2 MB in bytes
+    if (!files) {console.log("!files"); return;};
+    const file = files[0];
+    if (!allowedTypes.includes(file.type)) {
+      alert("Only PDF, JPG, PNG, and GIF files are allowed.");
+      return;
+    }
+    if (file.size > maxFileSize) {
+      alert("File size must not exceed 2 MB.");
+      return;
+    }
+    // use the file
+    setSelectNewFile([...selectNewFile, file]);
+    console.log(file);
+  };
+
+  const handleRemoveNewFile = (fileName: any) => {
+    const remainFile = selectNewFile.filter(f => f.name != fileName);
+    setSelectNewFile(remainFile);
+  };
+
+  function handleAddFileClick(e: React.MouseEvent<HTMLButtonElement>) {
+    console.log("inputRef =", inputRef);
+    e.preventDefault();
+    if (!inputRef || !inputRef.current) return;
+
+    inputRef.current.click();
+  }
+
+  const addContact = () => {
+    console.log("contacts =", contacts);
+    setContacts([
+      ...contacts,
+      { id: contacts.length, nameSurname: "", tel: "", email: "" },
+    ]);
+  };
+
+  const removeContact = (id: number) => {
+    if (contacts.length > 0) {
+      const filteredContacts = contacts.filter((contact) => contact.id !== id);
+      setContacts(filteredContacts);
+    }
+  };
+
+  const handleContactChange = (
+    id: number,
+    field: any,
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const { name, value } = e.target;
-    setFormData((prevData: any) => ({ ...prevData, [name]: value }));
-    console.log("formData", formData);
-  };
-
-  const addArea = () => {
-    const latestId = areas.reduce(
-      (max, area) => (area.id > max ? area.id : max),
-      0
-    );
-    setAreas([...areas, { id: latestId + 1, name: "" }]);
-  };
-
-  const removeArea = (id: number) => {
-    if (areas.length > 1) {
-      const filteredAreas = areas.filter((area) => area.id !== id);
-      const reorderedAreas = filteredAreas.map((area, index) => ({
-        ...area,
-        id: index + 1, // use index of array + 1 to set new id.
-      }));
-      setAreas(reorderedAreas);
-    }
-  };
-
-  const handleAreaChange = (id: number, value: string) => {
-    setAreas(
-      areas.map((area) => (area.id === id ? { ...area, name: value } : area))
+    setContacts(
+      contacts.map((contact) =>
+        contact.id === id ? { ...contact, [name]: value } : contact
+      )
     );
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
     setFormData((prevData: any) => ({ ...prevData, [name]: value }));
   };
 
   const handleUndo = () => {
-    setFormData(editCustomer);
-    setAreas(customeraAeas);
+    console.log(
+      `selectedIncidentType = ${selectedIncidentType}\n mappedContacts = ${mappedContacts}`
+    );
+    setFormData(selectedIncidentType);
+    setContacts(mappedContacts);
+    setSelectNewFile([]);
   };
 
   const handleDelete = () => {};
 
-  const handleSave = () => {};
+  const handleSave = async () => {
+    console.log("selectedFile = ", selectNewFile);
+    console.log("contacts = ", contacts);
+    console.log("formData = ", formData);
+    const result = await updateIncidentType(formData, contacts, selectNewFile);
+    if(result != null){
+      const confirmApprove = await confirmDialog(
+        "Update Success",
+        "Update incident type successfully !",
+        true
+      );
+      setIsAddOrUpdateSuccess(true);
+      if(confirmApprove) handleCloseForm();
+    }
+  };
+
+  const handleSubmit = async () => {
+    console.log("selectedFile = ", selectNewFile);
+    console.log("contacts = ", contacts);
+    console.log("formData = ", formData);
+    const result = await addNewIncidentType(formData, contacts, selectNewFile);
+    console.log("result = ", result);
+    if(result != null){
+      const confirmApprove = await confirmDialog(
+        "Add Success",
+        "Add incident type successfully !",
+        true
+      );
+      setIsAddOrUpdateSuccess(true);
+      if(confirmApprove) handleCloseForm();
+    }
+  };
 
   function handleCloseForm() {
     closeModal();
   }
-
-  const handleActiveChange = (checked: boolean) => {
-    setFormData((prevData: any) => ({ ...prevData, isActive: checked }));
-  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 flex flex-col items-center justify-center z-indextop">
@@ -230,11 +280,11 @@ const IncidentForm = ({
         </Button2>
       </Box>
 
-      <div className="bg-white rounded-b-lg shadow-lg min-h-[604px] max-h-[734px] w-[760px]">
+      <div className="bg-white justify-between rounded-b-lg shadow-lg min-h-[628px] max-h-[734px] w-[760px]">
         {/* Body */}
-        <div className="max-h-[638px] overflow-auto">
+        <div className="max-h-[600px] overflow-auto">
           <Box
-            className="w-full justify-center px-6 py-2 rounded-t-lg pb-6"
+            className="w-full h-[600px] justify-center px-6 py-2 rounded-t-lg pb-6"
             textAlign="center"
           >
             <Box className="w-full flex space-x-4">
@@ -244,7 +294,7 @@ const IncidentForm = ({
                   name="incidentTypeEN"
                   inputType="text"
                   placeHolder="Type here..."
-                  value={formData?.customerName}
+                  value={formData?.incidentTypeEN}
                   handleChange={handleChange}
                 />
               </Box>
@@ -254,7 +304,7 @@ const IncidentForm = ({
                   name="incidentTypeTH"
                   inputType="text"
                   placeHolder="Type here..."
-                  value={formData?.customerName}
+                  value={formData?.incidentTypeTH}
                   handleChange={handleChange}
                 />
               </Box>
@@ -275,25 +325,28 @@ const IncidentForm = ({
               </Typography>
               <Box
                 sx={{
-                  border: `1px solid ${isFocused ? "#1D7A9B" : "#1D7A9B"}`, // Change border color on focus
-                  borderRadius: "8px", // Optional: customize the border radius
-                  padding: "4px", // Optional: space between border and textarea
-                  transition: "border 0.3s ease", // Smooth transition
+                  border: `1px solid ${isFocused ? "#1D7A9B" : "#1D7A9B"}`,
+                  borderRadius: "8px",
+                  padding: "4px",
                 }}
               >
                 <TextareaAutosize
+                  name="correctiveAction"
                   minRows={5}
                   maxRows={8}
                   placeholder="Type here..."
-                  onFocus={() => setIsFocused(true)} // Set focus state
-                  onBlur={() => setIsFocused(false)} // Remove focus state
+                  value={formData.correctiveAction}
+                  onFocus={() => setIsFocused(true)}
+                  onBlur={() => setIsFocused(false)}
                   style={{
+                    color: "#2C5079",
                     width: "100%",
-                    outline: "none", // Remove default outline
-                    border: "none", // Remove internal border
-                    fontSize: "14px", // Optional: custom font size
+                    outline: "none",
+                    border: "none",
+                    fontSize: "14px",
                     padding: "0.25rem",
                   }}
+                  onChange={(e) => handleChange(e)}
                 />
               </Box>
             </Box>
@@ -309,74 +362,59 @@ const IncidentForm = ({
             >
               Contact
             </Typography>
-            {/* {areas.map((area, index) => ( */}
-            <Box
-              // key={area.id}
-              className="flex w-full bg-[#F1F4F4] rounded-lg justify-items-center align-middle justify-between mb-3"
-            >
-              <Grid2 container sx={{ width: "100%", p: 2 }} spacing={2}>
-                <Grid2 size={6} sx={{ bgcolor: "white" }}>
-                  <LabelTextField3
-                    label={"Name-Surname"}
-                    placeholder={"Type here..."}
-                    inputVal={undefined}
-                    field={"nameSurname"}
-                    id={undefined}
-                    handleChangeVal={function (
-                      id: any,
-                      field: any,
-                      value: any
-                    ): void {
-                      throw new Error("Function not implemented.");
-                    }}
-                  />
+            {contacts?.map((contact, index) => (
+              <Box
+                key={index}
+                className="flex w-full bg-[#F1F4F4] rounded-lg justify-items-center align-middle justify-between mb-3"
+              >
+                <Grid2 container sx={{ width: "100%", p: 2 }} spacing={2}>
+                  <Grid2 size={6} sx={{ bgcolor: "white" ,borderRadius: "10px"}}>
+                    <LabelTextField3
+                      label={"Name-Surname"}
+                      placeholder={"Type here..."}
+                      inputVal={contact.nameSurname}
+                      field={"nameSurname"}
+                      id={index}
+                      handleChangeVal={handleContactChange}
+                    />
+                  </Grid2>
+                  <Grid2
+                    size={6}
+                    sx={{ bgcolor: "white", borderRadius: "10px" }}
+                  >
+                    <LabelTextField3
+                      label={"Tel"}
+                      placeholder={"Type here..."}
+                      inputVal={contact.tel}
+                      field={"tel"}
+                      id={index}
+                      handleChangeVal={handleContactChange}
+                    />
+                  </Grid2>
+                  <Grid2 size={6} sx={{ bgcolor: "white" , borderRadius: "10px"}}>
+                    <LabelTextField3
+                      label={"Email"}
+                      placeholder={"Type here..."}
+                      inputVal={contact.email}
+                      field={"email"}
+                      id={index}
+                      handleChangeVal={handleContactChange}
+                    />
+                  </Grid2>
                 </Grid2>
-                <Grid2 size={6} sx={{ bgcolor: "white" }}>
-                  <LabelTextField3
-                    label={"Tel"}
-                    placeholder={"Type here..."}
-                    inputVal={undefined}
-                    field={"tel"}
-                    id={undefined}
-                    handleChangeVal={function (
-                      id: any,
-                      field: any,
-                      value: any
-                    ): void {
-                      throw new Error("Function not implemented.");
-                    }}
-                  />
-                </Grid2>
-                <Grid2 size={6} sx={{ bgcolor: "white" }}>
-                  <LabelTextField3
-                    label={"Email"}
-                    placeholder={"Type here..."}
-                    inputVal={undefined}
-                    field={"email"}
-                    id={undefined}
-                    handleChangeVal={function (
-                      id: any,
-                      field: any,
-                      value: any
-                    ): void {
-                      throw new Error("Function not implemented.");
-                    }}
-                  />
-                </Grid2>
-              </Grid2>
-              <Box className="flex align-middle ml-2 justify-around">
-                <Button
-                  //onClick={() => removeArea(area.id)}
-                  className="bg-[#F66262] rounded-r-lg rounded-l-none w-14 h-full"
-                >
-                  <Trash color="white" />
-                </Button>
+                <Box className="flex align-middle ml-2 justify-around">
+                  <Button
+                    onClick={() => removeContact(contact.id)}
+                    className="bg-[#F66262] rounded-r-lg rounded-l-none w-14 h-full"
+                  >
+                    <Trash color="white" />
+                  </Button>
+                </Box>
               </Box>
-            </Box>
-            {/* ))} */}
+            ))}
 
             <Box className="justify-start flex w-full">
-              <AddButton onAddBtnClick={addArea} />
+              <AddButton onAddBtnClick={addContact} />
             </Box>
 
             <Box className="w-full justify-center" textAlign="center">
@@ -387,10 +425,48 @@ const IncidentForm = ({
                   color: "#2C5079",
                   fontWeight: "700",
                   paddingTop: "0.75rem",
+                  pb: "0.125rem",
                 }}
               >
                 Attachment
               </Typography>
+              <Typography
+                textAlign="left"
+                sx={{
+                  fontSize: "14px",
+                  color: "#4C9BF5",
+                  fontWeight: "700",
+                  paddingTop: "0.5rem",
+                  pb: "0.5rem",
+                }}
+              >
+                Existing Files :
+              </Typography>
+              <Grid2 container sx={{ width: "100%", mb: 1 }} spacing={2}>
+                {mappedFileName.map((file, index) => (
+                  <Grid2 size={4} key={index}>
+                    <Box className="justify-between flex p-1 bg-white border-[1px] border-[#4C9BF5] rounded-lg">
+                    <a target="_blank" href={file.fileUrl} className="flex justify-between">
+                      <Typography className="py-1 px-2 text-[#2C5079]">
+                        {file.fileName.length > 20 ? file.fileName.substring(0, 20)+"..." : file.fileName}
+                      </Typography>
+                      </a>
+                      <GoArrowUpRight
+                        size={24}
+                        color="#4C9BF5"
+                        style={{ marginTop: 5 }}
+                      />
+                      
+                      {/* <Trash
+                        size={24}
+                        color="#F66262"
+                        style={{ marginTop: 5 }}
+                        className="cursor-pointer"
+                      /> */}
+                    </Box>
+                  </Grid2>
+                ))}
+              </Grid2>
               <Typography
                 textAlign="left"
                 sx={{
@@ -402,23 +478,49 @@ const IncidentForm = ({
                 *File type : PDF, JPG, PNG and GIF (each file must not exceed 2
                 MB)
               </Typography>
+              {selectNewFile.length > 0 && (
+                <Typography
+                  textAlign="left"
+                  sx={{
+                    fontSize: "14px",
+                    color: "#4C9BF5",
+                    fontWeight: "700",
+                    paddingTop: "0.5rem",
+                    pb: "0.5rem",
+                  }}
+                >
+                  New Upload Files :
+                </Typography>
+              )}
               <Grid2 container sx={{ width: "100%" }} spacing={2}>
-                <Grid2 size={4}>
-                  <Box className="justify-between flex p-1 bg-white border-[1px] border-[#4C9BF5] cursor-pointer rounded-lg">
-                    <Typography className="py-1 px-2 text-[#2C5079]">
-                      row.attachment
-                    </Typography>
-                    <GoArrowUpRight
-                      size={24}
-                      color="#4C9BF5"
-                      style={{ marginTop: 5 }}
-                    />
-                  </Box>
-                </Grid2>
+                {selectNewFile.map((file, index) => (
+                  <Grid2 size={4} key={index}>
+                    <Box className="justify-between flex p-1 bg-white border-[1px] border-[#4C9BF5] rounded-lg">
+                      <Typography className="py-1 px-2 text-[#2C5079]">
+                        {file.name.length > 20 ? file.name.substring(0, 20)+"..." : file.name}
+                      </Typography>
+                      <Trash
+                        onClick={() => handleRemoveNewFile(file.name)}
+                        size={24}
+                        color="#F66262"
+                        style={{ marginTop: 5 }}
+                        className="cursor-pointer"
+                      />
+                    </Box>
+                  </Grid2>
+                ))}
               </Grid2>
 
-              <Box className="justify-start flex w-full pt-3">
-                <AddButton onAddBtnClick={addArea} />
+              <Box className="justify-start flex w-full pt-3 pb-4">
+                <FormControl>
+                  <AddButton content={"+ Add File"} onAddBtnClick={handleAddFileClick} />
+                  <input
+                    type="file"
+                    ref={inputRef}
+                    hidden
+                    onChange={handleFileChange}
+                  />
+                </FormControl>
               </Box>
             </Box>
           </Box>
@@ -434,6 +536,7 @@ const IncidentForm = ({
               Cancel
             </Button>
             <Button
+            onClick={handleSubmit}
               className="w-28 h-11 enabled:bg-gradient-to-r from-[#00336C] to-[#37B7C3] hover:from-[#2BA441] hover:to-[#A7E5A6]
                                disabled:bg-[#83A2AD]"
             >
@@ -455,15 +558,17 @@ const IncidentForm = ({
               Undo all changes
             </Button>
             <Box className="space-x-4">
-              <DeleteBtnFooter
+              {/* <DeleteBtnFooter
                 onDeleteBtnFooterClick={handleDelete}
                 disable={false}
-              />
+              /> */}
               <SaveBtnFooter onSaveBtnFooterClick={handleSave} />
             </Box>
           </Box>
         )}
       </div>
+      {/* Confirm dialog */}
+      {ConfirmAlertDialog}
     </div>
   );
 };

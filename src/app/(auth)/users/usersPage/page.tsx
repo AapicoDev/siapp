@@ -254,22 +254,21 @@ export default function UsersPage() {
   return (
     <div>
       <Navbar menu={"Users"} submenu={"Users"} />
-      <Box className="px-2">
+      <Box className='px-2'>
         {/* Main Content */}
         <Box px={2} pb={2}>
           {/* Sub Header */}
-          <Box mb={2} className="w-full flex justify-center">
+          <Box mb={2} className='w-full flex justify-center'>
             <Box
               sx={{
                 bgcolor: "white",
                 borderRadius: "10px",
                 boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
               }}
-              justifyContent="space-between"
-              className="space-x-4 p-4 flex w-[80%]"
-            >
-              <Box className="flex w-full space-x-4">
-                <Box className="w-40 bg-[#D9F0EC] rounded-lg flex text-[#37B7C3] py-2 px-4">
+              justifyContent='space-between'
+              className='space-x-4 p-4 flex w-[80%]'>
+              <Box className='flex w-full space-x-4'>
+                <Box className='w-40 bg-[#D9F0EC] rounded-lg flex text-[#37B7C3] py-2 px-4'>
                   <Filter
                     size={16}
                     style={{ marginRight: "5px", marginTop: "3px" }}
@@ -277,7 +276,7 @@ export default function UsersPage() {
                   Filter
                 </Box>
 
-                <Box className="w-[70%]">
+                <Box className='w-[70%]'>
                   <LabelTextField
                     label={"EmployeeId"}
                     placeholder={"Type here..."}
@@ -296,7 +295,7 @@ export default function UsersPage() {
                   defaultSelected={"All"}
                 />
 
-                <Box className="w-[50%]">
+                <Box className='w-[50%]'>
                   {/* Selector Search Status */}
                   <LabelSelector
                     selectorLabel={"Status"}
@@ -320,43 +319,41 @@ export default function UsersPage() {
           </Box>
 
           <TableContainer
-            className="h-screen bg-white"
+            className='h-screen bg-white'
             sx={{
               display: "flex",
               flexDirection: "column",
               borderRadius: "15px 15px 0px 0px",
               boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
-            }}
-          >
+            }}>
             <Table>
               <TableHead>
                 <TableRow
                   sx={{ borderBottom: "1px solid #C7D4D7" }}
-                  className={`${styles.table}`}
-                >
-                  <TableCell align="left" className="w-[4%]">
+                  className={`${styles.table}`}>
+                  <TableCell align='left' className='w-[4%]'>
                     <Checkbox
-                      className="mt-1 mb-2"
+                      className='mt-1 mb-2'
                       checked={isSelectedAll}
                       onCheckedChange={handleCheckAll}
                     />
                   </TableCell>
-                  <TableCell align="center" className="w-[14%]">
+                  <TableCell align='center' className='w-[14%]'>
                     Employee ID
                   </TableCell>
-                  <TableCell align="center" className="w-[20%]">
+                  <TableCell align='center' className='w-[20%]'>
                     Name-Surname
                   </TableCell>
-                  <TableCell align="center" className="w-[20%]">
+                  <TableCell align='center' className='w-[20%]'>
                     Role
                   </TableCell>
-                  <TableCell align="center" className="w-[16%]">
+                  <TableCell align='center' className='w-[16%]'>
                     Log In Username
                   </TableCell>
-                  <TableCell align="center" className="w-[14%]">
+                  <TableCell align='center' className='w-[14%]'>
                     Email
                   </TableCell>
-                  <TableCell align="center" className="w-[12%]">
+                  <TableCell align='center' className='w-[12%]'>
                     Status
                   </TableCell>
                 </TableRow>
@@ -380,9 +377,8 @@ export default function UsersPage() {
                       "&:hover": {
                         backgroundColor: "#DCE9EB",
                       },
-                    }}
-                  >
-                    <TableCell align="left">
+                    }}>
+                    <TableCell align='left'>
                       <Checkbox
                         checked={selected[index].isSelected}
                         onClick={(event) => {
@@ -392,9 +388,9 @@ export default function UsersPage() {
                       />
                     </TableCell>
 
-                    <TableCell align="center">{row.employeeId}</TableCell>
+                    <TableCell align='center'>{row.employeeId}</TableCell>
 
-                    <TableCell align="center">
+                    <TableCell align='center'>
                       {employees.find((e) => e.empId === row.employeeId)
                         ?.fname +
                         " " +
@@ -402,15 +398,15 @@ export default function UsersPage() {
                           ?.lname}
                     </TableCell>
 
-                    <TableCell align="center">
+                    <TableCell align='center'>
                       {roles.find((r) => r.id === row.roleId)?.desc}
                     </TableCell>
 
-                    <TableCell align="center">{row.userName}</TableCell>
+                    <TableCell align='center'>{row.userName}</TableCell>
 
-                    <TableCell align="center">{row.email}</TableCell>
+                    <TableCell align='center'>{row.email}</TableCell>
 
-                    <TableCell align="center">
+                    <TableCell align='center'>
                       <ActiveStatusBox status={row.status} />
                     </TableCell>
                   </TableRow>
@@ -421,14 +417,13 @@ export default function UsersPage() {
 
           {/* TableFooter*/}
           <TableContainer
-            className="bg-white border-t"
+            className='bg-white border-t'
             sx={{
               borderRadius: "0px 0px 15px 15px",
               boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
-            }}
-          >
+            }}>
             <Table>
-              <TableFooter className="w-full">
+              <TableFooter className='w-full'>
                 <TableRow>
                   <TableCell colSpan={6}>
                     <Box
@@ -437,8 +432,7 @@ export default function UsersPage() {
                         justifyContent: "space-between",
                         alignItems: "center",
                         width: "100%",
-                      }}
-                    >
+                      }}>
                       <Typography>Total: {totalItems} items</Typography>
                       <Box>
                         <DeleteButton
@@ -487,14 +481,14 @@ export default function UsersPage() {
       {openAddContract && (
         <ContractForm
           closeModal={handleCloseContractForm}
-          customeraAeas={areas}
+          customeraAreas={areas}
         />
       )}
 
       {openEditContract && (
         <ContractForm
           closeModal={handleCloseContractForm}
-          customeraAeas={areas}
+          customeraAreas={areas}
           selectedCustomer={selectedRow}
         />
       )}

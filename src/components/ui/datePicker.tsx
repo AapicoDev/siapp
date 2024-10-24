@@ -15,11 +15,19 @@ import {
 
 interface DatePickerProps {
   justify? : any;
-  h?: any
+  h?: any;
+  date?: Date;
+  setDate?: (value: any) => void;
 }
 
-export function DatePicker({justify="left", h="h-8"}: DatePickerProps) {
-  const [date, setDate] = React.useState<Date>()
+export function DatePicker({justify="left", h="h-8", date, setDate}: DatePickerProps) {
+  //const [date, setDate] = React.useState<Date>()
+
+  const handleChange = (e :Date | undefined) => {
+    console.log("e = ", e);
+    if(setDate) setDate(e);
+
+  }
 
   return (
     <Popover>
@@ -39,7 +47,7 @@ export function DatePicker({justify="left", h="h-8"}: DatePickerProps) {
         <Calendar
           mode="single"
           selected={date}
-          onSelect={setDate}
+          onSelect={e => handleChange(e)}
           initialFocus
         />
       </PopoverContent>

@@ -211,6 +211,11 @@ const mockArea: AreaData[] = [
     custId: 2,
     name: "อาคาร2",
   },
+  {
+    id: 4,
+    custId: 3,
+    name: "หน้าประตูทางออก 1",
+  },
 ];
 
 const mockChkPt = [
@@ -233,32 +238,6 @@ const mockChkPt = [
 ];
 
 const mockContract = data.contracts;
-// = [
-//   {
-//     custId: 1,
-//     id: "0001",
-//     startDate: "13/08/2024",
-//     endDate: "31/12/2024",
-//     attachment: "MUIC_contract2024_13.pdf",
-//     isActive: true,
-//   },
-//   {
-//     custId: 2,
-//     id: "0002",
-//     startDate: "01/05/2024",
-//     endDate: "31/12/2024",
-//     attachment: "contract2024_11.pdf",
-//     isActive: true,
-//   },
-//   {
-//     custId: 3,
-//     id: "0003",
-//     startDate: "01/04/2024",
-//     endDate: "31/12/2024",
-//     attachment: "contract2024_27.pdf",
-//     isActive: false,
-//   },
-// ];
 
 const totalItems = rows.length;
 
@@ -277,7 +256,7 @@ export default function Customer() {
   const [areas, setAreas] = useState<AreaData[]>([
     { id: 1, custId: null, name: "" },
   ]);
-  const [custAreas, setCustAreas] = useState<AreaData[]>();
+  const [custAreas, setCustAreas] = useState<AreaData[]>(mockArea);
   const [selectedRow, setSelectedRow] = useState<RowData | null>(null);
   const [isSelectedAll, setIsSelectedAll] = useState(false);
   const [openAddCustModal, setShowAddCustModal] = useState(false);
@@ -821,13 +800,13 @@ export default function Customer() {
               custData={rowData}
               isSelectedAll={isSelectedAll}
               handlecheckAll={handleCheckAll}
-              editMode={editMode}
               selected={selected}
               handleSelected={handleSelected}
             />
           )}
 
           {/* TableFooter*/}
+          {isCustomerPage && (
           <TableContainer
             className="bg-white border-t"
             sx={{
@@ -867,7 +846,7 @@ export default function Customer() {
                 </TableRow>
               </TableFooter>
             </Table>
-          </TableContainer>
+          </TableContainer>)}
         </Box>
       </Box>
 
@@ -1064,7 +1043,7 @@ export default function Customer() {
           closeModal={handleCloseContractForm}
           customeraAreas={custAreas}
           selectedCustomer={selectedRow}
-          isEditFromCustPage={false}
+          isEditContract={false}
           custList={[customerNameList.find(c => c.id === selectedRow?.customerId)]}
         />
       )}
@@ -1074,7 +1053,7 @@ export default function Customer() {
           closeModal={handleCloseContractForm}
           customeraAreas={custAreas}
           selectedCustomer={selectedRow}
-          isEditFromCustPage={true}
+          isEditContract={true}
           custList={customerNameList}
         />
       )}

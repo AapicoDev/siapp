@@ -38,7 +38,7 @@ export function PatrolStatus({
 
   return (
     <>
-      <Box className={`justify-between flex p-1 ${statusColor} w-[120px] rounded-lg`}>
+      <Box className={`justify-center flex p-1 ${statusColor} w-[120px] rounded-lg`}>
         <Box className="w-full text-center">
           <Typography sx={{py:"0.25rem", px: "0.5rem", color: "white"}}>
             {statusDesc}

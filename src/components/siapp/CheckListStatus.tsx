@@ -15,8 +15,8 @@ export function CheckListStatus({
    const [statusDesc, setStatusDesc] = useState("");
    const [statusColor, setStatusColor] = useState("transparent");
 
-   const abnormal = ["ไม่เพียงพอ", "พบ"];
-   const normal = ["เพียงพอ", "ไม่พบ"];
+   const abnormal = ["ไม่เพียงพอ", "พบ", "ไม่เรียบร้อย"];
+   const normal = ["เพียงพอ", "ไม่พบ", "เรียบร้อย"];
 
   useEffect(() => {
     if (normal.includes(status)) {
