@@ -10,21 +10,46 @@ import { DeleteButton } from "../ui/buttons/deleteButton";
 import { Button } from "@/components/ui/buttons/button";
 import ContractForm from "./ContractForm";
 import data from "@/app/mockData.json";
+import { Item } from "@radix-ui/react-dropdown-menu";
+
+type RowData = {
+  hrCode: string;
+  customerId: any;
+  departmentId: any;
+  segmentId: any;
+  groupId: any;
+  zoneId: any;
+  chkPtTotal: any;
+  contractTotal: any;
+  code: string;
+  isActive: boolean;
+  customerName: string;
+};
+
+type selectedDelete = {
+  isSelected: boolean;
+  contractId: string;
+};
 
 interface TableContract{
     contractData: any[];
     custData: any[];
-    isSelectedAll: boolean;
-    handlecheckAll: (checked: boolean) => void;
-    selected: any[];
-    handleSelected: (index: number) => void;
 }
 
-export function TableContract({contractData, custData, isSelectedAll, handlecheckAll, selected, handleSelected}: TableContract) {
+export function TableContract({contractData, custData,}: TableContract) {
 
   const [customerNameList, setCustomerNameList] = useState<any[]>([]);
   const [openAddContract, setOpenAddContract] = useState<boolean>(false);
   const [openEditContract, setOpenEditContract] = useState<boolean>(false);
+  const [selectedRow, setSelectedRow] = useState<RowData>();
+  const [custArea, setCustArea] = useState<any[]>([]);
+  const [isSelectedAll, setIsSelectedAll] = useState(false);
+  const [selected, setSelected] = useState<selectedDelete[]>(
+    contractData.map((row) => ({
+      isSelected: false, // Default value for `selected`
+      contractId: row.customerId, // Convert customerId to string for custId
+    }))
+  );
 
   function handleCloseContractForm(isEdit: boolean) {
     if (!isEdit) {
@@ -63,11 +88,42 @@ export function TableContract({contractData, custData, isSelectedAll, handlechec
   }
 
   const handleDeleteContract = () => {
-
   }
   
-  const handleRowClick = (row: any) => {
+  const handleRowClick = (row: RowData) => {
     console.log("row = ", row);
+    const mapRow: RowData = {...row, customerName: custData.find(c => c.customerId === row.customerId).customerName}
+    setSelectedRow(mapRow);
+    console.log("maprow = ", mapRow);
+    customerArea(row);
+    setOpenEditContract(true);
+  };
+
+  const customerArea = (row: RowData) => {
+    const customerArea = data.areas.filter(cust => cust.custId === row.customerId);
+    setCustArea(customerArea);
+  };
+
+  const handleSelected = (index: number) => {
+    const newSelected = [...selected];
+    newSelected[index].isSelected = !selected[index].isSelected;
+    setSelected(newSelected);
+    const isCheckAll = !selected.some((item) => item.isSelected === false);
+    if (isCheckAll) {
+      setIsSelectedAll(true);
+    } else {
+      setIsSelectedAll(false);
+    }
+    console.log("isCheckAll", isCheckAll);
+  };
+
+  const handleCheckAll = (checked: boolean) => {
+    setIsSelectedAll(checked);
+    const selectedAll = [...selected];
+    selectedAll.forEach((element) => {
+      element.isSelected = checked;
+    });
+    setSelected(selectedAll);
   };
 
   return (
@@ -90,7 +146,7 @@ export function TableContract({contractData, custData, isSelectedAll, handlechec
                   <TableCell align="left" className="w-[4%]">
                     <Checkbox className="mt-1 mb-2"
                       checked={isSelectedAll}
-                      onCheckedChange={(checked: boolean) => handlecheckAll(checked)}
+                      onCheckedChange={(checked: boolean) => handleCheckAll(checked)}
                     />
                   </TableCell>
                   <TableCell align="center" className="w-[16%]">
@@ -239,10 +295,22 @@ export function TableContract({contractData, custData, isSelectedAll, handlechec
         {openAddContract && (
         <ContractForm
           closeModal={handleCloseContractForm}
-          customeraAreas={[]}
-          selectedCustomer={selected}
+          customerAreas={[]}
+          selectedCustomer={null}
           isEditContract={false}
           custList={customerNameList}
+          isFromCustomerPage={false}
+        />
+      )}
+
+        {openEditContract && (
+        <ContractForm
+          closeModal={handleCloseContractForm}
+          customerAreas={custArea}
+          selectedCustomer={selectedRow}
+          isEditContract={true}
+          custList={customerNameList}
+          isFromCustomerPage={false}
         />
       )}
       </>

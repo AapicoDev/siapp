@@ -51,6 +51,7 @@ import { convert12HourTo24Hour } from "../ui/selectors/timePickerUtils";
 import CheckBoxDropDown from "../ui/checkBoxDropDown";
 import AlertToDatail from "./AlertToDetail";
 import { Checkbox as Checkbox3 } from "@/components/ui/checkbox3";
+import Image from "next/image";
 
 type AreaData = {
   id: number;
@@ -120,16 +121,18 @@ const mockIsSameDayList = [
 interface ContractFormProps {
   selectedCustomer: any;
   closeModal: any;
-  customeraAreas: any[];
+  customerAreas: any[];
   isEditContract: boolean;
   custList: any[];
+  isFromCustomerPage?: boolean;
 }
 
 const ContractForm = ({
   selectedCustomer,
   closeModal,
-  customeraAreas,
+  customerAreas,
   isEditContract,
+  isFromCustomerPage = true, 
   custList = [{ id: 1, desc: "" }],
 }: ContractFormProps) => {
   const [isEdit, setIsEdit] = useState(isEditContract);
@@ -148,7 +151,7 @@ const ContractForm = ({
       customerName: "",
     }
   );
-  const [areas, setAreas] = useState<AreaData[]>(customeraAreas);
+  const [areas, setAreas] = useState<AreaData[]>(customerAreas);
   const [formHeader, setFormHeader] = useState("");
   const [customerList, setCustomerList] = useState(
     custList || [{ id: 1, desc: "" }]
@@ -221,7 +224,7 @@ const ContractForm = ({
       setFormHeader("View / Edit Contract");
     }
     const initialSeelctedContract = contractListInitial();
-      contractDetail(initialSeelctedContract);
+    contractDetail(initialSeelctedContract);
     initialData();
   }, [areas]);
 
@@ -236,7 +239,7 @@ const ContractForm = ({
 
   const contractListInitial = () => {
     const contracts = data.contracts.filter(
-      (c) => c.customerId === customer.customerId //&& c.isActive
+      (c) => c.customerId === customer.customerId && (!isFromCustomerPage ? customer.id === c.id : true) //&& c.isActive
     );
     const mappedContract = contracts.map((contract) => ({
       id: contract.id,
@@ -277,7 +280,6 @@ const ContractForm = ({
     // setAreaList(mappedAreaList);
   };
 
-
   const handleSelectChange = (e: SelectChangeEvent) => {
     const { name, value } = e.target;
     console.log("selected =", e.target);
@@ -289,6 +291,7 @@ const ContractForm = ({
     } else if (name === "selectedContractId") {
       setSelectedContractId(value);
       contractDetail(value);
+      console.log("customer =", customer)
     }
   };
 
@@ -425,10 +428,10 @@ const ContractForm = ({
           item.id === roundId ? { ...item, [field]: value } : item
         );
 
-        if ((field === "startTimeHr" ||
+        if (((field === "startTimeHr" ||
             "startTimeMin" ||
             "finishTimeHr" ||
-            "finishTimeMin" ) && value.length <= 2) {
+            "finishTimeMin" ) && value.length <= 2) || field === "isSameDay") {
           updatedRoundData = calMinutes(roundId, updatedRoundData);
         }
         // Return the updated area object
@@ -641,13 +644,12 @@ const ContractForm = ({
   };
 
   const calMinutes = (roundId: any, roundList: RoundData[]) => {
-    console.log("roundList", roundList);
     const rounds: RoundData[] = roundList.map((item) => {
       if (item.id === roundId) {
         let mins = 0;
-        let startHr = parseInt(item.startTimeHr, 10);
-        let finishHr = parseInt(item.finishTimeHr, 10);
-        let startTotalMins =
+        const startHr = parseInt(item.startTimeHr, 10);
+        const finishHr = parseInt(item.finishTimeHr, 10);
+        const startTotalMins =
           parseInt(item.startTimeHr, 10) * 60 + parseInt(item.startTimeMin, 10);
         let finishTotalMins =
           parseInt(item.finishTimeHr, 10) * 60 +
@@ -658,9 +660,9 @@ const ContractForm = ({
             console.log("mins = ", mins);
           } else mins = 0;
         } else {
-          if (finishTotalMins < startTotalMins) {
+          //if (finishTotalMins <= startTotalMins) {
             finishTotalMins += 24 * 60;
-          }
+          //}
           mins = finishTotalMins - startTotalMins;
         }
         item.totalTimeMin = mins.toString();
@@ -762,14 +764,16 @@ const ContractForm = ({
     console.log("alertToList = ", alertToList);
   };
 
-  const handleSubmit = () => {};
+  const handleSubmit = () => {
+    console.log("customerAdd =", customerAdd)
+  };
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
     setTabValue(newValue);
   };
 
   function roundManagement(areaId: any, contractId: any) {
-    let filteredRound = data.rounds.filter(
+    const filteredRound = data.rounds.filter(
       (round) => round.areaId === areaId && round.contrtactId === contractId
     );
     const roundDataArray: RoundData[] = filteredRound.map((round) => ({
@@ -804,9 +808,9 @@ const ContractForm = ({
   }
 
   function calMinFromDate(start: any, finish: any) {
-    let hoursToMins =
+    const hoursToMins =
       Math.abs(new Date(finish).getHours() - new Date(start).getHours()) * 60;
-    let sumMins =
+    const sumMins =
       hoursToMins +
       new Date(start).getMinutes() +
       new Date(finish).getMinutes();
@@ -946,6 +950,7 @@ const ContractForm = ({
                             </Typography>
                           </Box>
 
+                          {isFromCustomerPage &&
                           <Typography
                             sx={{
                               color: "#4C9BF5",
@@ -956,7 +961,7 @@ const ContractForm = ({
                           >
                             Total : {contractList.length} contract
                             {contractList.length > 1 ? "s" : ""}
-                          </Typography>
+                          </Typography>}
                         </Box>
 
                         <Box className="w-[30%] flex justify-end">
@@ -973,6 +978,7 @@ const ContractForm = ({
                     <Box className="flex w-full space-x-5 pt-2">
                       <Box className="w-1/2">
                         <Selector
+                          disable={!isFromCustomerPage && contractList.length < 2}
                           selectorLabel={"Contract No."}
                           itemSource={contractList}
                           handleChange={handleSelectChange}
@@ -1414,7 +1420,20 @@ const ContractForm = ({
                         >
                           Total manpower: {totalManpower}
                         </Typography>
-
+                        {shiftList.length < 1 && (
+                          <div className="flex flex-col h-full items-center justify-center">
+                          <Image src={"/NoData.png"} alt="No Data" width={80} height={80} />
+                          <Typography
+                          sx={{
+                            color: "#83A2AD",
+                            fontSize: "16px",
+                            mb: "0.25rem",
+                          }}
+                        >
+                          Please Add Shift
+                        </Typography>
+                          </div>
+                        )}
                         {shiftList.map((shift, index) => (
                           <div className="mb-2" key={index}>
                             <Accordion
@@ -1734,7 +1753,20 @@ const ContractForm = ({
                           Total: {areas.length} area
                           {areas.length > 1 ? "s" : ""}
                         </Typography>
-
+                        {areas.length < 1 && (
+                          <div className="flex flex-col h-full items-center justify-center">
+                          <Image src={"/NoData.png"} alt="No Data" width={80} height={80} />
+                          <Typography
+                          sx={{
+                            color: "#83A2AD",
+                            fontSize: "16px",
+                            mb: "0.25rem",
+                          }}
+                        >
+                          {customerAdd==="" ? "Please select Customer" : "Please add area"}
+                        </Typography>
+                          </div>
+                        )}
                         {areaList.map((area, index) => (
                           <div className="mb-2" key={index}>
                             <Accordion
@@ -1858,7 +1890,10 @@ const ContractForm = ({
                                                 </Typography>
                                                 <Input
                                                   value={round.startTimeMin}
-                                                  className="p-0 w-[25%] border-none text-center mr-1 text-[14px]"
+                                                  className="p-0 w-[25%] border-none ml-2 text-center mr-1 text-[14px]"
+                                                  type="number"
+                                                  min={0}
+                                                  max={59}
                                                   onChange={(e) =>
                                                     handleFieldDataInRoundChange(
                                                       area.areaId,
@@ -1903,6 +1938,9 @@ const ContractForm = ({
                                                 <Input
                                                   value={round.finishTimeHr}
                                                   className="p-0 w-[25%] border-none text-center text-[14px]"
+                                                  type="number"
+                                                  min={0}
+                                                  max={24}
                                                   onChange={(e) =>
                                                     handleFieldDataInRoundChange(
                                                       area.areaId,
@@ -1935,7 +1973,10 @@ const ContractForm = ({
                                                 </Typography>
                                                 <Input
                                                   value={round.finishTimeMin}
-                                                  className="p-0 w-[25%] border-none text-center mr-1 text-[14px]"
+                                                  className="p-0 w-[25%] border-none text-center ml-2 mr-1 text-[14px]"
+                                                  type="number"
+                                                  min={0}
+                                                  max={59}
                                                   onChange={(e) =>
                                                     handleFieldDataInRoundChange(
                                                       area.areaId,

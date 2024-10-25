@@ -23,6 +23,7 @@ import { AddButton } from "../ui/buttons/addButton";
 import { DeleteBtnFooter } from "../ui/buttons/deleteBtnFooter";
 import { SaveBtnFooter } from "../ui/buttons/saveBtnFooter";
 import { IoClose } from "react-icons/io5";
+import data from "@/app/mockData.json";
 
 type RowData = {
   hrCode: string;
@@ -254,7 +255,20 @@ const CustomerForm = ({ editCustomer, closeModal, customeraAeas }: any) => {
                   name={"zoneId"}
                 />
               </Box>
+              {/* Department */}
+              <Box className="w-1/2">
+                <Selector
+                  selectorLabel={"Department"}
+                  itemSource={data.departments}
+                  handleChange={handleSelectChange}
+                  selectedVal={formData.departmentId}
+                  name={"departmentId"}
+                />
+              </Box>
+            </Box>
 
+            <Box className="flex w-full space-x-5 pt-3">
+              {/* Customer */}
               <Box className="w-1/2">
                 <Textbox
                   header="Customer"
@@ -265,10 +279,8 @@ const CustomerForm = ({ editCustomer, closeModal, customeraAeas }: any) => {
                   handleChange={handleChange}
                 />
               </Box>
-            </Box>
-
-            <Box className="flex w-full space-x-5 pt-3">
-              <Box className="w-[40%]">
+              {/* HR Code */}
+              <Box className="w-1/2">
                 <Textbox
                   header="HR Code"
                   name="hrCode"
@@ -278,7 +290,11 @@ const CustomerForm = ({ editCustomer, closeModal, customeraAeas }: any) => {
                   handleChange={handleChange}
                 />
               </Box>
-              <Box className="w-[40%]">
+            </Box>
+
+            <Box className="flex w-full space-x-5 pt-3">
+
+              <Box className="w-1/2">
                 <Textbox
                   header="Code"
                   name="code"
@@ -288,7 +304,7 @@ const CustomerForm = ({ editCustomer, closeModal, customeraAeas }: any) => {
                   handleChange={handleChange}
                 />
               </Box>
-              <Box className="w-[20%]">
+              <Box className="w-1/2">
                 <Typography
                   textAlign="left"
                   sx={{fontSize: "14px", paddingBottom: "0.25rem", color: "#2C5079", fontWeight: "700"}}

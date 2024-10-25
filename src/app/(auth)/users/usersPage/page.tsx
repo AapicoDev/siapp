@@ -487,16 +487,14 @@ export default function UsersPage() {
       {openAddContract && (
         <ContractForm
           closeModal={handleCloseContractForm}
-          customeraAeas={areas}
-        />
+          customerAreas={areas} selectedCustomer={undefined} isEditContract={false} custList={[]}        />
       )}
 
       {openEditContract && (
         <ContractForm
           closeModal={handleCloseContractForm}
-          customeraAeas={areas}
-          selectedCustomer={selectedRow}
-        />
+          customerAreas={areas}
+          selectedCustomer={selectedRow} isEditContract={false} custList={[]}        />
       )}
     </div>
   );

@@ -798,10 +798,6 @@ export default function Customer() {
             <TableContract
               contractData={mockContract}
               custData={rowData}
-              isSelectedAll={isSelectedAll}
-              handlecheckAll={handleCheckAll}
-              selected={selected}
-              handleSelected={handleSelected}
             />
           )}
 
@@ -1041,7 +1037,7 @@ export default function Customer() {
       {openAddContract && (
         <ContractForm
           closeModal={handleCloseContractForm}
-          customeraAreas={custAreas}
+          customerAreas={custAreas}
           selectedCustomer={selectedRow}
           isEditContract={false}
           custList={[customerNameList.find(c => c.id === selectedRow?.customerId)]}
@@ -1051,7 +1047,7 @@ export default function Customer() {
       {openEditContract && (
         <ContractForm
           closeModal={handleCloseContractForm}
-          customeraAreas={custAreas}
+          customerAreas={custAreas}
           selectedCustomer={selectedRow}
           isEditContract={true}
           custList={customerNameList}

@@ -1,7 +1,14 @@
 "use client";
 
 import * as React from "react";
-import { FormControl, InputLabel, MenuItem, Select, SelectChangeEvent, Typography } from "@mui/material";
+import {
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+  SelectChangeEvent,
+  Typography,
+} from "@mui/material";
 import { useState } from "react";
 
 interface SelectorProps {
@@ -10,11 +17,18 @@ interface SelectorProps {
   selectedVal: any;
   name: any;
   handleChange: any;
+  disable?: boolean;
 }
 
-export function Selector({selectorLabel, itemSource, selectedVal, handleChange, name,}: SelectorProps) {
-
-  function handleSelectionChange(e: SelectChangeEvent){
+export function Selector({
+  selectorLabel,
+  itemSource,
+  selectedVal,
+  handleChange,
+  name,
+  disable = false,
+}: SelectorProps) {
+  function handleSelectionChange(e: SelectChangeEvent) {
     handleChange(e);
   }
 
@@ -22,12 +36,21 @@ export function Selector({selectorLabel, itemSource, selectedVal, handleChange, 
     <FormControl focused className="w-full">
       <Typography
         textAlign="left"
-        sx={{fontSize: "14px", paddingBottom: "0.25rem", color: "#2C5079", fontWeight: "700"}}
+        sx={{
+          fontSize: "14px",
+          paddingBottom: "0.25rem",
+          color: "#2C5079",
+          fontWeight: "700",
+        }}
       >
         {selectorLabel}
       </Typography>
-      <InputLabel sx={{fontWeight: "700", color: "#2C5079"}} className="w-full"></InputLabel>
+      <InputLabel
+        sx={{ fontWeight: "700", color: "#2C5079", "& .Mui-disabled": {color: "#2C5079"} }}
+        className="w-full"
+      ></InputLabel>
       <Select
+        disabled={disable}
         name={name}
         size="small"
         displayEmpty
@@ -40,9 +63,7 @@ export function Selector({selectorLabel, itemSource, selectedVal, handleChange, 
         }
         inputProps={{ "aria-label": "Without label" }}
         sx={{
-          color: `${
-            selectedVal === "" ? `#83A2AD` : "#2C5079"
-          }`,
+          color: `${selectedVal === "" ? `#83A2AD` : "#2C5079"}`,
           height: "40px",
           width: "100%",
           borderRadius: "10px",
@@ -58,13 +79,22 @@ export function Selector({selectorLabel, itemSource, selectedVal, handleChange, 
           "& .MuiSelect-icon": {
             color: "#83A2AD", // Customize arrow icon color
           },
+          "& .Mui-disabled": {
+            "& .MuiSelect-select": {
+              color: "#2C5079", // Override disabled font color here
+            },
+          },
         }}
       >
         {itemSource.map((s) => (
           <MenuItem
             key={s.id}
             value={s.id}
-            sx={{fontSize: "0.875rem", lineHeight: "1.25rem", color: "#2C5079"}}
+            sx={{
+              fontSize: "0.875rem",
+              lineHeight: "1.25rem",
+              color: "#2C5079",
+            }}
           >
             {s.desc}
           </MenuItem>

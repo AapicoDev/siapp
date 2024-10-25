@@ -234,7 +234,7 @@ export default function Incident() {
       console.log("confirmApprove =", confirmApprove);
       if (confirmApprove) {
         approveRow[index].status = "Approved";
-        let dataToSubmit = { ["Status"]: approveRow[index]["status"] };
+        const dataToSubmit = { ["Status"]: approveRow[index]["status"] };
         const response = await updateIncidentStatus(
           row.incidentId,
           dataToSubmit
