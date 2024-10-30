@@ -479,7 +479,7 @@ export default function UsersPage() {
       {openViewQR && (
         <ViewQrCode
           closeModal={handleCloseViewQr}
-          customeraAeas={custAreas}
+          customerAreas={custAreas}
           selectedCustomer={selectedRow}
         />
       )}

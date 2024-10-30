@@ -17,18 +17,22 @@ interface SelectorProps {
   name: any;
   handleChange: any;
   disable?: boolean;
+  id? : any;
+  index? : number;
 }
 
-export function Selector({
+export function Selector3({
   selectorLabel,
   itemSource,
   selectedVal,
   handleChange,
   name,
   disable = false,
+  id = undefined,
+  index = undefined,
 }: SelectorProps) {
   function handleSelectionChange(e: SelectChangeEvent) {
-    handleChange(e);
+    handleChange(id, name, e.target.value,index);
   }
 
   return (

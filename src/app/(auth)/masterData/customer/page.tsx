@@ -402,7 +402,7 @@ export default function Customer() {
   const handleOpenViewQr = (selecectedRow: any) => {
     setSelectedRow(selecectedRow);
     handleCustArea(selecectedRow);
-    setOpenViewQR(true);
+    //setOpenViewQR(true);
   };
 
   const handleCustArea = (selecectedRow: any) => {
@@ -1029,7 +1029,7 @@ export default function Customer() {
       {openViewQR && (
         <ViewQrCode
           closeModal={handleCloseViewQr}
-          customeraAreas={custAreas}
+          customerAreas={custAreas}
           selectedCustomer={selectedRow}
         />
       )}

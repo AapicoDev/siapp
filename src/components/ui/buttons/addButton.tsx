@@ -9,13 +9,15 @@ import { Button } from "@/components/ui/buttons/button";
 interface AddButtonProps {
     content?: any;
     onAddBtnClick: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void; // Button click handler
+    disable? : boolean;
   }
 
-export function AddButton({ onAddBtnClick, content="+ Add" }: AddButtonProps) {
+export function AddButton({ onAddBtnClick, content="+ Add", disable=false }: AddButtonProps) {
 
   return (
       <Button
         // onClick={()=>handleOnClick()}
+        disabled={disable}
         onClick={(event) => {
             event.stopPropagation(); // Prevent event propagation
             onAddBtnClick(event); // Call the click handler passed as prop

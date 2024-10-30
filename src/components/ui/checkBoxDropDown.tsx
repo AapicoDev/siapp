@@ -70,7 +70,7 @@ export default function CheckBoxDropDown({
           size="small"
           multiple
           value={selectedVal || []}
-          onChange={(e) => handleChangeVal(id,id2, field, e.target.value)}
+          onChange={(e) => handleChangeVal(id, id2, field, e.target.value)}
           input={<OutlinedInput label={label} />}
           renderValue={(value) => value.length === 0 ?
             `Select` :

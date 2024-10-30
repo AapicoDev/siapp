@@ -11,6 +11,7 @@ import {
   SelectChangeEvent,
   Icon,
   Grid,
+  CircularProgress,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { Input } from "@/components/ui/textboxs/input";
@@ -25,6 +26,7 @@ import { Printer, ImportCurve } from "iconsax-react";
 import Image from "next/image";
 import QRCode from "../../components/QRCode";
 import { IoClose } from "react-icons/io5";
+import { getMasterCheckpointData } from "@/app/lib/api";
 
 type RowData = {
   hrCode: string;
@@ -48,7 +50,7 @@ type AreaData = {
 
 type CheckpointData = {
   areaId: any;
-  id: number;
+  id: any;
   name: string;
   qr: string;
   lt: string;
@@ -166,14 +168,20 @@ const mockCheckpoints: CheckpointData[] = [
   },
 ];
 
-const ViewQrCode = ({ selectedCustomer, closeModal, customeraAreas }: any) => {
+interface ViewQrCodeProp {
+  selectedCustomer: any;
+  closeModal: any;
+  customerAreas : any;
+}
+
+const ViewQrCode = ({ selectedCustomer, closeModal, customerAreas }: ViewQrCodeProp) => {
   const [isEdit, setIsEdit] = useState(false);
   const [customer, setCustomer] = useState(selectedCustomer);
-  const [areas, setAreas] = useState<AreaData[]>(customeraAreas);
+  const [areas, setAreas] = useState<AreaData[]>(customerAreas);
   const [checkpoints, setCheckpoints] =
     useState<CheckpointData[]>(mockCheckpoints);
   const formHeader = "View QR Code";
-  const [selectedArea, setSelectedArea] = useState<any>(areas[0]?.id);
+  const [selectedArea, setSelectedArea] = useState<any>(areas !== undefined ? areas[0].id : undefined);
   const [isPrintCardType, setIsPrintCardType] = useState(true);
   const [selectedChkPtArr, setSelectedChkPtArr] = useState(
     Array(checkpoints.length).fill(false)
@@ -188,11 +196,27 @@ const ViewQrCode = ({ selectedCustomer, closeModal, customeraAreas }: any) => {
     areaName: "",
     qr: null,
   });
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const initialData = () => {
-    const areaChkPt = mockCheckpoints.filter((c) => c.areaId === areas[0].id);
-    setCheckpoints(areaChkPt);
-    setSelectedChkPtArr(Array(areaChkPt.length).fill(false));
+  const initialData = async () => {
+    setIsLoading(true);
+    console.log("customeraAreas =", customerAreas);
+    const getCheckpoints = await getMasterCheckpointData(selectedCustomer.areaId);
+    const mappedCheckpoints:CheckpointData[] = getCheckpoints?.documents.map((checkpoint) => {
+      return {
+        id: checkpoint.$id,
+        areaId : checkpoint.areaId,
+        name: checkpoint.checkpointName,
+        qr: checkpoint.$id,
+        lt: checkpoint.latitude,
+        lg: checkpoint.longitude,
+        ut: checkpoint.altitude
+      };
+    }) || checkpoints
+    //const areaChkPt = mockCheckpoints.filter((c) => c.areaId === areas !== undefined ? areas[0].id : undefined);
+    setCheckpoints(mappedCheckpoints);
+    setSelectedChkPtArr(Array(mappedCheckpoints.length).fill(false));
+    setIsLoading(false);
   };
 
   useEffect(() => {
@@ -341,8 +365,8 @@ const ViewQrCode = ({ selectedCustomer, closeModal, customeraAreas }: any) => {
                   sx={{ color: "#4C9BF5", textDecorationLine: "underline", fontSize: "16px"}}
                   textAlign={"left"}
                 >
-                  Total : {customer.chkPtTotal} check point
-                  {customer.chkPtTotal > 1 ? "s" : ""}
+                  Total : {customer.totalCheckpoint} check point
+                  {customer.totalCheckpoint > 1 ? "s" : ""}
                 </Typography>
               </Box>
             </Box>
@@ -363,6 +387,7 @@ const ViewQrCode = ({ selectedCustomer, closeModal, customeraAreas }: any) => {
                   </Typography>
                   <InputLabel sx={{ fontWeight: "700", color: "#2C5079"}} className="w-full"></InputLabel>
                   <Select
+                  // disabled={areas?.length ===1}
                     name="areaId"
                     size="small"
                     value={selectedArea}
@@ -392,7 +417,7 @@ const ViewQrCode = ({ selectedCustomer, closeModal, customeraAreas }: any) => {
                       },
                     }}
                   >
-                    {areas.map((area) => (
+                    {areas?.map((area) => (
                       <MenuItem
                         sx={{fontSize: "0.875rem", lineHeight: "1.25rem", color: "#2C5079"}}
                         key={area.id}
@@ -501,7 +526,7 @@ const ViewQrCode = ({ selectedCustomer, closeModal, customeraAreas }: any) => {
                         textAlign="left"
                         sx={{ color: "#2C5079", fontSize: "14px"}}
                       >
-                        อัลติจูด : {chkpt.ut}
+                        อัลติจูด : {chkpt.ut === undefined || "" || null ? "-": chkpt.ut}
                       </Typography>
                     </Box>
                   </Box>
@@ -548,10 +573,11 @@ const ViewQrCode = ({ selectedCustomer, closeModal, customeraAreas }: any) => {
                         <Box className="p-2">
                           <div
                             className="flex flex-col px-12 justify-center items-center"
-                            key={`${window.location.origin}${chkPtQRCode.qr}`}
+                            // key={`${window.location.origin}${chkPtQRCode.qr}`}
+                            key={`${chkPtQRCode.qr}`}
                           >
                             <QRCode
-                              data={`${window.location.origin}${chkPtQRCode.qr}`}
+                              data={`${chkPtQRCode.qr}`}
                               qrCode={qrCode}
                               setQrCode={setQrCode}
                             />
@@ -653,21 +679,31 @@ const ViewQrCode = ({ selectedCustomer, closeModal, customeraAreas }: any) => {
             </Typography>
           </Box>
           <Box className="flex items-center space-x-4">
-            <Button className="w-32 h-11 bg-white text-[#F66262] border-[1px] border-[#F66262] hover:text-white hover:bg-[#F66262]">
+            {/* <Button className="w-32 h-11 bg-white text-[#F66262] border-[1px] border-[#F66262] hover:text-white hover:bg-[#F66262]">
               Delete
-            </Button>
+            </Button> */}
 
-            <Button className="flex items-center justify-center w-32 h-11 border-[1px] border-[#1D7A9B] bg-white text-[#1D7A9B] hover:bg-[#1D7A9B] hover:text-white disabled:bg-[#83A2AD]">
+            <Button className="flex items-center justify-center w-32 h-11 border-[1px] border-[#1D7A9B] bg-white text-[#1D7A9B] hover:bg-[#1D7A9B] hover:text-white disabled:bg-[#83A2AD]"
+            disabled={true}>
               <Printer size={20} className="mr-2" />
               Print
             </Button>
 
-            <Button className="flex items-center justify-center w-32 h-11 border-[1px] border-[#1D7A9B] bg-white text-[#1D7A9B] hover:bg-[#1D7A9B] hover:text-white disabled:bg-[#83A2AD]">
+            <Button className="flex items-center justify-center w-32 h-11 border-[1px] border-[#1D7A9B] bg-white text-[#1D7A9B] hover:bg-[#1D7A9B] hover:text-white disabled:bg-[#83A2AD]"
+             disabled={true}>
               <ImportCurve size={20} className="mr-2" />
               Download
             </Button>
           </Box>
         </Box>
+
+        {isLoading && (
+        <div className="fixed inset-0 bg-white bg-opacity-40 flex flex-col items-center justify-center z-indextop">
+          <Box sx={{ display: "flex" }}>
+            <CircularProgress />
+          </Box>
+        </div>
+      )}
       </div>
     </div>
   );

@@ -402,26 +402,7 @@ const ContractForm = ({
     field: keyof RoundData,
     value: any
   ) => {
-    console.log("field = ", field);
-    console.log("value = ", value);
-    console.log("areaId = ", areaId);
-    console.log("roundId = ", roundId);
-    console.log("areaList =", areaList)
-
-    // let isTime = false;
-    // if (
-    //   field === "startTimeHr" ||
-    //   "startTimeMin" ||
-    //   "finishTimeHr" ||
-    //   "finishTimeMin"
-    // ) {
-    //   isTime = true;
-    //   if (value.length > 2) return;
-    // }
-
-    console.log("before update")
     const updatedAreaList = areaList.map((area) => {
-      console.log("enter update")
       if (area.areaId === areaId) {
         // Update the roundList for the matched areaId
         let updatedRoundData = area.roundList.map((item) =>
@@ -672,10 +653,6 @@ const ContractForm = ({
     return rounds;
   };
 
-  const addArea = () => {
-    console.log("alertToList = ", alertToList);
-  };
-
   const addRound = (selectedAreaId: any) => {
     const mappedAreaList: AreaListType[] = areaList.map((area) => {
       if (area.areaId === selectedAreaId) {
@@ -874,7 +851,6 @@ const ContractForm = ({
     const remainFile = selectNewFile.filter(f => f.name != fileName);
     setSelectNewFile(remainFile);
   };
-
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 flex flex-col items-center justify-center z-indextop">

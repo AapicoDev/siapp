@@ -11,7 +11,8 @@
       "contractTotal": "View",
       "code": "404-73-031-00",
       "isActive": true,
-      "customerName": "วิทยาลัยนานาชาติ มหาวิทยาลัยมหิดล"
+      "customerName": "วิทยาลัยนานาชาติ มหาวิทยาลัยมหิดล",
+      "areaId": [1, 2]
     },
     {
       "hrCode": "401-13-035-00",
@@ -24,7 +25,8 @@
       "contractTotal": "View",
       "code": "401-13-035-00",
       "isActive": true,
-      "customerName": "เรนวูด ปาร์ค"
+      "customerName": "เรนวูด ปาร์ค",
+      "areaId": [3]
     },
     {
       "hrCode": "405-20-048-00",
@@ -37,7 +39,8 @@
       "contractTotal": "12345",
       "code": "405-20-048-00",
       "isActive": true,
-      "customerName": "บริษัท สยามคอมเพรสเซอร์ อุตสาหกรรม จำกัด"
+      "customerName": "บริษัท สยามคอมเพรสเซอร์ อุตสาหกรรม จำกัด",
+      "areaId": [4]
     },
     {
       "hrCode": "601-10-077-00",
@@ -50,7 +53,8 @@
       "contractTotal": null,
       "code": "601-10-077-00",
       "isActive": false,
-      "customerName": "สายการบิน แควนตัสแอร์เวย์"
+      "customerName": "สายการบิน แควนตัสแอร์เวย์",
+      "areaId": []
     }
   ],
   "departments": [
@@ -75,44 +79,80 @@
     {
       "id": 1,
       "custId": 1,
-      "name": "อาคาร1"
+      "custName": "วิทยาลัยนานาชาติ มหาวิทยาลัยมหิดล",
+      "name": "อาคาร1",
+      "checkpointId": [1, 2]
     },
     {
       "id": 2,
       "custId": 1,
-      "name": "อาคารใหญ่"
+      "custName": "วิทยาลัยนานาชาติ มหาวิทยาลัยมหิดล",
+      "name": "อาคารใหญ่",
+      "checkpointId": [3]
     },
     {
       "id": 3,
       "custId": 2,
-      "name": "อาคาร2"
+      "custName": "เรนวูด ปาร์ค",
+      "name": "อาคาร2",
+      "checkpointId": [4]
     },
     {
       "id": 4,
       "custId": 3,
-      "name": "หน้าประตูทางออก 1"
+      "custName": "บริษัท สยามคอมเพรสเซอร์ อุตสาหกรรม จำกัด",
+      "name": "หน้าประตูทางออก 1",
+      "checkpointId": []
     }
   ],
   "checkpoints": [
     {
       "id": 1,
       "areaId": 1,
-      "chkPtName": "จุดที่ 1"
+      "chkPtName": "จุดที่ 1",
+      "location": "ด้านหน้า",
+      "latitude": "13.716290389890368",
+      "longitude": "100.55800449648537",
+      "altitude": "100.55800449648537",
+      "isRestrictionTime": true,
+      "timeLimit": 20,
+      "checkListId": ["670f5609001a28173ad0", "67107c010002f3401f5f", "67107c25002ad97f6c07", "67107c37000aef40349b"]
     },
     {
       "id": 2,
       "areaId": 1,
-      "chkPtName": "จุดที่ 2"
+      "chkPtName": "จุดที่ 2",
+      "location": "ด้านข้าง",
+      "latitude": "13.715759496081468",
+      "longitude": "100.55826768112321",
+      "altitude": "",
+      "isRestrictionTime": true,
+      "timeLimit": 30,
+      "checkListId": ["670f5609001a28173ad0", "67107c010002f3401f5f", "67107c25002ad97f6c07", "67107c37000aef40349b"]
     },
     {
       "id": 3,
       "areaId": 2,
-      "chkPtName": "หน้าประตู"
+      "chkPtName": "หน้าประตู",
+      "location": "หน้าประตูฝั่งซ้าย",
+      "latitude": "13.715871939831132",
+      "longitude": "100.55841198049663",
+      "altitude": "",
+      "isRestrictionTime": false,
+      "timeLimit": 0,
+      "checkListId": ["670f5609001a28173ad0", "67107c010002f3401f5f", "67107c25002ad97f6c07", "67107c37000aef40349b"]
     },
     {
       "id": 4,
       "areaId": 3,
-      "chkPtName": "หน้าตึก"
+      "chkPtName": "หน้าตึก",
+      "location": "ทางเข้าที่ 1",
+      "latitude": "13.716226745609495",
+      "longitude": "100.55851086125757",
+      "altitude": "",
+      "isRestrictionTime": false,
+      "timeLimit": 0,
+      "checkListId": ["670f5609001a28173ad0", "67107c010002f3401f5f", "67107c25002ad97f6c07", "671f655c00280d58dacc"]
     }
   ],
   "rounds": [
@@ -120,6 +160,7 @@
       "id": 1,
       "areaId": 1,
       "contrtactId": "0001-2024",
+      "isActive": true,
       "roundNo": "1",
       "startTime": "Wed Oct 09 2024 08:00:00 GMT+0700 (GMT+07:00)",
       "finishTime": "Wed Oct 09 2024 09:00:00 GMT+0700 (GMT+07:00)",
@@ -133,11 +174,12 @@
     {
       "id": 2,
       "contrtactId": "0001-2024",
+      "isActive": true,
       "areaId": 1,
       "roundNo": "2",
       "startTime": "Wed Oct 09 2024 12:00:00 GMT+0700 (GMT+07:00)",
       "finishTime": "Wed Oct 09 2024 14:00:00 GMT+0700 (GMT+07:00)",
-      "totalTime": "60",
+      "totalTime": "120",
       "isSameDay": 1,
       "shiftId": "0002",
       "alertTo": ["al0002"],
@@ -147,11 +189,12 @@
     {
       "id": 3,
       "contrtactId": "0002-2024",
+      "isActive": true,
       "areaId": 3,
       "roundNo": "3",
       "startTime": "Wed Oct 09 2024 18:00:00 GMT+0700 (GMT+07:00)",
       "finishTime": "Wed Oct 09 2024 19:00:00 GMT+0700 (GMT+07:00)",
-      "totalTime": "120",
+      "totalTime": "60",
       "isSameDay": 2,
       "shiftId": "0003",
       "alertTo": ["al0003"],
@@ -161,6 +204,7 @@
     {
       "id": 4,
       "contrtactId": "0003-2024",
+      "isActive": false,
       "areaId": 2,
       "roundNo": "4",
       "startTime": "Wed Oct 09 2024 20:00:00 GMT+0700 (GMT+07:00)",
@@ -245,93 +289,125 @@
       "name": "เสาร์, อาทิตย์",
       "workdays": ["วันเสาร์", "วันอาทิตย์"],
       "customerId": 1,
-      "contractId": "0001-2024"
+      "contractId": "0001-2024",
+      "isActive": true
     },
     {
       "id": "0002",
       "name": "วันธรรมดา",
       "workdays": ["วันจันทร์", "วันอังคาร", "วันพุธ", "วันพฤหัส", "วันศุกร์"],
       "customerId": 1,
-      "contractId": "0001-2024"
+      "contractId": "0001-2024",
+      "isActive": true
     },
     {
       "id": "0003",
       "name": "วันจันทร์, อาทิตย์",
       "workdays": ["วันจันทร์", "วันอาทิตย์"],
       "customerId": 2,
-      "contractId": "0002-2024"
+      "contractId": "0002-2024",
+      "isActive": true
     },
     {
       "id": "0004",
       "name": "วันธรรมดา",
       "workdays": ["วันจันทร์", "วันอังคาร", "วันพุธ", "วันพฤหัส", "วันศุกร์"],
       "customerId": 2,
-      "contractId": "0002-2024"
+      "contractId": "0002-2024",
+      "isActive": true
     },
     {
       "id": "0005",
       "name": "เสาร์, อาทิตย์, จันทร์",
       "workdays": ["วันจันทร์", "วันเสาร์", "วันอาทิตย์"],
       "customerId": 1,
-      "contractId": "0003-2024"
+      "contractId": "0003-2024",
+      "isActive": false
     },
     {
       "id": "0006",
       "name": "วันทำงาน",
       "workdays": ["วันจันทร์", "วันอังคาร", "วันพุธ", "วันพฤหัส", "วันศุกร์"],
       "customerId": 1,
-      "contractId": "0003-2024"
+      "contractId": "0003-2024",
+      "isActive": false
     }
   ],
   "manpowers": [
     {
       "id": "m0001",
       "nameInReport": "name in report",
-      "roleId": 1,
+      "roleId": 5,
       "quantity": 1,
       "shiftId": "0001"
     },
     {
       "id": "m0002",
       "nameInReport": "name in report2",
-      "roleId": 2,
+      "roleId": 6,
       "quantity": 2,
       "shiftId": "0001"
     },
     {
       "id": "m0003",
       "nameInReport": "name in report3",
-      "roleId": 3,
+      "roleId": 5,
       "quantity": 1,
       "shiftId": "0002"
     },
     {
       "id": "m0004",
       "nameInReport": "name in report",
-      "roleId": 1,
+      "roleId": 5,
       "quantity": 1,
       "shiftId": "0003"
     },
     {
       "id": "m0005",
       "nameInReport": "name in report2",
-      "roleId": 2,
+      "roleId": 6,
       "quantity": 2,
       "shiftId": "0003"
     },
     {
       "id": "m0006",
       "nameInReport": "name in report3",
-      "roleId": 2,
+      "roleId": 6,
       "quantity": 2,
       "shiftId": "0004"
     },
     {
       "id": "m0007",
       "nameInReport": "name in report",
-      "roleId": 1,
+      "roleId": 6,
       "quantity": 3,
       "shiftId": "0005"
+    }
+  ],
+  "assignedManpowers": [
+    {
+      "id": "pt0001",
+      "employeeId": "12345678",
+      "employeeName": "สมมติ1 สมมติ1",
+      "shiftId": "0001",
+      "manpowerId": "m0001",
+      "checkpointId": [1,2]
+    },
+    {
+      "id": "pt0002",
+      "employeeId": "12345679",
+      "employeeName": "สมมติ2 สมมติ2",
+      "shiftId": "0001",
+      "manpowerId": "m0002",
+      "checkpointId": [1,2]
+    },
+    {
+      "id": "pt0003",
+      "employeeId": "12345680",
+      "employeeName": "สมมติ3 สมมติ3",
+      "shiftId": "0003",
+      "manpowerId": "m0004",
+      "checkpointId": [4]
     }
   ],
   "patrolAlertTo": [
@@ -341,7 +417,7 @@
       "name": "กตคน์ แย้มโสพิศ",
       "email": "kitty@asm-company.com",
       "otherPositionId": [1, 2],
-      "contractId" : "0001-2024"
+      "contractId": "0001-2024"
     },
     {
       "id": "al0002",
@@ -349,7 +425,7 @@
       "name": "วัฒนา เฉลิม",
       "email": "wattana.cha@mahidol.edu",
       "otherPositionId": [1, 2, 4],
-      "contractId" : "0001-2024"
+      "contractId": "0001-2024"
     },
     {
       "id": "al0003",
@@ -357,7 +433,7 @@
       "name": "กตคน์ แย้มโสพิศ",
       "email": "kitty@asm-company.com",
       "otherPositionId": [1, 2],
-      "contractId" : "0002-2024"
+      "contractId": "0002-2024"
     },
     {
       "id": "al0004",
@@ -365,7 +441,7 @@
       "name": "สมมติ1 สมมติ1",
       "email": "numberone@mail.com",
       "otherPositionId": [1],
-      "contractId" : "0002-2024"
+      "contractId": "0002-2024"
     },
     {
       "id": "al0005",
@@ -373,7 +449,7 @@
       "name": "สมมติ2 สมมติ2",
       "email": "numberTwo@mail.com",
       "otherPositionId": [2],
-      "contractId" : "0003-2024"
+      "contractId": "0003-2024"
     }
   ],
   "patrolStatus": [
@@ -490,6 +566,17 @@
       "id": 4,
       "desc": "Developer",
       "permissions": [1, 2, 3, 4, 5, 6]
+    },
+    {
+      "id": 5,
+      "desc": "หัวหน้าเจ้าหน้าที่รักษาความปลอดภัย",
+      "permissions": [1]
+    }
+    ,
+    {
+      "id": 6,
+      "desc": "เจ้าหน้าที่รักษาความปลอดภัย",
+      "permissions": [1,2]
     }
   ],
   "activeStatus": [

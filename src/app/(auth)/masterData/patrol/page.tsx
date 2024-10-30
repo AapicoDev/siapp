@@ -18,6 +18,7 @@ import {
   Button as Button2,
   IconButton,
   Switch as SwitchMUI,
+  CircularProgress,
 } from "@mui/material/";
 import CloseIcon from "@mui/icons-material/Close";
 import Navbar from "@/components/Navbar";
@@ -27,30 +28,26 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/textboxs/input";
 import styles from "../../../styles.module.css";
 import { Filter } from "iconsax-react";
-import { usePathname } from "next/navigation";
-import CustomerForm from "@/components/materData/CustomerForm";
 import { Switch } from "@/components/ui/switch";
 import ViewQrCode from "@/components/materData/ViewQrCode";
-import ContractForm from "@/components/materData/ContractForm";
-import { AddButton } from "@/components/ui/buttons/addButton";
-import { ViewButton } from "@/components/ui/buttons/viewButton";
 import { DeleteButton } from "@/components/ui/buttons/deleteButton";
-import { GoArrowUpRight } from "react-icons/go";
-import { TableContract } from "@/components/materData/TableContract";
-import { mock } from "node:test";
+import PatrolCheckpointFrom from "@/components/materData/PatrolCheckpointForm";
+import data from "@/app/mockData.json";
+import {
+  getAllMasteCustomerData,
+  getAllMasterAreaData,
+  getMasterRoundData,
+} from "@/app/lib/api";
 
 type RowData = {
-  hrCode: string;
   customerId: any;
-  departmentId: any;
-  segmentId: any;
-  groupId: any;
-  zoneId: any;
-  chkPtTotal: any;
-  contractTotal: any;
-  code: string;
-  isActive: boolean;
-  customerName: string;
+  customerName: any;
+  areaId: any;
+  areaName: any;
+  checkpointId: any[];
+  totalRound: any;
+  totalCheckpoint: any;
+  //isActive: boolean;
 };
 
 type AreaData = {
@@ -136,61 +133,6 @@ const zones = [
   },
 ];
 
-const rows: RowData[] = [
-  {
-    hrCode: "404-73-031-00",
-    customerId: 1,
-    departmentId: 1,
-    groupId: 1,
-    segmentId: 2,
-    zoneId: 1,
-    chkPtTotal: null,
-    contractTotal: "View",
-    code: "404-73-031-00",
-    isActive: true,
-    customerName: "วิทยาลัยนานาชาติ มหาวิทยาลัยมหิดล",
-  },
-  {
-    hrCode: "401-13-035-00",
-    customerId: 2,
-    groupId: 1,
-    departmentId: 2,
-    segmentId: 4,
-    zoneId: 4,
-    chkPtTotal: null,
-    contractTotal: "View",
-    code: "401-13-035-00",
-    isActive: true,
-    customerName: "เรนวูด ปาร์ค",
-  },
-  {
-    hrCode: "405-20-048-00",
-    customerId: 3,
-    groupId: 3,
-    departmentId: 3,
-    segmentId: 3,
-    zoneId: 2,
-    chkPtTotal: null,
-    contractTotal: "12345",
-    code: "405-20-048-00",
-    isActive: true,
-    customerName: "บริษัท สยามคอมเพรสเซอร์ อุตสาหกรรม จำกัด",
-  },
-  {
-    hrCode: "601-10-077-00",
-    customerId: 4,
-    departmentId: 4,
-    segmentId: null,
-    groupId: 2,
-    zoneId: 3,
-    chkPtTotal: null,
-    contractTotal: null,
-    code: "601-10-077-00",
-    isActive: false,
-    customerName: "สายการบิน แควนตัสแอร์เวย์",
-  },
-];
-
 const mockArea: AreaData[] = [
   {
     id: 1,
@@ -211,51 +153,49 @@ const mockArea: AreaData[] = [
 
 const mockChkPt = [
   {
-    areaId: 1, 
+    areaId: 1,
     chkPtName: "จุดที่ 1",
-  }, 
+  },
   {
-    areaId: 1, 
+    areaId: 1,
     chkPtName: "จุดที่ 2",
-  }, 
+  },
   {
-    areaId: 2, 
+    areaId: 2,
     chkPtName: "หน้าประตู",
-  }, 
+  },
   {
-    areaId: 3, 
+    areaId: 3,
     chkPtName: "หน้าตึก",
   },
-]
+];
 
 const mockContract = [
   {
-    custId: 1, 
+    custId: 1,
     id: "0001",
     startDate: "13/08/2024",
     endDate: "31/12/2024",
     attachment: "MUIC_contract2024_13.pdf",
-    isActive: true
+    isActive: true,
   },
   {
-    custId: 2, 
+    custId: 2,
     id: "0002",
     startDate: "01/05/2024",
     endDate: "31/12/2024",
     attachment: "contract2024_11.pdf",
-    isActive: true
+    isActive: true,
   },
   {
-    custId: 3, 
+    custId: 3,
     id: "0003",
     startDate: "01/04/2024",
     endDate: "31/12/2024",
     attachment: "contract2024_27.pdf",
-    isActive: false
-  }
-]
-
-const totalItems = rows.length;
+    isActive: false,
+  },
+];
 
 const initialArea: AreaData[] = [
   {
@@ -266,27 +206,26 @@ const initialArea: AreaData[] = [
 ];
 
 const mockRandom = [
-    {
-        reason: "ตรวจระเบียบเครื่องแต่งกายตาม Standard",
-        totalCheckList: 4
-    },
-    {
-        reason: "ตรวจอุปกรณ์ตามสัญญา TOR",
-        totalCheckList: 2
-    },
-    {
-        reason: "ตรวจความเสี่ยงภายในหน่วยงาน",
-        totalCheckList: 2
-    },
-    {
-        reason: "เข้าพบลูกค้า อัพเดทข้อมูล/รับทราบปัญหาต่าง ๆ",
-        totalCheckList: 2
-    }
-]
+  {
+    reason: "ตรวจระเบียบเครื่องแต่งกายตาม Standard",
+    totalCheckList: 4,
+  },
+  {
+    reason: "ตรวจอุปกรณ์ตามสัญญา TOR",
+    totalCheckList: 2,
+  },
+  {
+    reason: "ตรวจความเสี่ยงภายในหน่วยงาน",
+    totalCheckList: 2,
+  },
+  {
+    reason: "เข้าพบลูกค้า อัพเดทข้อมูล/รับทราบปัญหาต่าง ๆ",
+    totalCheckList: 2,
+  },
+];
 
 export default function Patrol() {
-  const [editMode, setEditMode] = useState(Array(rows.length).fill(false)); // Array to track edit state for each row
-  const [rowData, setRowData] = useState(rows); // Local state for row data
+  const [rowData, setRowData] = useState<RowData[]>([]); // Local state for row data
   const [contractData, setContractData] = useState(mockContract); // Local state for row data
   const [areas, setAreas] = useState<AreaData[]>([
     { id: 1, custId: null, name: "" },
@@ -295,60 +234,88 @@ export default function Patrol() {
   const [selectedRow, setSelectedRow] = useState<RowData | null>(null);
   const [isSelectedAll, setIsSelectedAll] = useState(false);
   const [openAddCustModal, setShowAddCustModal] = useState(false);
-  const [openEditCustModal, setOpenEditCustModal] = useState<boolean>(false)
+  const [openEditCustModal, setOpenEditCustModal] = useState<boolean>(false);
   const [openFilterModal, setOpenFilterModal] = useState<boolean>(false);
-  const [openViewQR, setOpenViewQR] = useState<boolean>(false); 
-  const [openAddContract, setOpenAddContract] = useState<boolean>(false);
-  const [openEditContract, setOpenEditContract] = useState<boolean>(false); 
-  const [isCheckpointPage, setIsCheckpointPage] = useState<boolean>(true); 
+  const [openViewQR, setOpenViewQR] = useState<boolean>(false);
+  const [openAddCheckpoint, setOpenAddCheckpoint] = useState<boolean>(false);
+  const [openEditCheckpoint, setOpenEditCheckpoint] = useState<boolean>(false);
+  const [isCheckpointPage, setIsCheckpointPage] = useState<boolean>(true);
   const [selected, setSelected] = useState<selectedDelete[]>(
-    rows.map((row) => ({
+    rowData?.map((row) => ({
       isSelected: false, // Default value for `selected`
       custId: row.customerId, // Convert customerId to string for custId
     }))
   );
-
-  //calculate total checkpoint to display QR Code row
-  const calTotalChkPt = () => {
-    const rowDataUpdate = [...rowData]
-    rowDataUpdate.forEach(customer => {
-      customer.customerId
-      //use customerId to find area of that customer
-      const custArea = mockArea.filter((a) => a.custId === customer.customerId);
-      let sumChkPt = 0;
-      if(custArea.length > 0){
-          custArea.forEach(area => {
-            //use areaId to find number of checkpoint of that area
-            sumChkPt += mockChkPt.filter(chkPt => chkPt.areaId === area.id).length
-          });
-      }
-      customer.chkPtTotal = sumChkPt;
-    });
-    setRowData(rowDataUpdate);
-  }
-
-  const calTotalContract = () => {
-    const rowDataUpdate = [...rowData]
-    rowDataUpdate.forEach(customer => {
-      customer.customerId
-      const custContract = mockContract.filter((a) => a.custId === customer.customerId);
-      customer.contractTotal = custContract.length;
-    });
-    setRowData(rowDataUpdate);
-  }
+  const [customerList, setCustomerList] = useState<any[]>();
+  const [custAreaList, setCustAreaList] = useState<any[]>();
+  const [roundList, setRoundList] = useState<any[]>();
+  const [checkpointList, setCheckpointList] = useState<any[]>();
+  const [allArea, setAllArea] = useState<any[]>();
+  const [isAddOrUpdateSucces, setIsAddOrUpdateSucces] = useState(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   useEffect(() => {
-    calTotalChkPt();
-    calTotalContract();
+    tableData();
   }, []);
 
-  const handleAddNewCust = () => {
-    //setShowAddCustModal(true);
+  const tableData = async () => {
+    setIsLoading(true);
+    const customers = await getAllMasteCustomerData();
+    const custList = customers?.documents
+      .filter((c) => c.area_id.length > 0)
+      .map((cust) => {
+        return {
+          id: cust.$id,
+          desc: cust.CustomerName,
+        };
+      });
+    setCustomerList(custList);
+    // const custAreaList = data.areas.map(area => {
+    //   return {
+    //     id: area.id,
+    //     desc: area.name
+    //   };
+    // });
+    // setCustAreaList(custAreaList);
+
+    const areaList = await getAllMasterAreaData();
+    setAllArea(areaList?.documents);
+    console.log("areaList =", areaList);
+    const mappedPatrolList: RowData[] =
+      areaList?.documents.map((area) => {
+        return {
+          customerId: area.CustomerId,
+          customerName: area.customerName,
+          areaId: area.$id,
+          areaName: area.name,
+          checkpointId: area.checkPointIDs,
+          totalRound: getRound(area.$id),
+          totalCheckpoint: area.checkPointIDs?.length,
+        };
+      }) || [];
+    console.log("mappedPatrolList =", mappedPatrolList);
+    setRowData(mappedPatrolList);
+    setSelected(
+      mappedPatrolList?.map((row) => ({
+        isSelected: false, // Default value for `selected`
+        custId: row.customerId, // Convert customerId to string for custId
+      }))
+    );
+    setIsLoading(false);
   };
 
-  const handleDeleteCust = () => {
-    
+  const getRound = async (areaId: any) => {
+    const rounds = await getMasterRoundData(areaId);
+    const filteredRound = rounds?.documents.filter(
+      (round) => round.isActive === true
+    ).length;
+    return filteredRound;
   };
+
+  const handleAddNewPatrol = () => {
+    setOpenAddCheckpoint(true);
+  };
+  const handleDeleteCust = () => {};
 
   const setToggleFilter = () => {
     console.log("openFilterModal =", openFilterModal);
@@ -356,54 +323,50 @@ export default function Patrol() {
   };
 
   const handleRowClick = (row: RowData) => {
+    console.log("row =", row);
+    const custAreaList = allArea
+      ?.filter((a) => a.CustomerId === row.customerId)
+      .map((area) => {
+        return {
+          id: area.$id,
+          desc: area.name,
+        };
+      });
+    console.log("custAreaList =", custAreaList);
+    setCustAreaList(custAreaList);
     setSelectedRow(row);
-    //setOpenEditCustModal(true);
-
-    const custArea = mockArea.filter((a) => a.custId === row.customerId);
-    setAreas(initialArea);
-    if (custArea.length != 0) {
-      setAreas(
-        custArea.map((area, index) => ({
-          ...area,
-          id: index + 1, // use index of array+1 to set new id.
-        }))
-      );
-    }
+    setOpenEditCheckpoint(true);
   };
 
-  function handleCloseCustomerForm(isEdit: boolean) {
-    if (!isEdit) {
-      setShowAddCustModal(false);
-    } else {
-      setOpenEditCustModal(false);
-    }
-    setRowData(rows);
-  }
-
   function handleCloseViewQr() {
-    setOpenViewQR(false)
+    setOpenViewQR(false);
   }
 
-  function handleCloseContractForm(isEdit: boolean) {
+  function handleClosePatrolCheckpointForm(isEdit: boolean) {
     if (!isEdit) {
-      setOpenAddContract(false);
+      setOpenAddCheckpoint(false);
     } else {
-      setOpenEditContract(false);
+      setOpenEditCheckpoint(false);
+      if (isAddOrUpdateSucces) tableData();
     }
-  }
-
-  const handleEditContract = (selecectedRow: any) => {
-    console.log("row =", selecectedRow)
-    setSelectedRow(selecectedRow);
-    setOpenEditContract(true)
   }
 
   const handleOpenViewQr = (selecectedRow: any) => {
     setSelectedRow(selecectedRow);
-    const custArea = mockArea.filter(a => a.custId === selecectedRow.customerId);
-    setCustAreas(custArea);
-    //setOpenViewQR(true)
-  }
+    const custAreaList = allArea
+      ?.filter((a) => a.CustomerId === selecectedRow.customerId)
+      .map((area) => {
+        return {
+          id: area.$id,
+          custId: area.CustomerId,
+          name: area.name,
+        };
+      });
+    console.log("custAreaList= ", custAreaList);
+    console.log("selecectedRow= ", selecectedRow);
+    setCustAreaList(custAreaList);
+    setOpenViewQR(true);
+  };
 
   const handleSelected = (index: number) => {
     const newSelected = [...selected];
@@ -427,16 +390,10 @@ export default function Patrol() {
     setSelected(selectedAll);
   };
 
-  const handleAddBtnOnClick = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-    e.stopPropagation();
-    setOpenAddContract(true);
-  };
-
-  const handleSelectCustomerPage = (checked: boolean) => {
+  const handleSelecCheckpointPage = (checked: boolean) => {
     if (checked) setIsCheckpointPage(true);
   };
-
-  const handleSelectContractPage = (checked: boolean) => {
+  const handleSelectRandomPatrolPage = (checked: boolean) => {
     if (checked) setIsCheckpointPage(false);
   };
 
@@ -457,9 +414,12 @@ export default function Patrol() {
                   <Checkbox
                     className="bg-[#EBF4F6] border-none"
                     checked={isCheckpointPage}
-                    onCheckedChange={handleSelectCustomerPage}
+                    onCheckedChange={handleSelecCheckpointPage}
                   />
-                  <Typography sx={{fontWeight: "700", color: "#1D7A9B"}} className="py-1 px-2">
+                  <Typography
+                    sx={{ fontWeight: "700", color: "#1D7A9B" }}
+                    className="py-1 px-2"
+                  >
                     Check Point
                   </Typography>
                 </Box>
@@ -467,10 +427,15 @@ export default function Patrol() {
                   sx={{ borderRadius: "10px" }}
                   className="justify-center flex p-1 bg-white"
                 >
-                  <Checkbox className="bg-[#EBF4F6] border-none" 
+                  <Checkbox
+                    className="bg-[#EBF4F6] border-none"
                     checked={!isCheckpointPage}
-                    onCheckedChange={handleSelectContractPage}/>
-                  <Typography sx={{fontWeight: "700", color: "#1D7A9B"}} className="py-1 px-2">
+                    onCheckedChange={handleSelectRandomPatrolPage}
+                  />
+                  <Typography
+                    sx={{ fontWeight: "700", color: "#1D7A9B" }}
+                    className="py-1 px-2"
+                  >
                     Random
                   </Typography>
                 </Box>
@@ -496,197 +461,189 @@ export default function Patrol() {
             </Box>
           </Box>
 
-          {isCheckpointPage && (<TableContainer
-            className="h-screen bg-white"
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              borderRadius: "15px 15px 0px 0px",
-              boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
-            }}
-          >
-            <Table>
-              <TableHead>
-                <TableRow
-                  sx={{ borderBottom: "1px solid #C7D4D7" }}
-                  className={`${styles.table}`}
-                >
-                  <TableCell align="left" className="w-[4%]">
-                    <Checkbox className="mt-1 mb-2"
+          {isCheckpointPage && (
+            <TableContainer
+              className="h-screen bg-white"
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                borderRadius: "15px 15px 0px 0px",
+                boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
+              }}
+            >
+              <Table>
+                <TableHead>
+                  <TableRow
+                    sx={{ borderBottom: "1px solid #C7D4D7" }}
+                    className={`${styles.table}`}
+                  >
+                    <TableCell align="left" className="w-[4%]">
+                      {/* <Checkbox className="mt-1 mb-2"
                       checked={isSelectedAll}
                       onCheckedChange={handleCheckAll}
-                    />
-                  </TableCell>
-                  <TableCell align="center" className="w-[26%]">
-                    Customer
-                  </TableCell>
-                  <TableCell align="center" className="w-[26%]">
-                    Area
-                  </TableCell>
-                  <TableCell align="center" className="w-[15%]">
-                    Total Round
-                  </TableCell>
-                  <TableCell align="center" className="w-[15%]">
-                    Total Checkpoint
-                  </TableCell>
-                  <TableCell align="center" className="w-[18%]">
-                    QR Code
-                  </TableCell>
-                </TableRow>
-              </TableHead>
+                    /> */}
+                    </TableCell>
+                    <TableCell align="center" className="w-[26%]">
+                      Customer
+                    </TableCell>
+                    <TableCell align="center" className="w-[26%]">
+                      Area
+                    </TableCell>
+                    <TableCell align="center" className="w-[15%]">
+                      Total Round
+                    </TableCell>
+                    <TableCell align="center" className="w-[15%]">
+                      Total Checkpoint
+                    </TableCell>
+                    <TableCell align="center" className="w-[18%]">
+                      QR Code
+                    </TableCell>
+                  </TableRow>
+                </TableHead>
 
-              {/* Allow the TableBody to grow and fill vertical space */}
-              <TableBody sx={{ flexGrow: 1 }}>
-                {rowData.map((row, index) => (
-                  <TableRow
-                    onClick={() => handleRowClick(row)} // Row click handler
-                    key={index}
-                    className={
-                      editMode[index]
-                        ? `bg-[#D8EAFF]`
-                        : `${index % 2 === 1 ? `bg-inherit` : `bg-[#EBF4F6]`}`
-                    }
-                    sx={{
-                      cursor: "pointer",
-                      "& .MuiTableCell-root": {
-                        padding: "10px 20px 10px 20px", // Customize border color
-                      },
-                      "&:hover": {
-                        backgroundColor: "#DCE9EB", // Optional: Change background color on hover
-                      },
-                    }}
-                  >
-                    <TableCell align="left">
-                      <Checkbox className="mt-1 mb-2"
-                        checked={selected[index].isSelected}
+                {/* Allow the TableBody to grow and fill vertical space */}
+                <TableBody sx={{ flexGrow: 1 }}>
+                  {rowData.map((row, index) => (
+                    <TableRow
+                      onClick={() => handleRowClick(row)} // Row click handler
+                      key={index}
+                      className={`${
+                        index % 2 === 1 ? `bg-inherit` : `bg-[#EBF4F6]`
+                      }`}
+                      sx={{
+                        cursor: "pointer",
+                        "& .MuiTableCell-root": {
+                          padding: "10px 20px 10px 20px", // Customize border color
+                        },
+                        "&:hover": {
+                          backgroundColor: "#DCE9EB", // Optional: Change background color on hover
+                        },
+                      }}
+                    >
+                      <TableCell align="left">
+                        {/* <Checkbox className="mt-1 mb-2"
+                        checked={selected[index]?.isSelected}
                         onClick={(event) => {
                           event.stopPropagation(); // Prevent row click
                           handleSelected(index);
                         }}
+                      /> */}
+                      </TableCell>
+
+                      {/* Customer */}
+                      <TableCell align="center">{row.customerName}</TableCell>
+
+                      {/* Area */}
+                      <TableCell align="center">{row.areaName}</TableCell>
+
+                      {/* Total Round */}
+                      <TableCell align="center">{row.totalRound}</TableCell>
+
+                      {/* Total Checkpoint */}
+                      <TableCell align="center">
+                        {row.totalCheckpoint}
+                      </TableCell>
+
+                      {/* ViewQR */}
+                      <TableCell align="center">
+                        {row.totalCheckpoint === 0 ? (
+                          "-"
+                        ) : (
+                          <Button
+                            style={{
+                              border: "1px solid #37B7C3",
+                              fontWeight: "bold",
+                            }}
+                            className="w-[84px] text-[#37B7C3] bg-white hover:bg-[#37B7C3] hover:text-white"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              handleOpenViewQr(row);
+                            }}
+                          >
+                            View
+                          </Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+
+          {!isCheckpointPage && (
+            <TableContainer
+              className="h-screen bg-white"
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                borderRadius: "15px 15px 0px 0px",
+                boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
+              }}
+            >
+              <Table>
+                <TableHead>
+                  <TableRow
+                    sx={{ borderBottom: "1px solid #C7D4D7" }}
+                    className={`${styles.table}`}
+                  >
+                    <TableCell align="left" className="w-[10%]">
+                      <Checkbox
+                        className="mt-1 mb-2"
+                        checked={isSelectedAll}
+                        onCheckedChange={handleCheckAll}
                       />
                     </TableCell>
-
-                    {/* Customer */}
-                    <TableCell align="center">{row.customerName}</TableCell>
-
-                    {/* Area */}
-                    <TableCell align="center">
-                      {
-                        mockArea.find((a) => a.custId === row.customerId)?.name
-                      }
+                    <TableCell align="center" className="w-[50%]">
+                      Random Patrol Reason
                     </TableCell>
-
-                    {/* Total Round */}
-                    <TableCell align="center">
-                      {row.chkPtTotal}
+                    <TableCell align="center" className="w-[40%]">
+                      Total Check List
                     </TableCell>
+                  </TableRow>
+                </TableHead>
 
-                    {/* Total Checkpoint */}
-                    <TableCell align="center">
-                      {row.chkPtTotal}
-                    </TableCell>
-
-                    {/* ViewQR */}
-                    <TableCell align="center">
-                      {row.chkPtTotal === 0 ? (
-                        "-"
-                      ) : (
-                        <Button
-                          style={{
-                            border: "1px solid #37B7C3",
-                            fontWeight: "bold",
-                          }}
-                          className="w-[84px] text-[#37B7C3] bg-white hover:bg-[#37B7C3] hover:text-white"
+                {/* Allow the TableBody to grow and fill vertical space */}
+                <TableBody sx={{ flexGrow: 1 }}>
+                  {mockRandom.map((row, index) => (
+                    <TableRow
+                      // onClick={() => handleRowClick(row)} // Row click handler
+                      key={index}
+                      className={`${
+                        index % 2 === 1 ? `bg-inherit` : `bg-[#EBF4F6]`
+                      }`}
+                      sx={{
+                        cursor: "pointer",
+                        "& .MuiTableCell-root": {
+                          padding: "10px 20px 10px 20px", // Customize border color
+                        },
+                        "&:hover": {
+                          backgroundColor: "#DCE9EB", // Optional: Change background color on hover
+                        },
+                      }}
+                    >
+                      <TableCell align="left">
+                        <Checkbox
+                          className="mt-1 mb-2"
+                          checked={selected[index]?.isSelected}
                           onClick={(event) => {
-                            event.stopPropagation();
-                            handleOpenViewQr(row)
+                            event.stopPropagation(); // Prevent row click
+                            handleSelected(index);
                           }}
-                        >
-                          View
-                        </Button>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>)}
+                        />
+                      </TableCell>
 
-           
-          {!isCheckpointPage && (<TableContainer
-            className="h-screen bg-white"
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              borderRadius: "15px 15px 0px 0px",
-              boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
-            }}
-          >
-            <Table>
-              <TableHead>
-                <TableRow
-                  sx={{ borderBottom: "1px solid #C7D4D7" }}
-                  className={`${styles.table}`}
-                >
-                  <TableCell align="left" className="w-[10%]">
-                    <Checkbox className="mt-1 mb-2"
-                      checked={isSelectedAll}
-                      onCheckedChange={handleCheckAll}
-                    />
-                  </TableCell>
-                  <TableCell align="center" className="w-[50%]">
-                    Random Patrol Reason
-                  </TableCell>
-                  <TableCell align="center" className="w-[40%]">
-                    Total Check List
-                  </TableCell>
-                </TableRow>
-              </TableHead>
+                      {/* Customer */}
+                      <TableCell align="center">{row.reason}</TableCell>
 
-              {/* Allow the TableBody to grow and fill vertical space */}
-              <TableBody sx={{ flexGrow: 1 }}>
-                {mockRandom.map((row, index) => (
-                  <TableRow
-                    // onClick={() => handleRowClick(row)} // Row click handler
-                    key={index}
-                    className={
-                      editMode[index]
-                        ? `bg-[#D8EAFF]`
-                        : `${index % 2 === 1 ? `bg-inherit` : `bg-[#EBF4F6]`}`
-                    }
-                    sx={{
-                      cursor: "pointer",
-                      "& .MuiTableCell-root": {
-                        padding: "10px 20px 10px 20px", // Customize border color
-                      },
-                      "&:hover": {
-                        backgroundColor: "#DCE9EB", // Optional: Change background color on hover
-                      },
-                    }}
-                  >
-                    <TableCell align="left">
-                      <Checkbox className="mt-1 mb-2"
-                        checked={selected[index].isSelected}
-                        onClick={(event) => {
-                          event.stopPropagation(); // Prevent row click
-                          handleSelected(index);
-                        }}
-                      />
-                    </TableCell>
-
-                    {/* Customer */}
-                    <TableCell align="center">{row.reason}</TableCell>
-
-                    {/* Total Check List */}
-                    <TableCell align="center">
-                      {row.totalCheckList}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>)}
-        
+                      {/* Total Check List */}
+                      <TableCell align="center">{row.totalCheckList}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
 
           {/* TableFooter*/}
           <TableContainer
@@ -708,17 +665,17 @@ export default function Patrol() {
                         width: "100%",
                       }}
                     >
-                      <Typography>Total: {totalItems} items</Typography>
+                      <Typography>Total: {rowData.length} items</Typography>
                       <Box>
-                        <DeleteButton onDeleteBtnClick={handleDeleteCust} disable={!selected.some((item) => item.isSelected)}/>
+                        {/* <DeleteButton onDeleteBtnClick={handleDeleteCust} disable={!selected.some((item) => item.isSelected)}/>
                         <Button
                           style={{ marginLeft: "auto", fontWeight: "bold" }}
                           className="w-48 enabled:bg-gradient-to-r from-[#00336C] to-[#37B7C3] hover:from-[#4C9BF5] hover:to-[#D8EAFF] 
                                  hover:text-[#00336C] disabled:bg-[#83A2AD]"
-                          onClick={() => handleAddNewCust()}
+                          onClick={() => handleAddNewPatrol()}
                         >
                           +New
-                        </Button>
+                        </Button> */}
                       </Box>
                     </Box>
                   </TableCell>
@@ -728,23 +685,6 @@ export default function Patrol() {
           </TableContainer>
         </Box>
       </Box>
-
-      {/* Add customer */}
-      {openAddCustModal && (
-        <CustomerForm
-          closeModal={handleCloseCustomerForm}
-          customeraAeas={initialArea}
-        />
-      )}
-
-      {/* Edit/Delete Customer */}
-      {openEditCustModal && (
-        <CustomerForm
-          closeModal={handleCloseCustomerForm}
-          editCustomer={selectedRow}
-          customeraAeas={areas}
-        />
-      )}
 
       {openFilterModal && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex flex-col">
@@ -776,9 +716,11 @@ export default function Patrol() {
             </Box>
 
             {/* Body */}
-            <Box className="w-full justify-center px-6 py-2 rounded-t-lg pb-6" textAlign="center">
+            <Box
+              className="w-full justify-center px-6 py-2 rounded-t-lg pb-6"
+              textAlign="center"
+            >
               <Box className="w-full space-y-6 pt-4">
-
                 {/* Segment */}
                 <Box className="w-full">
                   <FormControl focused className="w-full">
@@ -789,7 +731,8 @@ export default function Patrol() {
                           color: "#2C5079",
                           fontSize: "18px",
                         },
-                      }}>
+                      }}
+                    >
                       Segment
                     </InputLabel>
                     <Select
@@ -813,7 +756,7 @@ export default function Patrol() {
                         },
                         "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
                           border: "1px solid #1D7A9B", // Customize border color on focus
-                          fontSize: "18px"
+                          fontSize: "18px",
                         },
                         "&:hover .MuiOutlinedInput-notchedOutline": {
                           border: "1px solid #1D7A9B", // Hover border color
@@ -845,7 +788,8 @@ export default function Patrol() {
                           color: "#2C5079",
                           fontSize: "18px",
                         },
-                      }}>
+                      }}
+                    >
                       Group
                     </InputLabel>
                     <Select
@@ -869,7 +813,7 @@ export default function Patrol() {
                         },
                         "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
                           border: "1px solid #1D7A9B", // Customize border color on focus
-                          fontSize: "18px"
+                          fontSize: "18px",
                         },
                         "&:hover .MuiOutlinedInput-notchedOutline": {
                           border: "1px solid #1D7A9B", // Hover border color
@@ -901,7 +845,8 @@ export default function Patrol() {
                           color: "#2C5079",
                           fontSize: "18px",
                         },
-                      }}>
+                      }}
+                    >
                       Zone
                     </InputLabel>
                     <Select
@@ -925,7 +870,7 @@ export default function Patrol() {
                         },
                         "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
                           border: "1px solid #1D7A9B", // Customize border color on focus
-                          fontSize: "18px"
+                          fontSize: "18px",
                         },
                         "&:hover .MuiOutlinedInput-notchedOutline": {
                           border: "1px solid #1D7A9B", // Hover border color
@@ -957,7 +902,8 @@ export default function Patrol() {
                           color: "#2C5079",
                           fontSize: "18px",
                         },
-                      }}>
+                      }}
+                    >
                       Department
                     </InputLabel>
                     <Select
@@ -981,7 +927,7 @@ export default function Patrol() {
                         },
                         "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
                           border: "1px solid #1D7A9B", // Customize border color on focus
-                          fontSize: "18px"
+                          fontSize: "18px",
                         },
                         "&:hover .MuiOutlinedInput-notchedOutline": {
                           border: "1px solid #1D7A9B", // Hover border color
@@ -1013,7 +959,8 @@ export default function Patrol() {
                           color: "#2C5079",
                           fontSize: "18px",
                         },
-                      }}>
+                      }}
+                    >
                       Customer
                     </InputLabel>
                     <Select
@@ -1037,7 +984,7 @@ export default function Patrol() {
                         },
                         "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
                           border: "1px solid #1D7A9B", // Customize border color on focus
-                          fontSize: "18px"
+                          fontSize: "18px",
                         },
                         "&:hover .MuiOutlinedInput-notchedOutline": {
                           border: "1px solid #1D7A9B", // Hover border color
@@ -1061,70 +1008,70 @@ export default function Patrol() {
 
                 {/* HR Code & Code */}
                 <Box className="w-full flex space-x-5">
-                <TextField
-                  label="Department"
-                  size="small"
-                  className="w-full"
-                  focused
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      "&.Mui-focused fieldset": {
-                        border: "1px solid #1D7A9B", // Focus border color
-                        borderRadius: "10px",
-                        fontSize: "18px"
-                      },
-                    },
-                    "& .MuiInputLabel-root.Mui-focused": {
-                      color: "#2C5079", // Label color when focused
-                      fontSize: "18px"
-                    },
-                    "& .MuiOutlinedInput-input::placeholder": {
-                      color: "#83A2AD", // Customize placeholder text color
-                      opacity: 1, // Ensure full opacity for the placeholder
-                    },
-                  }}
-                  placeholder={"Type here..."}
-                />
                   <TextField
-                  label="Department"
-                  size="small"
-                  className="w-full"
-                  focused
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      "&.Mui-focused fieldset": {
-                        border: "1px solid #1D7A9B", // Focus border color
-                        borderRadius: "10px",
-                        fontSize: "18px"
+                    label="Department"
+                    size="small"
+                    className="w-full"
+                    focused
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        "&.Mui-focused fieldset": {
+                          border: "1px solid #1D7A9B", // Focus border color
+                          borderRadius: "10px",
+                          fontSize: "18px",
+                        },
                       },
-                    },
-                    "& .MuiInputLabel-root.Mui-focused": {
-                      color: "#2C5079", // Label color when focused
-                      fontSize: "18px"
-                    },
-                    "& .MuiOutlinedInput-input::placeholder": {
-                      color: "#83A2AD", // Customize placeholder text color
-                      opacity: 1, // Ensure full opacity for the placeholder
-                    },
-                  }}
-                  placeholder={"Type here..."}
-                />
+                      "& .MuiInputLabel-root.Mui-focused": {
+                        color: "#2C5079", // Label color when focused
+                        fontSize: "18px",
+                      },
+                      "& .MuiOutlinedInput-input::placeholder": {
+                        color: "#83A2AD", // Customize placeholder text color
+                        opacity: 1, // Ensure full opacity for the placeholder
+                      },
+                    }}
+                    placeholder={"Type here..."}
+                  />
+                  <TextField
+                    label="Department"
+                    size="small"
+                    className="w-full"
+                    focused
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        "&.Mui-focused fieldset": {
+                          border: "1px solid #1D7A9B", // Focus border color
+                          borderRadius: "10px",
+                          fontSize: "18px",
+                        },
+                      },
+                      "& .MuiInputLabel-root.Mui-focused": {
+                        color: "#2C5079", // Label color when focused
+                        fontSize: "18px",
+                      },
+                      "& .MuiOutlinedInput-input::placeholder": {
+                        color: "#83A2AD", // Customize placeholder text color
+                        opacity: 1, // Ensure full opacity for the placeholder
+                      },
+                    }}
+                    placeholder={"Type here..."}
+                  />
                 </Box>
 
                 {/* IsActive */}
                 <Box className="w-full flex space-x-1">
                   <Switch
-                     name="isActive"
+                    name="isActive"
                     //  checked={formData.isActive}
                     //  onCheckedChange={handleActiveChange}
                   />
                   <Typography
-                  textAlign="left"
-                  className="text-[14px] pb-1 text-[#2C5079] pl-2 pt-2"
-                >
-                  {/* {formData.isActive === true ? "Active" : "Inactive"} */}
-                  Active
-                </Typography>
+                    textAlign="left"
+                    className="text-[14px] pb-1 text-[#2C5079] pl-2 pt-2"
+                  >
+                    {/* {formData.isActive === true ? "Active" : "Inactive"} */}
+                    Active
+                  </Typography>
                 </Box>
               </Box>
             </Box>
@@ -1135,9 +1082,7 @@ export default function Patrol() {
                 <Button className="w-32 h-11 bg-white text-[#F66262] border-[1px] border-[#F66262] hover:text-white hover:bg-[#F66262]">
                   Reset
                 </Button>
-                <Button
-                  className="w-32 h-11 enabled:bg-gradient-to-r from-[#00336C] to-[#37B7C3] hover:from-[#2BA441] hover:to-[#A7E5A6] disabled:bg-[#83A2AD]"
-                >
+                <Button className="w-32 h-11 enabled:bg-gradient-to-r from-[#00336C] to-[#37B7C3] hover:from-[#2BA441] hover:to-[#A7E5A6] disabled:bg-[#83A2AD]">
                   Apply
                 </Button>
               </Box>
@@ -1147,15 +1092,34 @@ export default function Patrol() {
       )}
 
       {openViewQR && (
-        <ViewQrCode closeModal={handleCloseViewQr} customeraAeas={custAreas} selectedCustomer={selectedRow}/>
+        <ViewQrCode
+          closeModal={handleCloseViewQr}
+          customerAreas={custAreaList}
+          selectedCustomer={selectedRow}
+        />
       )}
 
-      {openAddContract && (
-        <ContractForm closeModal={handleCloseContractForm} customeraAeas={areas}/>
+      {/* {openAddCheckpoint && (
+        <PatrolCheckpointFrom selectedRow={undefined} closeModal={handleClosePatrolCheckpointForm} custList={customerList || []} isEdit={false} areaList={[]}/>
+      )} */}
+
+      {openEditCheckpoint && (
+        <PatrolCheckpointFrom
+          selectedRow={selectedRow}
+          closeModal={handleClosePatrolCheckpointForm}
+          custList={customerList || []}
+          isEdit={true}
+          areaList={custAreaList || []}
+          setIsAddOrUpdateSuccess={setIsAddOrUpdateSucces}
+        />
       )}
 
-      {openEditContract && (
-        <ContractForm closeModal={handleCloseContractForm} customeraAeas={areas} selectedCustomer={selectedRow}/>
+      {isLoading && (
+        <div className="fixed inset-0 bg-white bg-opacity-40 flex flex-col items-center justify-center z-indextop">
+          <Box sx={{ display: "flex" }}>
+            <CircularProgress />
+          </Box>
+        </div>
       )}
     </div>
   );
