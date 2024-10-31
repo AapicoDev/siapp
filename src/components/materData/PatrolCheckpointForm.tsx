@@ -65,6 +65,9 @@ import {
 } from "@/app/lib/api";
 import { Models } from "appwrite";
 
+import MapComponent from "././../MapView";
+import { Logs } from "lucide-react";
+
 interface PatrolCheckpointFromProp {
   selectedRow: any;
   closeModal: any;
@@ -573,7 +576,7 @@ const PatrolCheckpointFrom = ({
               return {
                 ...checkpoint,
                 checkListId: updatedCheckListId,
-                status: "edit",
+                status: checkpoint.status != "new" ? "edit" : "new",
               };
             }
           }
@@ -584,7 +587,11 @@ const PatrolCheckpointFrom = ({
     } else {
       let updatedCheckpointList = checkPointDatas.map((checkpoint) =>
         checkpoint.checkPointId === checkpointId
-          ? { ...checkpoint, [field]: value, status: "edit" }
+          ? {
+              ...checkpoint,
+              [field]: value,
+              status: checkpoint.status != "new" ? "edit" : "new",
+            }
           : checkpoint
       );
       if (field === "isRestrictionTime" && value === false) {
@@ -1584,12 +1591,12 @@ const PatrolCheckpointFrom = ({
                           </div>
                           {/* Map */}
                           <div className="flex w-full rounded-lg border-[#2C5079] border-[1px] bg-slate-200 p-1 justify-center">
-                            <Image
+                            {/* <Image
                               src={"/NoData.png"}
                               alt="No Data"
                               width={90}
                               height={90}
-                            />
+                            /> */}
                           </div>
                           <div className="w-full flex space-x-2 mt-2">
                             {/* <Box className="flex flex-grow bg-[white] rounded-md border-[1px] border-[#2C5079] text-[#2C5079] px-1 py-2 text-sm">
@@ -1744,232 +1751,243 @@ const PatrolCheckpointFrom = ({
                     >
                       Check Point
                     </Typography>
-                    {checkPointDatas.map((checkpoint, index) => (
-                      <Box
-                        key={index}
-                        className="flex w-full bg-[#EBF4F6] rounded-lg justify-items-center align-middle justify-between mb-3 p-3 space-x-3"
-                      >
-                        <Box className="w-11 h-10 bg-[#37B7C3] rounded-lg justify-center text-white p-2">
-                          {index + 1}
-                        </Box>
-                        <Box className="w-full justify-center space-y-2">
-                          <div>
-                            <Textbox
-                              header={"Check Point Name"}
-                              inputType={"text"}
-                              placeHolder={"Type here..."}
-                              handleChange={(e: any) =>
-                                handleFieldDataInCheckpointChange(
-                                  checkpoint.checkPointId,
-                                  "checkPointName",
-                                  e.target.value
-                                )
-                              }
-                              value={checkpoint.checkPointName}
-                              name={"checkPointName"}
-                            />
-                          </div>
-                          <div>
-                            <Textbox
-                              header={"Location"}
-                              inputType={"text"}
-                              placeHolder={"Type here..."}
-                              handleChange={(e: any) =>
-                                handleFieldDataInCheckpointChange(
-                                  checkpoint.checkPointId,
-                                  "locationName",
-                                  e.target.value
-                                )
-                              }
-                              value={checkpoint.locationName}
-                              name={"locationName"}
-                            />
-                          </div>
-                          {/* Map */}
-                          <div className="flex w-full rounded-lg border-[#2C5079] border-[1px] bg-slate-200 p-1 justify-center">
-                            <Image
+                    {checkPointDatas.map((checkpoint, index) => {
+                      console.log(checkpoint.longitude);
+
+                      return (
+                        <Box
+                          key={index}
+                          className="flex w-full bg-[#EBF4F6] rounded-lg justify-items-center align-middle justify-between mb-3 p-3 space-x-3"
+                        >
+                          <Box className="w-11 h-10 bg-[#37B7C3] rounded-lg justify-center text-white p-2">
+                            {index + 1}
+                          </Box>
+                          <Box className="w-full justify-center space-y-2">
+                            <div>
+                              <Textbox
+                                header={"Check Point Name"}
+                                inputType={"text"}
+                                placeHolder={"Type here..."}
+                                handleChange={(e: any) =>
+                                  handleFieldDataInCheckpointChange(
+                                    checkpoint.checkPointId,
+                                    "checkPointName",
+                                    e.target.value
+                                  )
+                                }
+                                value={checkpoint.checkPointName}
+                                name={"checkPointName"}
+                              />
+                            </div>
+                            <div>
+                              <Textbox
+                                header={"Location"}
+                                inputType={"text"}
+                                placeHolder={"Type here..."}
+                                handleChange={(e: any) =>
+                                  handleFieldDataInCheckpointChange(
+                                    checkpoint.checkPointId,
+                                    "locationName",
+                                    e.target.value
+                                  )
+                                }
+                                value={checkpoint.locationName}
+                                name={"locationName"}
+                              />
+                            </div>
+                            {/* Map */}
+                            <div className="flex w-full rounded-lg border-[#2C5079] border-[1px] bg-slate-200 p-1 justify-center">
+                              {/* <Image
                               src={"/NoData.png"}
                               alt="No Data"
                               width={90}
                               height={90}
-                            />
-                          </div>
-                          <div className="w-full flex space-x-2 mt-2">
-                            {/* <Box className="flex flex-grow bg-[white] rounded-md border-[1px] border-[#2C5079] text-[#2C5079] px-1 py-2 text-sm">
+                            /> */}
+
+                              {/* // TO DO by Add Image View */}
+                              <MapComponent
+                                latitude={checkpoint.latitude}
+                                longitude={checkpoint.longitude}
+                                zoom={13}
+                              />
+                            </div>
+                            <div className="w-full flex space-x-2 mt-2">
+                              {/* <Box className="flex flex-grow bg-[white] rounded-md border-[1px] border-[#2C5079] text-[#2C5079] px-1 py-2 text-sm">
                               ละติจูด : {checkpoint.latitude}
                             </Box> */}
-                            <div>
-                              <Textbox
-                                header={"ละติจูด"}
-                                inputType={"text"}
-                                placeHolder={"Type here..."}
-                                handleChange={(
-                                  e: React.ChangeEvent<HTMLInputElement>
-                                ) =>
-                                  handleFieldDataInCheckpointChange(
-                                    checkpoint.checkPointId,
-                                    "latitude",
-                                    e.target.value
-                                  )
-                                }
-                                value={checkpoint.latitude}
-                                name={"latitude"}
-                              />
-                            </div>
-                            <div>
-                              <Textbox
-                                header={"ลองจิจูด"}
-                                inputType={"text"}
-                                placeHolder={"Type here..."}
-                                handleChange={(
-                                  e: React.ChangeEvent<HTMLInputElement>
-                                ) =>
-                                  handleFieldDataInCheckpointChange(
-                                    checkpoint.checkPointId,
-                                    "longitude",
-                                    e.target.value
-                                  )
-                                }
-                                value={checkpoint.longitude}
-                                name={"longitude"}
-                              />
-                            </div>
-                            <div>
-                              <Textbox
-                                header={"อัลติจูด"}
-                                inputType={"text"}
-                                placeHolder={"Type here..."}
-                                handleChange={(
-                                  e: React.ChangeEvent<HTMLInputElement>
-                                ) =>
-                                  handleFieldDataInCheckpointChange(
-                                    checkpoint.checkPointId,
-                                    "altitude",
-                                    e.target.value
-                                  )
-                                }
-                                value={checkpoint.altitude}
-                                name={"altitude"}
-                              />
-                            </div>
-                          </div>
-                          <Typography
-                            textAlign="left"
-                            sx={{
-                              fontSize: "14px",
-                              paddingBottom: "0.25rem",
-                              color: "#2C5079",
-                              fontWeight: "700",
-                            }}
-                          >
-                            Patrol Time Restriction
-                          </Typography>
-                          <div className="w-fit">
-                            <Box className="flex">
-                              <Checkbox
-                                className="mb-2"
-                                checked={!checkpoint.isRestrictionTime}
-                                onCheckedChange={(e) =>
-                                  handleFieldDataInCheckpointChange(
-                                    checkpoint.checkPointId,
-                                    "isRestrictionTime",
-                                    false
-                                  )
-                                }
-                              />
-                              <Typography
-                                sx={{
-                                  fontSize: "14px",
-                                  color: "#2C5079",
-                                  mt: "0.25rem",
-                                  ml: 1,
-                                }}
-                              >
-                                No Restriction
-                              </Typography>
-                            </Box>
-                            <Box className="flex">
-                              <Checkbox
-                                className="mb-2 mt-1"
-                                checked={checkpoint.isRestrictionTime}
-                                onCheckedChange={(e) =>
-                                  handleFieldDataInCheckpointChange(
-                                    checkpoint.checkPointId,
-                                    "isRestrictionTime",
-                                    true
-                                  )
-                                }
-                              />
-                              <Typography
-                                sx={{
-                                  fontSize: "14px",
-                                  color: "#2C5079",
-                                  mt: "0.5rem",
-                                  mr: 1,
-                                  ml: 1,
-                                }}
-                              >
-                                Not Exeed
-                              </Typography>
-                              <Box className="w-[15%]">
+                              <div>
                                 <Textbox
-                                  disable={!checkpoint.isRestrictionTime}
-                                  inputType={"number"}
+                                  header={"ละติจูด"}
+                                  inputType={"text"}
                                   placeHolder={"Type here..."}
-                                  handleChange={(e: any) =>
+                                  handleChange={(
+                                    e: React.ChangeEvent<HTMLInputElement>
+                                  ) =>
                                     handleFieldDataInCheckpointChange(
                                       checkpoint.checkPointId,
-                                      "timeLimit",
+                                      "latitude",
                                       e.target.value
                                     )
                                   }
-                                  value={checkpoint.timeLimit}
-                                  name={"timeLimit"}
+                                  value={checkpoint.latitude}
+                                  name={"latitude"}
                                 />
+                              </div>
+                              <div>
+                                <Textbox
+                                  header={"ลองจิจูด"}
+                                  inputType={"text"}
+                                  placeHolder={"Type here..."}
+                                  handleChange={(
+                                    e: React.ChangeEvent<HTMLInputElement>
+                                  ) =>
+                                    handleFieldDataInCheckpointChange(
+                                      checkpoint.checkPointId,
+                                      "longitude",
+                                      e.target.value
+                                    )
+                                  }
+                                  value={checkpoint.longitude}
+                                  name={"longitude"}
+                                />
+                              </div>
+                              <div>
+                                <Textbox
+                                  header={"อัลติจูด"}
+                                  inputType={"text"}
+                                  placeHolder={"Type here..."}
+                                  handleChange={(
+                                    e: React.ChangeEvent<HTMLInputElement>
+                                  ) =>
+                                    handleFieldDataInCheckpointChange(
+                                      checkpoint.checkPointId,
+                                      "altitude",
+                                      e.target.value
+                                    )
+                                  }
+                                  value={checkpoint.altitude}
+                                  name={"altitude"}
+                                />
+                              </div>
+                            </div>
+                            <Typography
+                              textAlign="left"
+                              sx={{
+                                fontSize: "14px",
+                                paddingBottom: "0.25rem",
+                                color: "#2C5079",
+                                fontWeight: "700",
+                              }}
+                            >
+                              Patrol Time Restriction
+                            </Typography>
+                            <div className="w-fit">
+                              <Box className="flex">
+                                <Checkbox
+                                  className="mb-2"
+                                  checked={!checkpoint.isRestrictionTime}
+                                  onCheckedChange={(e) =>
+                                    handleFieldDataInCheckpointChange(
+                                      checkpoint.checkPointId,
+                                      "isRestrictionTime",
+                                      false
+                                    )
+                                  }
+                                />
+                                <Typography
+                                  sx={{
+                                    fontSize: "14px",
+                                    color: "#2C5079",
+                                    mt: "0.25rem",
+                                    ml: 1,
+                                  }}
+                                >
+                                  No Restriction
+                                </Typography>
                               </Box>
-                              <Typography
-                                sx={{
-                                  fontSize: "14px",
-                                  color: "#2C5079",
-                                  mt: "0.5rem",
-                                  ml: 1,
-                                }}
-                              >
-                                minutes from previous check point
-                              </Typography>
-                            </Box>
-                          </div>
-                          {checkpoint.status === "new" ||
-                            (checkpoint.status === "edit" && (
-                              <Typography
-                                sx={{
-                                  fontSize: "14px",
-                                  color: "#F66262",
-                                  mt: "0.5rem",
-                                  ml: 1,
-                                }}
-                              >
-                                {checkpoint.status === "new"
-                                  ? "New Checkpoint: Please save."
-                                  : "Edit Checkpoint: Please save."}
-                              </Typography>
-                            ))}
+                              <Box className="flex">
+                                <Checkbox
+                                  className="mb-2 mt-1"
+                                  checked={checkpoint.isRestrictionTime}
+                                  onCheckedChange={(e) =>
+                                    handleFieldDataInCheckpointChange(
+                                      checkpoint.checkPointId,
+                                      "isRestrictionTime",
+                                      true
+                                    )
+                                  }
+                                />
+                                <Typography
+                                  sx={{
+                                    fontSize: "14px",
+                                    color: "#2C5079",
+                                    mt: "0.5rem",
+                                    mr: 1,
+                                    ml: 1,
+                                  }}
+                                >
+                                  Not Exeed
+                                </Typography>
+                                <Box className="w-[15%]">
+                                  <Textbox
+                                    disable={!checkpoint.isRestrictionTime}
+                                    inputType={"number"}
+                                    placeHolder={"Type here..."}
+                                    handleChange={(e: any) =>
+                                      handleFieldDataInCheckpointChange(
+                                        checkpoint.checkPointId,
+                                        "timeLimit",
+                                        e.target.value
+                                      )
+                                    }
+                                    value={checkpoint.timeLimit}
+                                    name={"timeLimit"}
+                                  />
+                                </Box>
+                                <Typography
+                                  sx={{
+                                    fontSize: "14px",
+                                    color: "#2C5079",
+                                    mt: "0.5rem",
+                                    ml: 1,
+                                  }}
+                                >
+                                  minutes from previous check point
+                                </Typography>
+                              </Box>
+                            </div>
+                            {checkpoint.status === "new" ||
+                              (checkpoint.status === "edit" && (
+                                <Typography
+                                  sx={{
+                                    fontSize: "14px",
+                                    color: "#F66262",
+                                    mt: "0.5rem",
+                                    ml: 1,
+                                  }}
+                                >
+                                  {checkpoint.status === "new"
+                                    ? "New Checkpoint: Please save."
+                                    : "Edit Checkpoint: Please save."}
+                                </Typography>
+                              ))}
+                          </Box>
+                          <Box className="flex align-middle ml-2 justify-around">
+                            <Button
+                              onClick={() =>
+                                removeCheckpoint(
+                                  checkpoint.checkPointId,
+                                  checkpoint.status
+                                )
+                              }
+                              className="bg-[#F66262] rounded-lg"
+                            >
+                              <Trash color="white" />
+                            </Button>
+                          </Box>
                         </Box>
-                        <Box className="flex align-middle ml-2 justify-around">
-                          <Button
-                            onClick={() =>
-                              removeCheckpoint(
-                                checkpoint.checkPointId,
-                                checkpoint.status
-                              )
-                            }
-                            className="bg-[#F66262] rounded-lg"
-                          >
-                            <Trash color="white" />
-                          </Button>
-                        </Box>
-                      </Box>
-                    ))}
+                      );
+                    })}
                     <Box className="justify-start flex w-full">
                       <AddButton onAddBtnClick={addCheckPoint} />
                     </Box>
