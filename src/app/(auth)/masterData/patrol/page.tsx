@@ -400,19 +400,18 @@ export default function Patrol() {
   return (
     <div>
       <Navbar menu={"Master Data"} submenu={"Patrol"} />
-      <Box className="px-2">
+      <Box className='px-2'>
         {/* Main Content */}
         <Box px={2} pb={2}>
           {/* Sub Header */}
-          <Box className="w-full">
-            <Box justifyContent="space-between" className="flex">
-              <Box className="space-x-4 py-4 flex">
+          <Box className='w-full'>
+            <Box justifyContent='space-between' className='flex'>
+              <Box className='space-x-4 py-4 flex'>
                 <Box
                   sx={{ borderRadius: "10px" }}
-                  className="justify-center flex p-1 pb-0 bg-white"
-                >
+                  className='justify-center flex p-1 pb-0 bg-white'>
                   <Checkbox
-                    className="bg-[#EBF4F6] border-none"
+                    className='bg-[#EBF4F6] border-none'
                     checked={isCheckpointPage}
                     onCheckedChange={handleSelecCheckpointPage}
                   />
@@ -441,20 +440,19 @@ export default function Patrol() {
                 </Box>
               </Box>
 
-              <Box className="space-x-2 py-4 flex">
+              <Box className='space-x-2 py-4 flex'>
                 <Input
-                  type="text"
-                  placeholder="Search..."
+                  type='text'
+                  placeholder='Search...'
                   style={{
                     boxShadow: "0px 5px 12px rgba(29, 122, 155, 0.1)",
                     borderRadius: "10px",
                   }}
-                  className="border-none bg-white p-4 mr-2 min-w-80 custom-placeholder"
+                  className='border-none bg-white p-4 mr-2 min-w-80 custom-placeholder'
                 />
                 <Button
-                  className="w-40 bg-[#1D7A9B] hover:bg-[#D9F0EC] hover:text-[#1D7A9B]"
-                  onClick={setToggleFilter}
-                >
+                  className='w-40 bg-[#1D7A9B] hover:bg-[#D9F0EC] hover:text-[#1D7A9B]'
+                  onClick={setToggleFilter}>
                   <Filter size={20} style={{ marginRight: "5px" }} /> Filter
                 </Button>
               </Box>
@@ -647,14 +645,13 @@ export default function Patrol() {
 
           {/* TableFooter*/}
           <TableContainer
-            className="bg-white border-t"
+            className='bg-white border-t'
             sx={{
               borderRadius: "0px 0px 15px 15px",
               boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
-            }}
-          >
+            }}>
             <Table>
-              <TableFooter className="w-full">
+              <TableFooter className='w-full'>
                 <TableRow>
                   <TableCell colSpan={6}>
                     <Box
@@ -687,18 +684,17 @@ export default function Patrol() {
       </Box>
 
       {openFilterModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex flex-col">
+        <div className='fixed inset-0 bg-black bg-opacity-40 flex flex-col'>
           <Button
-            className="w-[122px] text-[#1D7A9B] bg-white hover:bg-[#D9F0EC] hover:text-[#1D7A9B] fixed right-6 top-[80px]"
-            onClick={() => setOpenFilterModal(false)}
-          >
+            className='w-[122px] text-[#1D7A9B] bg-white hover:bg-[#D9F0EC] hover:text-[#1D7A9B] fixed right-6 top-[80px]'
+            onClick={() => setOpenFilterModal(false)}>
             <Filter size={20} style={{ marginRight: "5px" }} /> Filter
           </Button>
-          <div className="bg-white rounded-lg shadow-lg h-[600px] w-[498px] overflow-auto fixed right-6 top-[136px]">
+          <div className='bg-white rounded-lg shadow-lg h-[600px] w-[498px] overflow-auto fixed right-6 top-[136px]'>
             {/* Header */}
-            <Box className="flex w-[full] bg-[#D9F0EC] py-2 rounded-t-lg justify-center">
-              <Box className="w-[100%] justify-center flex">
-                <Typography className="w-fit text-xl font-semibold text-[#1D7A9B] h-fit mt-1 ml-[78px] flex">
+            <Box className='flex w-[full] bg-[#D9F0EC] py-2 rounded-t-lg justify-center'>
+              <Box className='w-[100%] justify-center flex'>
+                <Typography className='w-fit text-xl font-semibold text-[#1D7A9B] h-fit mt-1 ml-[78px] flex'>
                   <Filter
                     size={20}
                     style={{ marginRight: "5px", marginTop: "3px" }}
@@ -707,11 +703,10 @@ export default function Patrol() {
                 </Typography>
               </Box>
               <Button2
-                className="bg-transparent text-[#83A2AD] float"
+                className='bg-transparent text-[#83A2AD] float'
                 sx={{ position: "relative", right: 0 }}
-                onClick={() => setOpenFilterModal(false)}
-              >
-                <CloseIcon className="w-[26px] h-[26px]" />
+                onClick={() => setOpenFilterModal(false)}>
+                <CloseIcon className='w-[26px] h-[26px]' />
               </Button2>
             </Box>
 
@@ -722,10 +717,10 @@ export default function Patrol() {
             >
               <Box className="w-full space-y-6 pt-4">
                 {/* Segment */}
-                <Box className="w-full">
-                  <FormControl focused className="w-full">
+                <Box className='w-full'>
+                  <FormControl focused className='w-full'>
                     <InputLabel
-                      className="text-[#2C5079"
+                      className='text-[#2C5079'
                       sx={{
                         "&.Mui-focused": {
                           color: "#2C5079",
@@ -736,8 +731,8 @@ export default function Patrol() {
                       Segment
                     </InputLabel>
                     <Select
-                      label="Segment"
-                      size="small"
+                      label='Segment'
+                      size='small'
                       displayEmpty
                       value={undefined}
                       // onChange={handleAddSegmentChange}
@@ -764,13 +759,11 @@ export default function Patrol() {
                         "& .MuiSelect-icon": {
                           color: "#83A2AD", // Customize arrow icon color
                         },
-                      }}
-                    >
+                      }}>
                       {segments.map((segment, index) => (
                         <MenuItem
                           key={`${segment.smid}-${index}`}
-                          value={segment.desc}
-                        >
+                          value={segment.desc}>
                           {segment.desc}
                         </MenuItem>
                       ))}
@@ -779,10 +772,10 @@ export default function Patrol() {
                 </Box>
 
                 {/* Group */}
-                <Box className="w-full">
-                  <FormControl focused className="w-full">
+                <Box className='w-full'>
+                  <FormControl focused className='w-full'>
                     <InputLabel
-                      className="text-[#2C5079"
+                      className='text-[#2C5079'
                       sx={{
                         "&.Mui-focused": {
                           color: "#2C5079",
@@ -793,8 +786,8 @@ export default function Patrol() {
                       Group
                     </InputLabel>
                     <Select
-                      label="Group"
-                      size="small"
+                      label='Group'
+                      size='small'
                       displayEmpty
                       value={undefined}
                       // onChange={handleAddSegmentChange}
@@ -821,13 +814,11 @@ export default function Patrol() {
                         "& .MuiSelect-icon": {
                           color: "#83A2AD", // Customize arrow icon color
                         },
-                      }}
-                    >
+                      }}>
                       {groups.map((group, index) => (
                         <MenuItem
                           key={`${group.gid}-${index}`}
-                          value={group.desc}
-                        >
+                          value={group.desc}>
                           {group.desc}
                         </MenuItem>
                       ))}
@@ -836,10 +827,10 @@ export default function Patrol() {
                 </Box>
 
                 {/* Zone */}
-                <Box className="w-full">
-                  <FormControl focused className="w-full">
+                <Box className='w-full'>
+                  <FormControl focused className='w-full'>
                     <InputLabel
-                      className="text-[#2C5079"
+                      className='text-[#2C5079'
                       sx={{
                         "&.Mui-focused": {
                           color: "#2C5079",
@@ -850,8 +841,8 @@ export default function Patrol() {
                       Zone
                     </InputLabel>
                     <Select
-                      label="Zone"
-                      size="small"
+                      label='Zone'
+                      size='small'
                       displayEmpty
                       value={undefined}
                       // onChange={handleAddSegmentChange}
@@ -878,13 +869,11 @@ export default function Patrol() {
                         "& .MuiSelect-icon": {
                           color: "#83A2AD", // Customize arrow icon color
                         },
-                      }}
-                    >
+                      }}>
                       {zones.map((zone, index) => (
                         <MenuItem
                           key={`${zone.zid}-${index}`}
-                          value={zone.desc}
-                        >
+                          value={zone.desc}>
                           {zone.desc}
                         </MenuItem>
                       ))}
@@ -893,10 +882,10 @@ export default function Patrol() {
                 </Box>
 
                 {/* Department */}
-                <Box className="w-full">
-                  <FormControl focused className="w-full">
+                <Box className='w-full'>
+                  <FormControl focused className='w-full'>
                     <InputLabel
-                      className="text-[#2C5079"
+                      className='text-[#2C5079'
                       sx={{
                         "&.Mui-focused": {
                           color: "#2C5079",
@@ -907,8 +896,8 @@ export default function Patrol() {
                       Department
                     </InputLabel>
                     <Select
-                      label="Department"
-                      size="small"
+                      label='Department'
+                      size='small'
                       displayEmpty
                       value={undefined}
                       // onChange={handleAddSegmentChange}
@@ -935,13 +924,11 @@ export default function Patrol() {
                         "& .MuiSelect-icon": {
                           color: "#83A2AD", // Customize arrow icon color
                         },
-                      }}
-                    >
+                      }}>
                       {departments.map((department, index) => (
                         <MenuItem
                           key={`${department.did}-${index}`}
-                          value={department.desc}
-                        >
+                          value={department.desc}>
                           {department.desc}
                         </MenuItem>
                       ))}
@@ -950,10 +937,10 @@ export default function Patrol() {
                 </Box>
 
                 {/* Customer */}
-                <Box className="w-full">
-                  <FormControl focused className="w-full">
+                <Box className='w-full'>
+                  <FormControl focused className='w-full'>
                     <InputLabel
-                      className="text-[#2C5079"
+                      className='text-[#2C5079'
                       sx={{
                         "&.Mui-focused": {
                           color: "#2C5079",
@@ -964,8 +951,8 @@ export default function Patrol() {
                       Customer
                     </InputLabel>
                     <Select
-                      label="Customer"
-                      size="small"
+                      label='Customer'
+                      size='small'
                       displayEmpty
                       value={undefined}
                       // onChange={handleAddSegmentChange}
@@ -992,13 +979,11 @@ export default function Patrol() {
                         "& .MuiSelect-icon": {
                           color: "#83A2AD", // Customize arrow icon color
                         },
-                      }}
-                    >
+                      }}>
                       {segments.map((segment, index) => (
                         <MenuItem
                           key={`${segment.smid}-${index}`}
-                          value={segment.desc}
-                        >
+                          value={segment.desc}>
                           {segment.desc}
                         </MenuItem>
                       ))}
@@ -1059,7 +1044,7 @@ export default function Patrol() {
                 </Box>
 
                 {/* IsActive */}
-                <Box className="w-full flex space-x-1">
+                <Box className='w-full flex space-x-1'>
                   <Switch
                     name="isActive"
                     //  checked={formData.isActive}
@@ -1077,9 +1062,9 @@ export default function Patrol() {
             </Box>
 
             {/* Footer */}
-            <Box className="flex w-full justify-center px-6 pt-1 pb-4">
-              <Box className="space-x-4">
-                <Button className="w-32 h-11 bg-white text-[#F66262] border-[1px] border-[#F66262] hover:text-white hover:bg-[#F66262]">
+            <Box className='flex w-full justify-center px-6 pt-1 pb-4'>
+              <Box className='space-x-4'>
+                <Button className='w-32 h-11 bg-white text-[#F66262] border-[1px] border-[#F66262] hover:text-white hover:bg-[#F66262]'>
                   Reset
                 </Button>
                 <Button className="w-32 h-11 enabled:bg-gradient-to-r from-[#00336C] to-[#37B7C3] hover:from-[#2BA441] hover:to-[#A7E5A6] disabled:bg-[#83A2AD]">
