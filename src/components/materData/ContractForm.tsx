@@ -119,7 +119,7 @@ const mockIsSameDayList = [
 ];
 
 interface ContractFormProps {
-  selectedCustomer: any;
+  selectedCustomer?: any;
   closeModal: any;
   customerAreas: any[];
   isEditContract: boolean;
@@ -253,13 +253,15 @@ const ContractForm = ({
 
   const addNewContractinitial = (selectedCustId: any) => {
     //Mapped area
-    const customerAreas: AreaData[] = data.areas.filter(area => area.custId === selectedCustId).map((area) => ({
-      id: area.id,
-      custId: area.custId,
-      name: area.name,
-      totalChkPt: 0,
-      round: []
-    }));
+    const customerAreas: AreaData[] = data.areas
+      .filter((area) => area.custId === selectedCustId)
+      .map((area) => ({
+        id: area.id,
+        custId: area.custId,
+        name: area.name,
+        totalChkPt: 0,
+        round: [],
+      }));
     setAreas(customerAreas);
     // const mappedAreaList: AreaListType[] = customerAreas.map((area: AreaData) => {
     //   return {
@@ -324,7 +326,9 @@ const ContractForm = ({
       to: new Date(filteredContract?.finishDate || "") || date?.to,
     });
     setStartDate(new Date(filteredContract?.startDate || new Date()));
-    setFinishDate(new Date(filteredContract?.finishDate || addDays(new Date(), 1)));
+    setFinishDate(
+      new Date(filteredContract?.finishDate || addDays(new Date(), 1))
+    );
 
     //attachmentList
     const attachments = filteredContract?.attachment;
@@ -427,7 +431,7 @@ const ContractForm = ({
 
     // Set the updated areaList
     setAreaList(updatedAreaList);
-    console.log("updatedAreaList =", updatedAreaList)
+    console.log("updatedAreaList =", updatedAreaList);
   };
 
   const handleFieldShiftListTypeChange = (
@@ -568,11 +572,14 @@ const ContractForm = ({
     );
 
     const mappedAlertList: PatrolAlertListType[] =
-    updatedPatrolAlertList.map((alertTo) => ({
+      updatedPatrolAlertList.map((alertTo) => ({
         id: alertTo.id,
         isAsm: alertTo.isAsm,
         name: alertTo.name,
-        email: alertTo.isAsm ===1 ? asmAlertNames.find((a) => a.desc === alertTo.name)?.email : alertTo.email,
+        email:
+          alertTo.isAsm === 1
+            ? asmAlertNames.find((a) => a.desc === alertTo.name)?.email
+            : alertTo.email,
         otherPositionId: alertTo.otherPositionId,
         desc: alertTo.name,
       })) || alertToList;
@@ -807,7 +814,10 @@ const ContractForm = ({
       "image/gif",
     ];
     const maxFileSize = 2 * 1024 * 1024; // 2 MB in bytes
-    if (!files) {console.log("!files"); return;};
+    if (!files) {
+      console.log("!files");
+      return;
+    }
     const file = files[0];
     if (!allowedTypes.includes(file?.type)) {
       alert("Only PDF, JPG, PNG, and GIF files are allowed.");
@@ -848,12 +858,12 @@ const ContractForm = ({
   };
 
   const handleRemoveNewFile = (fileName: any) => {
-    const remainFile = selectNewFile.filter(f => f.name != fileName);
+    const remainFile = selectNewFile.filter((f) => f.name != fileName);
     setSelectNewFile(remainFile);
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 flex flex-col items-center justify-center z-indextop">
+    <div className='fixed inset-0 bg-black bg-opacity-40 flex flex-col items-center justify-center z-indextop'>
       {/* Header */}
       {!showAlertToDeatil && (
         <>
@@ -865,11 +875,9 @@ const ContractForm = ({
               paddingY: "5px",
               borderRadius: "8px 8px 0px 0px", // Adjust rounded corners as needed
               justifyContent: "center",
-            }}
-          >
+            }}>
             <Box
-              sx={{ width: "100%", display: "flex", justifyContent: "center" }}
-            >
+              sx={{ width: "100%", display: "flex", justifyContent: "center" }}>
               <Typography
                 sx={{
                   width: "fit-content",
@@ -878,50 +886,46 @@ const ContractForm = ({
                   color: "#1D7A9B",
                   marginTop: "0.25rem",
                   marginLeft: "78px",
-                }}
-              >
+                }}>
                 {formHeader}
               </Typography>
             </Box>
             <Button2
-              className="bg-transparent float w-fit"
+              className='bg-transparent float w-fit'
               sx={{ position: "relative", right: 0, top: 0, color: "#83A2AD" }}
-              onClick={handleCloseContractForm}
-            >
+              onClick={handleCloseContractForm}>
               <IoClose size={26} />
             </Button2>
           </Box>
-          <div className="bg-white rounded-b-lg shadow-lg min-h-[544px] max-h-[654px] w-[700px]">
+          <div className='bg-white rounded-b-lg shadow-lg min-h-[544px] max-h-[654px] w-[700px]'>
             {/* Body */}
-            <div className="max-h-[528px] min-h-[528px] overflow-auto">
-              <Box className="w-full px-6 py-2 rounded-t-lg pb-6">
+            <div className='max-h-[528px] min-h-[528px] overflow-auto'>
+              <Box className='w-full px-6 py-2 rounded-t-lg pb-6'>
                 {/* View / Edit Customer */}
                 {isEdit && (
                   <Box>
-                    <Box className="flex w-full space-x-5 pt-2">
-                      <Box className="w-full border-b-2 pb-2 flex">
-                        <Box className="w-[70%]">
-                          <Box className="flex">
+                    <Box className='flex w-full space-x-5 pt-2'>
+                      <Box className='w-full border-b-2 pb-2 flex'>
+                        <Box className='w-[70%]'>
+                          <Box className='flex'>
                             <Typography
-                              textAlign="left"
+                              textAlign='left'
                               sx={{
                                 fontWeight: "700",
                                 color: "#2C5079",
                                 fontSize: "16px",
                                 paddingBottom: "0.25rem",
-                              }}
-                            >
+                              }}>
                               {`Customer : `}
                             </Typography>
                             <Typography
-                              textAlign="left"
+                              textAlign='left'
                               sx={{
                                 color: "#2C5079",
                                 fontSize: "16px",
                                 paddingBottom: "0.25rem",
                                 paddingLeft: "0.25rem",
-                              }}
-                            >
+                              }}>
                               {`${customer?.customerName}` + " "}
                             </Typography>
                           </Box>
@@ -933,14 +937,13 @@ const ContractForm = ({
                               textDecorationLine: "underline",
                               fontSize: "16px",
                             }}
-                            textAlign={"left"}
-                          >
+                            textAlign={"left"}>
                             Total : {contractList.length} contract
                             {contractList.length > 1 ? "s" : ""}
                           </Typography>}
                         </Box>
 
-                        <Box className="w-[30%] flex justify-end">
+                        <Box className='w-[30%] flex justify-end'>
                           {/* <Button
                         onClick={addArea}
                         className=" bg-[#1D7A9B] hover:bg-[#D9F0EC] hover:text-[#1D7A9B] px-4"
@@ -951,8 +954,8 @@ const ContractForm = ({
                       </Box>
                     </Box>
 
-                    <Box className="flex w-full space-x-5 pt-2">
-                      <Box className="w-1/2">
+                    <Box className='flex w-full space-x-5 pt-2'>
+                      <Box className='w-1/2'>
                         <Selector
                           disable={!isFromCustomerPage && contractList.length < 2}
                           selectorLabel={"Contract No."}
@@ -981,35 +984,32 @@ const ContractForm = ({
                       className={`bg-[#D9F0EC] w-full rounded-lg`}
                     />
                   </Box> */}
-                      <Box className="w-1/2">
+                      <Box className='w-1/2'>
                         <Typography
-                          textAlign="left"
+                          textAlign='left'
                           sx={{
                             fontWeight: "700",
                             color: "#2C5079",
                             fontSize: "14px",
                             paddingBottom: "0.25rem",
-                          }}
-                        >
+                          }}>
                           Contract Status
                         </Typography>
-                        <Box display={"flex"} className="space-x-2">
+                        <Box display={"flex"} className='space-x-2'>
                           <Box
                             sx={{ borderRadius: "10px" }}
                             className={`${
                               isContractActive
                                 ? `bg-[#E2F7E1] border-[#86DC89]`
                                 : `bg-white border-[#2C5079]`
-                            } flex p-1 h-fit border-[1px] w-1/2`}
-                          >
+                            } flex p-1 h-fit border-[1px] w-1/2`}>
                             <Checkbox3
                               onCheckedChange={handleContractActive}
                               checked={isContractActive}
                             />
                             <Typography
                               sx={{ color: "#2C5079" }}
-                              className="py-1 px-2"
-                            >
+                              className='py-1 px-2'>
                               Active
                             </Typography>
                           </Box>
@@ -1019,16 +1019,14 @@ const ContractForm = ({
                               !isContractActive
                                 ? `bg-[#E2F7E1] border-[#86DC89]`
                                 : `bg-white border-[#2C5079]`
-                            } flex p-1 h-fit border-[1px] w-1/2`}
-                          >
+                            } flex p-1 h-fit border-[1px] w-1/2`}>
                             <Checkbox3
                               onCheckedChange={handleContractInactive}
                               checked={!isContractActive}
                             />
                             <Typography
-                              className="py-1 px-2"
-                              sx={{ color: "#2C5079" }}
-                            >
+                              className='py-1 px-2'
+                              sx={{ color: "#2C5079" }}>
                               Inactive
                             </Typography>
                           </Box>
@@ -1036,17 +1034,16 @@ const ContractForm = ({
                       </Box>
                     </Box>
 
-                    <Box className="flex w-full space-x-7 pt-2">
-                      <Box className="w-1/2">
+                    <Box className='flex w-full space-x-7 pt-2'>
+                      <Box className='w-1/2'>
                         <Typography
-                          textAlign="left"
+                          textAlign='left'
                           sx={{
                             fontWeight: "700",
                             color: "#2C5079",
                             fontSize: "14px",
                             paddingBottom: "0.25rem",
-                          }}
-                        >
+                          }}>
                           Start Date
                         </Typography>
                         <DatePicker
@@ -1056,16 +1053,15 @@ const ContractForm = ({
                         />
                       </Box>
 
-                      <Box className="w-1/2">
+                      <Box className='w-1/2'>
                         <Typography
-                          textAlign="left"
+                          textAlign='left'
                           sx={{
                             fontWeight: "700",
                             color: "#2C5079",
                             fontSize: "14px",
                             paddingBottom: "0.25rem",
-                          }}
-                        >
+                          }}>
                           End Date
                         </Typography>
                         <DatePicker
@@ -1077,27 +1073,25 @@ const ContractForm = ({
                     </Box>
 
                     <Typography
-                      textAlign="left"
+                      textAlign='left'
                       sx={{
                         fontWeight: "700",
                         color: "#2C5079",
                         fontSize: "14px",
                         paddingBottom: "0.25rem",
                         marginTop: "0.5rem",
-                      }}
-                    >
+                      }}>
                       Attachment
                     </Typography>
                     <Typography
-                      textAlign="left"
+                      textAlign='left'
                       sx={{
                         fontSize: "14px",
                         color: "#4C9BF5",
                         fontWeight: "700",
                         paddingTop: "0.5rem",
                         pb: "0.5rem",
-                      }}
-                    >
+                      }}>
                       Existing Files :
                     </Typography>
                     <Grid2 container sx={{ width: "100%", mb: 1 }} spacing={2}>
@@ -1106,23 +1100,23 @@ const ContractForm = ({
                           <Box
                             key={index}
                             sx={{ borderRadius: "10px" }}
-                            className="justify-between flex p-1 bg-white max-w-[220px] border-[1px] border-[#4C9BF5]"
-                          >
+                            className='justify-between flex p-1 bg-white max-w-[220px] border-[1px] border-[#4C9BF5]'>
                             <Typography
                               sx={{
                                 color: "#2C5079",
                                 ml: "0.25rem",
                                 paddingY: "0.25rem",
-                                width: "90%"
-                              }}
-                            >
-                              {attach.length > 18 ? attach.substring(0, 18)+"..." : attach}
+                                width: "90%",
+                              }}>
+                              {attach.length > 18
+                                ? attach.substring(0, 18) + "..."
+                                : attach}
                             </Typography>
                             <Trash
                               size={22}
-                              color="#F66262"
+                              color='#F66262'
                               style={{ marginTop: 5 }}
-                              className="cursor-pointer"
+                              className='cursor-pointer'
                             />
                           </Box>
                         </Grid2>
@@ -1130,23 +1124,25 @@ const ContractForm = ({
                     </Grid2>
                     {selectNewFile.length > 0 && (
                       <Typography
-                        textAlign="left"
+                        textAlign='left'
                         sx={{
                           fontSize: "14px",
                           color: "#4C9BF5",
                           fontWeight: "700",
                           paddingTop: "0.5rem",
                           pb: "0.5rem",
-                        }}
-                      >
+                        }}>
                         New Upload Files :
                       </Typography>
                     )}
-                    <Grid2 container sx={{ width: "100%", mb:1.5 }} spacing={2}>
+                    <Grid2
+                      container
+                      sx={{ width: "100%", mb: 1.5 }}
+                      spacing={2}>
                       {selectNewFile.map((file, index) => (
                         <Grid2 size={4} key={index}>
-                          <Box className="justify-between flex p-1 bg-white border-[1px] border-[#4C9BF5] rounded-lg">
-                          <Typography className="py-1 pl-1 text-[#2C5079] w-[90%]">
+                          <Box className='justify-between flex p-1 bg-white border-[1px] border-[#4C9BF5] rounded-lg'>
+                            <Typography className='py-1 pl-1 text-[#2C5079] w-[90%]'>
                               {file.name.length > 17
                                 ? file.name.substring(0, 17) + "..."
                                 : file.name}
@@ -1154,24 +1150,23 @@ const ContractForm = ({
                             <Trash
                               onClick={() => handleRemoveNewFile(file.name)}
                               size={22}
-                              color="#F66262"
+                              color='#F66262'
                               style={{ marginTop: 5 }}
-                              className="cursor-pointer"
+                              className='cursor-pointer'
                             />
                           </Box>
                         </Grid2>
                       ))}
                     </Grid2>
-                    <Box className="w-full flex space-x-3 mb-2">
+                    <Box className='w-full flex space-x-3 mb-2'>
                       <FormControl>
                         <Button
                           onClick={handleAddFileClick}
-                          className="w-[82px] bg-[#1D7A9B] hover:bg-[#D9F0EC] hover:text-[#1D7A9B] pr-4"
-                        >
+                          className='w-[82px] bg-[#1D7A9B] hover:bg-[#D9F0EC] hover:text-[#1D7A9B] pr-4'>
                           + Add File
                         </Button>
                         <input
-                          type="file"
+                          type='file'
                           ref={inputRef}
                           hidden
                           onChange={handleFileChange}
@@ -1184,8 +1179,8 @@ const ContractForm = ({
                 {/* Add New Customer */}
                 {!isEdit && (
                   <Box>
-                    <Box className="flex w-full space-x-5 pt-2">
-                      <Box className="w-1/2">
+                    <Box className='flex w-full space-x-5 pt-2'>
+                      <Box className='w-1/2'>
                         <Selector
                           selectorLabel={"Customer"}
                           itemSource={customerList}
@@ -1195,67 +1190,75 @@ const ContractForm = ({
                         />
                       </Box>
 
-                      <Box className="w-1/2">
+                      <Box className='w-1/2'>
                         <Textbox
-                          header="Contract Number"
-                          name="contractNumber"
-                          inputType="text"
-                          placeHolder="Type here..."
+                          header='Contract Number'
+                          name='contractNumber'
+                          inputType='text'
+                          placeHolder='Type here...'
                           value={addContractNo}
                           handleChange={handleChange}
                         />
                       </Box>
                     </Box>
 
-                    <Box className="flex w-full space-x-5 pt-2">
-                      <Box className="w-1/2">
+                    <Box className='flex w-full space-x-5 pt-2'>
+                      <Box className='w-1/2'>
                         <Typography
-                          textAlign="left"
+                          textAlign='left'
                           sx={{
                             fontWeight: "700",
                             color: "#2C5079",
                             fontSize: "14px",
                             paddingBottom: "0.25rem",
-                          }}
-                        >
+                          }}>
                           Start Date
                         </Typography>
-                        <DatePicker date={startDate} setDate={setStartDate} h={"h-10"} />
+                        <DatePicker
+                          date={startDate}
+                          setDate={setStartDate}
+                          h={"h-10"}
+                        />
                       </Box>
 
-                      <Box className="w-1/2">
+                      <Box className='w-1/2'>
                         <Typography
-                          textAlign="left"
+                          textAlign='left'
                           sx={{
                             fontWeight: "700",
                             color: "#2C5079",
                             fontSize: "14px",
                             paddingBottom: "0.25rem",
-                          }}
-                        >
+                          }}>
                           End Date
                         </Typography>
-                        <DatePicker h={"h-10"} date={finishDate} setDate={setFinishDate}/>
+                        <DatePicker
+                          h={"h-10"}
+                          date={finishDate}
+                          setDate={setFinishDate}
+                        />
                       </Box>
                     </Box>
 
                     <Typography
-                      textAlign="left"
+                      textAlign='left'
                       sx={{
                         fontWeight: "700",
                         color: "#2C5079",
                         fontSize: "14px",
                         paddingBottom: "0.25rem",
                         marginTop: "0.5rem",
-                      }}
-                    >
+                      }}>
                       Attachment
                     </Typography>
-                    <Grid2 container sx={{ width: "100%", mb:1.5 }} spacing={2}>
+                    <Grid2
+                      container
+                      sx={{ width: "100%", mb: 1.5 }}
+                      spacing={2}>
                       {selectNewFile.map((file, index) => (
                         <Grid2 size={4} key={index}>
-                          <Box className="justify-between flex p-1 bg-white border-[1px] border-[#4C9BF5] rounded-lg">
-                            <Typography className="py-1 pl-1 text-[#2C5079] w-[90%]">
+                          <Box className='justify-between flex p-1 bg-white border-[1px] border-[#4C9BF5] rounded-lg'>
+                            <Typography className='py-1 pl-1 text-[#2C5079] w-[90%]'>
                               {file.name.length > 17
                                 ? file.name.substring(0, 17) + "..."
                                 : file.name}
@@ -1263,24 +1266,23 @@ const ContractForm = ({
                             <Trash
                               onClick={() => handleRemoveNewFile(file.name)}
                               size={22}
-                              color="#F66262"
+                              color='#F66262'
                               style={{ marginTop: 5 }}
-                              className="cursor-pointer"
+                              className='cursor-pointer'
                             />
                           </Box>
                         </Grid2>
                       ))}
                     </Grid2>
-                    <Box className="w-full flex space-x-3 mb-2">
+                    <Box className='w-full flex space-x-3 mb-2'>
                       <FormControl>
                         <Button
                           onClick={handleAddFileClick}
-                          className="w-[82px] bg-[#1D7A9B] hover:bg-[#D9F0EC] hover:text-[#1D7A9B] pr-4"
-                        >
+                          className='w-[82px] bg-[#1D7A9B] hover:bg-[#D9F0EC] hover:text-[#1D7A9B] pr-4'>
                           + Add File
                         </Button>
                         <input
-                          type="file"
+                          type='file'
                           ref={inputRef}
                           hidden
                           onChange={handleFileChange}
@@ -1293,28 +1295,27 @@ const ContractForm = ({
                 <Box sx={{ width: "100%" }}>
                   <TabContext value={tabValue}>
                     <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-                      <TabList onChange={handleTabChange} aria-label="areaTabs">
-                        <Tab label="Shift" value="1" />
-                        <Tab label="Manpower" value="2" />
-                        <Tab label="Patrol Alert List" value="3" />
-                        <Tab label="Patrol Round" value="4" />
+                      <TabList onChange={handleTabChange} aria-label='areaTabs'>
+                        <Tab label='Shift' value='1' />
+                        <Tab label='Manpower' value='2' />
+                        <Tab label='Patrol Alert List' value='3' />
+                        <Tab label='Patrol Round' value='4' />
                       </TabList>
                     </Box>
-                    <TabPanel value="1" sx={{ padding: 0, py: "0.25rem" }}>
-                      <Box className="w-full text-center items-center">
+                    <TabPanel value='1' sx={{ padding: 0, py: "0.25rem" }}>
+                      <Box className='w-full text-center items-center'>
                         <Typography
                           sx={{
                             color: "#4C9BF5",
                             textDecorationLine: "underline",
                             fontSize: "16px",
                             mb: "0.25rem",
-                          }}
-                        >
+                          }}>
                           Total shift: {shiftList.length}
                         </Typography>
                         {shiftList.map((shift, index) => (
-                          <div className="mb-2" key={index}>
-                            <Box className="flex w-full">
+                          <div className='mb-2' key={index}>
+                            <Box className='flex w-full'>
                               <Box
                                 key={index}
                                 sx={{
@@ -1324,15 +1325,13 @@ const ContractForm = ({
                                   p: 2,
                                   borderRadius: "10px 0px 0px 10px",
                                 }}
-                                className="space-x-2"
-                              >
+                                className='space-x-2'>
                                 <Box
                                   sx={{
                                     width: "50%",
                                     bgcolor: "white",
                                     borderRadius: "10px",
-                                  }}
-                                >
+                                  }}>
                                   <LabelTextField2
                                     label={"Shift name"}
                                     placeholder={"Type here..."}
@@ -1350,50 +1349,47 @@ const ContractForm = ({
                                     width: "50%",
                                     bgcolor: "white",
                                     borderRadius: "10px",
-                                  }}
-                                >
+                                  }}>
                                   <CheckBoxDropDown
                                     itemSource={data.daysOfWeek}
-                                    label="Working Days"
-                                    unit="วัน"
+                                    label='Working Days'
+                                    unit='วัน'
                                     selectedVal={shift.workdays}
                                     handleChangeVal={
                                       handleFieldShiftListTypeChange
                                     }
                                     id={shift.id}
                                     field={"workdays"}
-                                    desc="จำนวน"
+                                    desc='จำนวน'
                                     maxLength={8}
                                     maxDiaplay={7}
                                   />
                                 </Box>
                               </Box>
-                              <Box className="h-[72px]">
+                              <Box className='h-[72px]'>
                                 <Button
                                   onClick={() => removeShift(shift.id)}
-                                  className="bg-[#F66262] rounded-r-lg rounded-l-none h-full px-2"
-                                >
-                                  <Trash color="white" />
+                                  className='bg-[#F66262] rounded-r-lg rounded-l-none h-full px-2'>
+                                  <Trash color='white' />
                                 </Button>
                               </Box>
                             </Box>
                           </div>
                         ))}
-                        <Box className="flex">
+                        <Box className='flex'>
                           <AddButton onAddBtnClick={(e) => addShift()} />
                         </Box>
                       </Box>
                     </TabPanel>
-                    <TabPanel value="2" sx={{ padding: 0, py: "0.25rem" }}>
-                      <Box className="w-full text-center items-center">
+                    <TabPanel value='2' sx={{ padding: 0, py: "0.25rem" }}>
+                      <Box className='w-full text-center items-center'>
                         <Typography
                           sx={{
                             color: "#4C9BF5",
                             textDecorationLine: "underline",
                             fontSize: "16px",
                             mb: "0.25rem",
-                          }}
-                        >
+                          }}>
                           Total manpower: {totalManpower}
                         </Typography>
                         {shiftList.length < 1 && (
@@ -1411,24 +1407,21 @@ const ContractForm = ({
                           </div>
                         )}
                         {shiftList.map((shift, index) => (
-                          <div className="mb-2" key={index}>
+                          <div className='mb-2' key={index}>
                             <Accordion
-                              sx={{ bgcolor: "#EBF4F6", mb: "0.5rem" }}
-                            >
+                              sx={{ bgcolor: "#EBF4F6", mb: "0.5rem" }}>
                               <AccordionSummary
                                 sx={{ borderBottom: "1px solid #C7D4D7" }}
                                 expandIcon={<FaSortDown />}
                                 aria-controls={`panel${index}-content`}
-                                id={`panel${index}-header`}
-                              >
-                                <Box className="w-full flex justify-between">
+                                id={`panel${index}-header`}>
+                                <Box className='w-full flex justify-between'>
                                   <Typography
                                     sx={{
                                       fontSize: "14px",
                                       color: "#1D7A9B",
                                       fontWeight: 700,
-                                    }}
-                                  >
+                                    }}>
                                     {shift.desc}
                                   </Typography>
                                   <Typography
@@ -1437,8 +1430,7 @@ const ContractForm = ({
                                       textDecorationLine: "underline",
                                       fontSize: "16px",
                                       mr: 3,
-                                    }}
-                                  >
+                                    }}>
                                     {shift.manpowers.length} role
                                     {shift.manpowers.length > 1 ? "s" : ""}
                                   </Typography>
@@ -1456,18 +1448,15 @@ const ContractForm = ({
                                         p: 2,
                                         mb: 1.5,
                                         borderRadius: "10px",
-                                      }}
-                                    >
+                                      }}>
                                       <Box
                                         sx={{
                                           width: "100%",
                                         }}
-                                        className="space-y-4"
-                                      >
+                                        className='space-y-4'>
                                         <Box
                                           sx={{ display: "flex", mr: 0.5 }}
-                                          className="space-x-2"
-                                        >
+                                          className='space-x-2'>
                                           <Box sx={{ width: "42%" }}>
                                             <LabelTextField2
                                               label={"ตำแหน่งของลูกค้า"}
@@ -1490,7 +1479,7 @@ const ContractForm = ({
                                               }
                                               selectedVal={manpower.roleId}
                                               field={"roleId"}
-                                              defaultSelected="select"
+                                              defaultSelected='select'
                                               id={shift.id}
                                               id2={manpower.id}
                                             />
@@ -1513,15 +1502,13 @@ const ContractForm = ({
                                     </Box>
                                     <Box
                                       key={`${manpower}-${index}`}
-                                      className="h-[72px]"
-                                    >
+                                      className='h-[72px]'>
                                       <Button
                                         onClick={() =>
                                           removeManpower(shift.id, manpower.id)
                                         }
-                                        className="bg-[#F66262] rounded-r-lg rounded-l-none h-full px-2"
-                                      >
-                                        <Trash color="white" />
+                                        className='bg-[#F66262] rounded-r-lg rounded-l-none h-full px-2'>
+                                        <Trash color='white' />
                                       </Button>
                                     </Box>
                                   </Box>
@@ -1532,8 +1519,7 @@ const ContractForm = ({
                                     display: "flex",
                                     width: "100%",
                                     justifyContent: "space-between",
-                                  }}
-                                >
+                                  }}>
                                   <AddButton
                                     onAddBtnClick={(e) => addManpower(shift.id)}
                                   />
@@ -1543,8 +1529,7 @@ const ContractForm = ({
                                       textDecorationLine: "underline",
                                       fontSize: "16px",
                                       mt: 1,
-                                    }}
-                                  >
+                                    }}>
                                     Total manpower:{" "}
                                     {shift.manpowers.reduce((sum, mp) => {
                                       return (sum += mp.quantity);
@@ -1557,20 +1542,19 @@ const ContractForm = ({
                         ))}
                       </Box>
                     </TabPanel>
-                    <TabPanel value="3" sx={{ padding: 0, py: "0.25rem" }}>
-                      <Box className="w-full text-center items-center">
+                    <TabPanel value='3' sx={{ padding: 0, py: "0.25rem" }}>
+                      <Box className='w-full text-center items-center'>
                         <Typography
                           sx={{
                             color: "#4C9BF5",
                             textDecorationLine: "underline",
                             fontSize: "16px",
                             mb: "0.25rem",
-                          }}
-                        >
+                          }}>
                           Total Alert: {alertToList.length}
                         </Typography>
                         {alertToList.map((alertTo, index) => (
-                          <div className="mb-2" key={`${alertTo} - ${index}`}>
+                          <div className='mb-2' key={`${alertTo} - ${index}`}>
                             <Box
                               sx={{
                                 bgcolor: "#EBF4F6",
@@ -1578,13 +1562,11 @@ const ContractForm = ({
                                 borderRadius: "10px 0px 0px 10px",
                                 width: "100%",
                               }}
-                              className="space-y-4"
-                            >
+                              className='space-y-4'>
                               <Box
                                 key={`${alertTo} - ${index}-contentBox`}
-                                className="space-x-2 flex"
-                              >
-                                <Box className="w-11 h-10 bg-[#37B7C3] rounded-lg justify-center text-white pt-2">
+                                className='space-x-2 flex'>
+                                <Box className='w-11 h-10 bg-[#37B7C3] rounded-lg justify-center text-white pt-2'>
                                   {index + 1}
                                 </Box>
                                 <Box
@@ -1592,8 +1574,7 @@ const ContractForm = ({
                                     width: "40%",
                                     bgcolor: "white",
                                     borderRadius: "10px",
-                                  }}
-                                >
+                                  }}>
                                   <LabelSelector3
                                     selectorLabel={"สังกัด"}
                                     itemSource={[
@@ -1613,8 +1594,7 @@ const ContractForm = ({
                                     width: "40%",
                                     bgcolor: "white",
                                     borderRadius: "10px",
-                                  }}
-                                >
+                                  }}>
                                   {" "}
                                   {alertTo.isAsm === 2 ? (
                                     <LabelTextField2
@@ -1642,20 +1622,18 @@ const ContractForm = ({
                                 </Box>
                                 <Button
                                   onClick={() => removeAlertToList(alertTo.id)}
-                                  className="bg-[#F66262] rounded-lg h-full px-2"
-                                >
-                                  <Trash color="white" />
+                                  className='bg-[#F66262] rounded-lg h-full px-2'>
+                                  <Trash color='white' />
                                 </Button>
                               </Box>
-                              <Box key={index} className="space-x-2 flex">
+                              <Box key={index} className='space-x-2 flex'>
                                 <Box
                                   sx={{
                                     ml: "9%",
                                     width: "40%",
                                     bgcolor: "white",
                                     borderRadius: "10px",
-                                  }}
-                                >
+                                  }}>
                                   <LabelTextField2
                                     label={"Email"}
                                     placeholder={"Type here..."}
@@ -1679,8 +1657,7 @@ const ContractForm = ({
                                     width: "40%",
                                     bgcolor: "white",
                                     borderRadius: "10px",
-                                  }}
-                                >
+                                  }}>
                                   <CheckBoxDropDown
                                     itemSource={data.roles}
                                     label={"ตำแหน่งอื่นๆ ที่ต้องการรับ Alert"}
@@ -1698,34 +1675,32 @@ const ContractForm = ({
                                 </Box>
                               </Box>
                               <Button
-                                className="flex text-[#1D7A9B] bg-transparent hover:bg-transparent underline w-full pt-0 justify-center"
-                                onClick={() => handleAlertToDetail(alertTo)}
-                              >
+                                className='flex text-[#1D7A9B] bg-transparent hover:bg-transparent underline w-full pt-0 justify-center'
+                                onClick={() => handleAlertToDetail(alertTo)}>
                                 ดู Area & Round ที่รับ Alert
                                 <GoArrowUpRight
                                   size={22}
-                                  color="#1D7A9B"
+                                  color='#1D7A9B'
                                   style={{ marginTop: 3 }}
                                 />
                               </Button>
                             </Box>
                           </div>
                         ))}
-                        <Box className="flex">
+                        <Box className='flex'>
                           <AddButton onAddBtnClick={(e) => addAlertToList()} />
                         </Box>
                       </Box>
                     </TabPanel>
-                    <TabPanel value="4" sx={{ padding: 0, py: "0.25rem" }}>
-                      <Box className="w-full text-center items-center">
+                    <TabPanel value='4' sx={{ padding: 0, py: "0.25rem" }}>
+                      <Box className='w-full text-center items-center'>
                         <Typography
                           sx={{
                             color: "#4C9BF5",
                             textDecorationLine: "underline",
                             fontSize: "16px",
                             mb: "0.25rem",
-                          }}
-                        >
+                          }}>
                           Total: {areas.length} area
                           {areas.length > 1 ? "s" : ""}
                         </Typography>
@@ -1744,24 +1719,21 @@ const ContractForm = ({
                           </div>
                         )}
                         {areaList.map((area, index) => (
-                          <div className="mb-2" key={index}>
+                          <div className='mb-2' key={index}>
                             <Accordion
-                              sx={{ bgcolor: "#EBF4F6", mb: "0.5rem" }}
-                            >
+                              sx={{ bgcolor: "#EBF4F6", mb: "0.5rem" }}>
                               <AccordionSummary
                                 sx={{ borderBottom: "1px solid #C7D4D7" }}
                                 expandIcon={<FaSortDown />}
                                 aria-controls={`panel${index}-content`}
-                                id={`panel${index}-header`}
-                              >
-                                <Box className="w-full flex justify-between">
+                                id={`panel${index}-header`}>
+                                <Box className='w-full flex justify-between'>
                                   <Typography
                                     sx={{
                                       fontSize: "14px",
                                       color: "#1D7A9B",
                                       fontWeight: 700,
-                                    }}
-                                  >
+                                    }}>
                                     {area.areaName}
                                   </Typography>
                                 </Box>
@@ -1774,8 +1746,7 @@ const ContractForm = ({
                                     fontSize: "14px",
                                     fontWeight: 700,
                                     pb: 1,
-                                  }}
-                                >
+                                  }}>
                                   Patrol Round
                                 </Typography>
                                 {area.roundList.map((round, index) => (
@@ -1788,18 +1759,15 @@ const ContractForm = ({
                                       p: 2,
                                       mb: 1.5,
                                       borderRadius: "10px",
-                                    }}
-                                  >
+                                    }}>
                                     <Box
                                       sx={{
                                         width: "90%",
                                       }}
-                                      className="space-y-4"
-                                    >
+                                      className='space-y-4'>
                                       <Box
                                         sx={{ display: "flex", mr: 0.5 }}
-                                        className="space-x-3"
-                                      >
+                                        className='space-x-3'>
                                         <Box sx={{ width: "15%" }}>
                                           <LabelTextField2
                                             label={"รอบที่"}
@@ -1822,16 +1790,15 @@ const ContractForm = ({
                                                 sx={{
                                                   display: "flex",
                                                   color: "#2C5079",
-                                                }}
-                                              >
+                                                }}>
                                                 <Clock
-                                                  className="w-[24%] mt-2 ml-2"
+                                                  className='w-[24%] mt-2 ml-2'
                                                   size={20}
                                                 />
                                                 <Input
                                                   value={round.startTimeHr}
-                                                  className="p-0 ml-1 w-[26%] border-none text-center text-[14px]"
-                                                  type="number"
+                                                  className='p-0 ml-1 w-[26%] border-none text-center text-[14px]'
+                                                  type='number'
                                                   min={0}
                                                   max={24}
                                                   onChange={(e) =>
@@ -1860,8 +1827,7 @@ const ContractForm = ({
                                                   sx={{
                                                     fontSize: "18px",
                                                     mt: 0.5,
-                                                  }}
-                                                >
+                                                  }}>
                                                   :
                                                 </Typography>
                                                 <Input
@@ -1905,10 +1871,9 @@ const ContractForm = ({
                                                 sx={{
                                                   display: "flex",
                                                   color: "#2C5079",
-                                                }}
-                                              >
+                                                }}>
                                                 <Clock
-                                                  className="w-[25%] mt-2 ml-2"
+                                                  className='w-[25%] mt-2 ml-2'
                                                   size={20}
                                                 />
                                                 <Input
@@ -1943,8 +1908,7 @@ const ContractForm = ({
                                                   sx={{
                                                     fontSize: "18px",
                                                     mt: 0.5,
-                                                  }}
-                                                >
+                                                  }}>
                                                   :
                                                 </Typography>
                                                 <Input
@@ -1985,14 +1949,12 @@ const ContractForm = ({
                                             border: "1px solid #2C5079",
                                             borderRadius: "10px",
                                             bgcolor: "#EBF4F6",
-                                          }}
-                                        >
+                                          }}>
                                           <Typography
                                             sx={{
                                               color: "#2C5079",
                                               mt: 1,
-                                            }}
-                                          >
+                                            }}>
                                             {round.totalTimeMin} minutes
                                           </Typography>
                                         </Box>
@@ -2000,8 +1962,7 @@ const ContractForm = ({
 
                                       <Box
                                         sx={{ display: "flex", mr: 0.5 }}
-                                        className="space-x-3"
-                                      >
+                                        className='space-x-3'>
                                         <Box sx={{ width: "50%" }}>
                                           <LabelSelector3
                                             selectorLabel={"ของวัน"}
@@ -2011,7 +1972,7 @@ const ContractForm = ({
                                             }
                                             selectedVal={round.isSameDay}
                                             field={"isSameDay"}
-                                            defaultSelected="เลือก"
+                                            defaultSelected='เลือก'
                                             id={area.areaId}
                                             id2={round.id}
                                           />
@@ -2025,7 +1986,7 @@ const ContractForm = ({
                                             }
                                             selectedVal={round.shift}
                                             field={"shift"}
-                                            defaultSelected="เลือก"
+                                            defaultSelected='เลือก'
                                             id={area.areaId}
                                             id2={round.id}
                                           />
@@ -2034,20 +1995,20 @@ const ContractForm = ({
 
                                       <Box
                                         sx={{ display: "flex", mr: 0.5 }}
-                                        className="space-x-3"
-                                      >
+                                        className='space-x-3'>
                                         <Box
-                                          sx={{ width: "50%", display: "flex" }}
-                                        >
+                                          sx={{
+                                            width: "50%",
+                                            display: "flex",
+                                          }}>
                                           <Box
                                             sx={{
                                               width: "45%",
                                               display: "flex",
                                               textAlign: "left",
-                                            }}
-                                          >
+                                            }}>
                                             <Checkbox
-                                              className="w-9 h-9 mt-1"
+                                              className='w-9 h-9 mt-1'
                                               checked={round.isNeed}
                                               onCheckedChange={(e) =>
                                                 handleFieldDataInRoundChange(
@@ -2058,7 +2019,7 @@ const ContractForm = ({
                                                 )
                                               }
                                             />
-                                            <Typography className="pl-1 pt-2 text-[#2C5079] text-[15px]">
+                                            <Typography className='pl-1 pt-2 text-[#2C5079] text-[15px]'>
                                               บังคับเดิน
                                             </Typography>
                                           </Box>
@@ -2066,10 +2027,9 @@ const ContractForm = ({
                                             sx={{
                                               width: "55%",
                                               display: "flex",
-                                            }}
-                                          >
+                                            }}>
                                             <Checkbox
-                                              className="w-9 h-9 mt-1"
+                                              className='w-9 h-9 mt-1'
                                               checked={round.isStrictOrder}
                                               onCheckedChange={(e) =>
                                                 handleFieldDataInRoundChange(
@@ -2080,7 +2040,7 @@ const ContractForm = ({
                                                 )
                                               }
                                             />
-                                            <Typography className="pl-1 pt-2 text-[#2C5079] text-[15px]">
+                                            <Typography className='pl-1 pt-2 text-[#2C5079] text-[15px]'>
                                               เดินตามลำดับ
                                             </Typography>
                                           </Box>
@@ -2109,9 +2069,8 @@ const ContractForm = ({
                                       onClick={() =>
                                         removeRound(area.areaId, round.id)
                                       }
-                                      className="bg-[#F66262] rounded-lg w-14 h-full"
-                                    >
-                                      <Trash color="white" />
+                                      className='bg-[#F66262] rounded-lg w-14 h-full'>
+                                      <Trash color='white' />
                                     </Button>
                                   </Box>
                                 ))}
@@ -2121,8 +2080,7 @@ const ContractForm = ({
                                     display: "flex",
                                     width: "100%",
                                     justifyContent: "space-between",
-                                  }}
-                                >
+                                  }}>
                                   <AddButton
                                     onAddBtnClick={(e) => addRound(area.areaId)}
                                   />
@@ -2132,8 +2090,7 @@ const ContractForm = ({
                                       textDecorationLine: "underline",
                                       fontSize: "16px",
                                       mt: 1,
-                                    }}
-                                  >
+                                    }}>
                                     Total: {area.roundList.length} round
                                     {area.roundList.length > 1 ? "s" : ""}
                                   </Typography>
@@ -2151,25 +2108,24 @@ const ContractForm = ({
 
             {/* Footer */}
             {!isEdit && (
-              <Box className="flex w-full justify-center px-6 space-x-4 border-t-2 pt-4 pb-4">
+              <Box className='flex w-full justify-center px-6 space-x-4 border-t-2 pt-4 pb-4'>
                 <CancelBtn onCancelBtnClick={handleCloseContractForm} />
                 <SubmitBtn onSubmitBtnClick={handleSubmit} />
               </Box>
             )}
 
             {isEdit && (
-              <Box className="flex w-full justify-between px-6 border-t-2 pt-4 pb-4">
+              <Box className='flex w-full justify-between px-6 border-t-2 pt-4 pb-4'>
                 <Button
-                  className="flex text-[#2C5079] pt-2 bg-transparent hover:bg-transparent underline"
-                  onClick={handleUndo}
-                >
+                  className='flex text-[#2C5079] pt-2 bg-transparent hover:bg-transparent underline'
+                  onClick={handleUndo}>
                   <VscRefresh
                     style={{ transform: "rotate(-60deg) scaleX(-1)" }}
                     size={24}
                   />
                   Undo all changes
                 </Button>
-                <Box className="space-x-4">
+                <Box className='space-x-4'>
                   <DeleteBtnFooter
                     onDeleteBtnFooterClick={handleDelete}
                     disable={false}

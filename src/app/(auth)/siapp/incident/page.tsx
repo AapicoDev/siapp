@@ -129,10 +129,12 @@ export default function Incident() {
   const [openEditContract, setOpenEditContract] = useState<boolean>(false);
   const [isIncidentPage, setIsIncidentPage] = useState<boolean>(true);
   const [selectedCustomerFilter, setSelectedCustomerFilter] = useState();
-  const [selectedIncidentTypeFilter, setSelectedIncidentTypeFilter] = useState();
+  const [selectedIncidentTypeFilter, setSelectedIncidentTypeFilter] =
+    useState();
   const [isIncidentStatusAll, setIsIncidentStatusAll] = useState(false);
   const [isIncidentStatusSolved, setIsIncidentStatusSolved] = useState(false);
-  const [isIncidentStatusInProcess, setIsIncidentStatusInProcess] = useState(false);
+  const [isIncidentStatusInProcess, setIsIncidentStatusInProcess] =
+    useState(false);
   const [selected, setSelected] = useState<selectedDelete[]>(
     rowData.map((row) => ({
       isSelected: false,
@@ -217,7 +219,7 @@ export default function Incident() {
           incidentTypeTH: type.IncidentType_TH,
           correctiveAction: type.CorrectiveAction,
           contacts: type.Contacts,
-          attchments: type.Attachments
+          attchments: type.Attachments,
         };
       }) || incidentTypes;
     console.log("mapincidentTypes = ", mapincidentTypes);
@@ -309,65 +311,63 @@ export default function Incident() {
   return (
     <div>
       <Navbar menu={"SIAPP"} submenu={"Incident"} />
-      <Box className="px-2">
+      <Box className='px-2'>
         {/* Main Content */}
         <Box px={2} pb={2}>
           {/* Sub Header */}
-          <Box className="w-full">
-            <Box justifyContent="space-between" className="flex">
-              <Box className="space-x-4 py-4 flex w-fit">
-                <Box className="justify-center flex p-1 pb-0 bg-white rounded-lg h-10 w-30 ">
+          <Box className='w-full'>
+            <Box justifyContent='space-between' className='flex'>
+              <Box className='space-x-4 py-4 flex w-fit'>
+                <Box className='justify-center flex p-1 pb-0 bg-white rounded-lg h-10 w-30 '>
                   <Checkbox
-                    className="bg-[#EBF4F6] border-none"
+                    className='bg-[#EBF4F6] border-none'
                     checked={isIncidentPage}
                     onCheckedChange={handleSelectChkPtPage}
                   />
                   <Typography
                     sx={{ fontWeight: "700", color: "#1D7A9B" }}
-                    className="py-1 px-2"
-                  >
+                    className='py-1 px-2'>
                     Incident
                   </Typography>
                 </Box>
-                <Box className="justify-center flex p-1 bg-white rounded-lg h-10 w-fit">
+                <Box className='justify-center flex p-1 bg-white rounded-lg h-10 w-fit'>
                   <Checkbox
-                    className="bg-[#EBF4F6] border-none"
+                    className='bg-[#EBF4F6] border-none'
                     checked={!isIncidentPage}
                     onCheckedChange={handleSelectRandomPage}
                   />
                   <Typography
                     sx={{ fontWeight: "700", color: "#1D7A9B" }}
-                    className="py-1 px-2"
-                  >
+                    className='py-1 px-2'>
                     Corrective Action
                   </Typography>
                 </Box>
               </Box>
 
-              <Box className="space-x-2 py-4 flex">
-                <Box className="justify-center flex p-1 bg-white rounded-lg">
+              <Box className='space-x-2 py-4 flex'>
+                <Box className='justify-center flex p-1 bg-white rounded-lg'>
                   <DatePicker />
-                  <Typography className="text-[#2C5079] text-sm px-4 pt-1">
+                  <Typography className='text-[#2C5079] text-sm px-4 pt-1'>
                     to
                   </Typography>
                   <DatePicker />
                 </Box>
                 <Grid2 size={{ xs: 6, md: 12 }}>
                   <Input
-                    type="text"
-                    placeholder="Search..."
+                    type='text'
+                    placeholder='Search...'
                     style={{
                       boxShadow: "0px 5px 12px rgba(29, 122, 155, 0.1)",
                       borderRadius: "10px",
                     }}
-                    className="border-none bg-white p-4 mr-2 custom-placeholder"
+                    className='border-none bg-white p-4 mr-2 custom-placeholder'
                   />
                 </Grid2>
 
-                <Button disabled={true}
-                  className="w-40 bg-[#1D7A9B] hover:bg-[#D9F0EC] hover:text-[#1D7A9B]"
-                  onClick={setToggleFilter}
-                >
+                <Button
+                  disabled={true}
+                  className='w-40 bg-[#1D7A9B] hover:bg-[#D9F0EC] hover:text-[#1D7A9B]'
+                  onClick={setToggleFilter}>
                   <Filter size={20} style={{ marginRight: "5px" }} /> Filter
                 </Button>
               </Box>
@@ -377,43 +377,41 @@ export default function Incident() {
           {isIncidentPage && (
             <>
               <TableContainer
-                className="h-screen bg-white p-2"
+                className='h-screen bg-white p-2'
                 sx={{
                   display: "flex",
                   flexDirection: "column",
                   borderRadius: "15px 15px 0px 0px",
                   boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
-                }}
-              >
+                }}>
                 <Table>
                   <TableHead>
                     <TableRow
                       sx={{ borderBottom: "1px solid #C7D4D7" }}
-                      className={`${styles.table}`}
-                    >
-                      <TableCell align="left" className="w-[12%]">
+                      className={`${styles.table}`}>
+                      <TableCell align='left' className='w-[12%]'>
                         <Checkbox2
-                          className="mt-1 mb-2"
+                          className='mt-1 mb-2'
                           checked={isSelectedAll}
                           onCheckedChange={handleCheckAll}
                         />
                       </TableCell>
-                      <TableCell align="center" className="w-[8%]">
+                      <TableCell align='center' className='w-[8%]'>
                         Date & Time
                       </TableCell>
-                      <TableCell align="center" className="w-[22%]">
+                      <TableCell align='center' className='w-[22%]'>
                         Customer
                       </TableCell>
-                      <TableCell align="center" className="w-[20%]">
+                      <TableCell align='center' className='w-[20%]'>
                         Incident Type
                       </TableCell>
-                      <TableCell align="center" className="w-[12%]">
+                      <TableCell align='center' className='w-[12%]'>
                         Topic
                       </TableCell>
-                      <TableCell align="center" className="w-[11%]">
+                      <TableCell align='center' className='w-[11%]'>
                         Reporter
                       </TableCell>
-                      <TableCell align="center" className="w-[13%]">
+                      <TableCell align='center' className='w-[13%]'>
                         Status
                       </TableCell>
                     </TableRow>
@@ -436,9 +434,8 @@ export default function Incident() {
                           "&:hover": {
                             backgroundColor: "#DCE9EB", // Optional: Change background color on hover
                           },
-                        }}
-                      >
-                        <TableCell align="left">
+                        }}>
+                        <TableCell align='left'>
                           <Checkbox2
                             checked={selected[index].isSelected}
                             onClick={(event) => {
@@ -448,16 +445,16 @@ export default function Incident() {
                           />
                         </TableCell>
 
-                        <TableCell align="center">{row.dateTime}</TableCell>
+                        <TableCell align='center'>{row.dateTime}</TableCell>
 
                         {/* Customer */}
-                        <TableCell align="center">{row.customerName}</TableCell>
+                        <TableCell align='center'>{row.customerName}</TableCell>
 
                         {/* Incedent Type */}
-                        <TableCell align="center">{row.incidentType}</TableCell>
+                        <TableCell align='center'>{row.incidentType}</TableCell>
 
                         {/* Topic */}
-                        <TableCell align="center">
+                        <TableCell align='center'>
                           {row.topic === null ? "-" : row.topic}
                         </TableCell>
 
@@ -467,24 +464,22 @@ export default function Incident() {
                         </TableCell> */}
 
                         {/* Reporter */}
-                        <TableCell align="center">
+                        <TableCell align='center'>
                           {row.reporter === null ? "-" : row.reporter}
                         </TableCell>
 
                         {/* Status */}
                         <TableCell
-                          align="center"
-                          className="flex justify-center"
-                        >
+                          align='center'
+                          className='flex justify-center'>
                           <IconButton
                             onClick={(e) => {
                               e.stopPropagation();
                               handleApproved(index, row);
-                            }}
-                          >
+                            }}>
                             <TickCircle
                               size={30}
-                              variant="Bold"
+                              variant='Bold'
                               className={`${
                                 row.status === "Approved"
                                   ? `text-[#A7E5A6]`
@@ -500,14 +495,13 @@ export default function Incident() {
               </TableContainer>
               {/* TableFooter*/}
               <TableContainer
-                className="bg-white border-t"
+                className='bg-white border-t'
                 sx={{
                   borderRadius: "0px 0px 15px 15px",
                   boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
-                }}
-              >
+                }}>
                 <Table>
-                  <TableFooter className="w-full">
+                  <TableFooter className='w-full'>
                     <TableRow>
                       <TableCell colSpan={6}>
                         <Box
@@ -516,32 +510,30 @@ export default function Incident() {
                             justifyContent: "space-between",
                             alignItems: "center",
                             width: "100%",
-                          }}
-                        >
+                          }}>
                           <Typography>Total: {totalItems} items</Typography>
-                          <Box className="w-fit flex">
-                            <Box className="w-fit p-2">
+                          <Box className='w-fit flex'>
+                            <Box className='w-fit p-2'>
                               <Button
                                 style={{ fontWeight: "bold" }}
-                                className="w-32 h-10 bg-white text-[#4c9bf5] border-[1px] border-[#4c9bf5] hover:text-white hover:bg-[#4c9bf5]"
-                                disabled={true}
-                              >
-                                <SmsTracking className="mr-1" />
+                                className='w-32 h-10 bg-white text-[#4c9bf5] border-[1px] border-[#4c9bf5] hover:text-white hover:bg-[#4c9bf5]'
+                                disabled={true}>
+                                <SmsTracking className='mr-1' />
                                 {/* <SmsTracking className="mr-1"/> */}
                                 Email
                               </Button>
                             </Box>
 
-                            <Box className="w-fit p-2">
+                            <Box className='w-fit p-2'>
                               <GradientButton
-                              disable={true}
+                                disable={true}
                                 content={"Customer Report"}
                                 onBtnClick={handleAddNewCust}
                               />
                             </Box>
-                            <Box className="w-fit p-2">
+                            <Box className='w-fit p-2'>
                               <GradientButton
-                              disable={true}
+                                disable={true}
                                 content={"Summary"}
                                 onBtnClick={handleAddNewCust}
                               />
@@ -573,14 +565,13 @@ export default function Incident() {
       {ConfirmAlertDialog}
 
       {openFilterModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex flex-col">
+        <div className='fixed inset-0 bg-black bg-opacity-40 flex flex-col'>
           <Button
-            className="w-24 text-[#1D7A9B] bg-white hover:bg-[#D9F0EC] hover:text-[#1D7A9B] fixed right-6 top-[80px]"
-            onClick={() => setOpenFilterModal(false)}
-          >
+            className='w-24 text-[#1D7A9B] bg-white hover:bg-[#D9F0EC] hover:text-[#1D7A9B] fixed right-6 top-[80px]'
+            onClick={() => setOpenFilterModal(false)}>
             <Filter size={20} style={{ marginRight: "5px" }} /> Filter
           </Button>
-          <div className="bg-white rounded-lg shadow-lg h-fit w-[498px] overflow-auto fixed right-6 top-[136px] pb-2">
+          <div className='bg-white rounded-lg shadow-lg h-fit w-[498px] overflow-auto fixed right-6 top-[136px] pb-2'>
             {/* Header */}
             <Box
               sx={{
@@ -592,15 +583,13 @@ export default function Incident() {
                 justifyContent: "center",
                 paddingTop: "0.25rem",
                 paddingBottom: "0.25rem",
-              }}
-            >
+              }}>
               <Box
                 sx={{
                   width: "100%",
                   display: "flex",
                   justifyContent: "center",
-                }}
-              >
+                }}>
                 <Typography
                   sx={{
                     width: "fit-content",
@@ -610,8 +599,7 @@ export default function Incident() {
                     marginTop: "0.25rem",
                     marginLeft: "65px",
                     display: "flex",
-                  }}
-                >
+                  }}>
                   <Filter
                     size={20}
                     style={{ marginRight: "5px", marginTop: "3px" }}
@@ -620,53 +608,50 @@ export default function Incident() {
                 </Typography>
               </Box>
               <Button2
-                className="bg-transparent float w-fit"
+                className='bg-transparent float w-fit'
                 sx={{ position: "relative", right: 0, color: "#83A2AD" }}
-                onClick={() => setOpenFilterModal(false)}
-              >
+                onClick={() => setOpenFilterModal(false)}>
                 <IoClose size={26} />
               </Button2>
             </Box>
 
             {/* Body */}
             <Box
-              className="w-full justify-center px-6 py-2 rounded-t-lg pb-6"
-              textAlign="center"
-            >
-              <Box className="w-full space-y-6 pt-4">
+              className='w-full justify-center px-6 py-2 rounded-t-lg pb-6'
+              textAlign='center'>
+              <Box className='w-full space-y-6 pt-4'>
                 {/* Customer */}
-                <Box className="w-full">
+                <Box className='w-full'>
                   <LabelSelector
                     selectorLabel={"Customer"}
                     itemSource={customers}
                     setSelectedVal={setSelectedCustomerFilter}
                     selectedVal={selectedCustomerFilter}
                     name={"customer"}
-                    defaultSelected="Select Customer"
+                    defaultSelected='Select Customer'
                   />
                 </Box>
 
                 {/* Incident Type */}
-                <Box className="w-full">
+                <Box className='w-full'>
                   <LabelSelector
                     selectorLabel={"Incident Type"}
                     itemSource={segments}
                     setSelectedVal={setSelectedIncidentTypeFilter}
                     selectedVal={selectedIncidentTypeFilter}
                     name={"incidentType"}
-                    defaultSelected="Select Incident Type"
+                    defaultSelected='Select Incident Type'
                   />
                 </Box>
 
-                <Box className="space-y-2">
+                <Box className='space-y-2'>
                   <Typography
                     sx={{
                       fontWeight: "700",
                       color: "#2C5079",
                       fontSize: "14px",
                       textAlign: "left",
-                    }}
-                  >
+                    }}>
                     Incident Status
                   </Typography>
                   <Box
@@ -675,16 +660,15 @@ export default function Incident() {
                       isIncidentStatusAll
                         ? `bg-[#E2F7E1] border-[#86DC89]`
                         : `bg-white border-[#83A2AD]`
-                    } flex p-1 h-fit border-[1px]`}
-                  >
+                    } flex p-1 h-fit border-[1px]`}>
                     <Checkbox3
-                      className="border-[#83A2AD]"
+                      className='border-[#83A2AD]'
                       onCheckedChange={() =>
                         setIsIncidentStatusAll(!isIncidentStatusAll)
                       }
                       checked={isIncidentStatusAll}
                     />
-                    <Typography sx={{ color: "#2C5079" }} className="py-1 px-2">
+                    <Typography sx={{ color: "#2C5079" }} className='py-1 px-2'>
                       All
                     </Typography>
                   </Box>
@@ -694,16 +678,15 @@ export default function Incident() {
                       isIncidentStatusSolved
                         ? `bg-[#E2F7E1] border-[#86DC89]`
                         : `bg-white border-[#83A2AD]`
-                    } flex p-1 h-fit border-[1px]`}
-                  >
+                    } flex p-1 h-fit border-[1px]`}>
                     <Checkbox3
-                      className="border-[#83A2AD]"
+                      className='border-[#83A2AD]'
                       onCheckedChange={() =>
                         setIsIncidentStatusSolved(!isIncidentStatusSolved)
                       }
                       checked={isIncidentStatusSolved}
                     />
-                    <Typography sx={{ color: "#2C5079" }} className="py-1 px-2">
+                    <Typography sx={{ color: "#2C5079" }} className='py-1 px-2'>
                       Solved
                     </Typography>
                   </Box>
@@ -713,16 +696,15 @@ export default function Incident() {
                       isIncidentStatusInProcess
                         ? `bg-[#E2F7E1] border-[#86DC89]`
                         : `bg-white border-[#83A2AD]`
-                    } flex p-1 h-fit border-[1px]`}
-                  >
+                    } flex p-1 h-fit border-[1px]`}>
                     <Checkbox3
-                      className="border-[#83A2AD]"
+                      className='border-[#83A2AD]'
                       onCheckedChange={() =>
                         setIsIncidentStatusInProcess(!isIncidentStatusInProcess)
                       }
                       checked={isIncidentStatusInProcess}
                     />
-                    <Typography sx={{ color: "#2C5079" }} className="py-1 px-2">
+                    <Typography sx={{ color: "#2C5079" }} className='py-1 px-2'>
                       In process of solving
                     </Typography>
                   </Box>
@@ -731,12 +713,12 @@ export default function Incident() {
             </Box>
 
             {/* Footer */}
-            <Box className="flex w-full justify-center px-6 pt-1 pb-4">
-              <Box className="space-x-4">
-                <Button className="w-32 h-11 bg-white text-[#F66262] border-[1px] border-[#F66262] hover:text-white hover:bg-[#F66262]">
+            <Box className='flex w-full justify-center px-6 pt-1 pb-4'>
+              <Box className='space-x-4'>
+                <Button className='w-32 h-11 bg-white text-[#F66262] border-[1px] border-[#F66262] hover:text-white hover:bg-[#F66262]'>
                   Reset
                 </Button>
-                <Button className="w-32 h-11 enabled:bg-gradient-to-r from-[#00336C] to-[#37B7C3] hover:from-[#2BA441] hover:to-[#A7E5A6] disabled:bg-[#83A2AD]">
+                <Button className='w-32 h-11 enabled:bg-gradient-to-r from-[#00336C] to-[#37B7C3] hover:from-[#2BA441] hover:to-[#A7E5A6] disabled:bg-[#83A2AD]'>
                   Apply
                 </Button>
               </Box>
@@ -745,11 +727,13 @@ export default function Incident() {
         </div>
       )}
 
-      {isLoading && <div className="fixed inset-0 bg-white bg-opacity-40 flex flex-col items-center justify-center z-indextop">
-        <Box sx={{ display: "flex" }}>
-          <CircularProgress />
-        </Box>
-      </div>}
+      {isLoading && (
+        <div className='fixed inset-0 bg-white bg-opacity-40 flex flex-col items-center justify-center z-indextop'>
+          <Box sx={{ display: "flex" }}>
+            <CircularProgress />
+          </Box>
+        </div>
+      )}
     </div>
   );
 }
