@@ -34,10 +34,11 @@ import { DeleteButton } from "@/components/ui/buttons/deleteButton";
 import PatrolCheckpointFrom from "@/components/materData/PatrolCheckpointForm";
 import data from "@/app/mockData.json";
 import {
-  getAllMasteCustomerData,
+  getAllMasterCustomerData,
   getAllMasterAreaData,
   getMasterRoundData,
 } from "@/app/lib/api";
+import { TableMasterPatrolRandom } from "@/components/materData/TableMasterPatrolRandom";
 
 type RowData = {
   customerId: any;
@@ -133,43 +134,6 @@ const zones = [
   },
 ];
 
-const mockArea: AreaData[] = [
-  {
-    id: 1,
-    custId: 1,
-    name: "อาคาร1",
-  },
-  {
-    id: 2,
-    custId: 1,
-    name: "อาคารใหญ่",
-  },
-  {
-    id: 3,
-    custId: 2,
-    name: "อาคาร2",
-  },
-];
-
-const mockChkPt = [
-  {
-    areaId: 1,
-    chkPtName: "จุดที่ 1",
-  },
-  {
-    areaId: 1,
-    chkPtName: "จุดที่ 2",
-  },
-  {
-    areaId: 2,
-    chkPtName: "หน้าประตู",
-  },
-  {
-    areaId: 3,
-    chkPtName: "หน้าตึก",
-  },
-];
-
 const mockContract = [
   {
     custId: 1,
@@ -197,44 +161,11 @@ const mockContract = [
   },
 ];
 
-const initialArea: AreaData[] = [
-  {
-    id: 1,
-    custId: null,
-    name: "",
-  },
-];
-
-const mockRandom = [
-  {
-    reason: "ตรวจระเบียบเครื่องแต่งกายตาม Standard",
-    totalCheckList: 4,
-  },
-  {
-    reason: "ตรวจอุปกรณ์ตามสัญญา TOR",
-    totalCheckList: 2,
-  },
-  {
-    reason: "ตรวจความเสี่ยงภายในหน่วยงาน",
-    totalCheckList: 2,
-  },
-  {
-    reason: "เข้าพบลูกค้า อัพเดทข้อมูล/รับทราบปัญหาต่าง ๆ",
-    totalCheckList: 2,
-  },
-];
-
 export default function Patrol() {
-  const [rowData, setRowData] = useState<RowData[]>([]); // Local state for row data
+  const [rowData, setRowData] = useState<RowData[]>([]);
   const [contractData, setContractData] = useState(mockContract); // Local state for row data
-  const [areas, setAreas] = useState<AreaData[]>([
-    { id: 1, custId: null, name: "" },
-  ]);
-  const [custAreas, setCustAreas] = useState<AreaData[]>();
   const [selectedRow, setSelectedRow] = useState<RowData | null>(null);
   const [isSelectedAll, setIsSelectedAll] = useState(false);
-  const [openAddCustModal, setShowAddCustModal] = useState(false);
-  const [openEditCustModal, setOpenEditCustModal] = useState<boolean>(false);
   const [openFilterModal, setOpenFilterModal] = useState<boolean>(false);
   const [openViewQR, setOpenViewQR] = useState<boolean>(false);
   const [openAddCheckpoint, setOpenAddCheckpoint] = useState<boolean>(false);
@@ -248,8 +179,6 @@ export default function Patrol() {
   );
   const [customerList, setCustomerList] = useState<any[]>();
   const [custAreaList, setCustAreaList] = useState<any[]>();
-  const [roundList, setRoundList] = useState<any[]>();
-  const [checkpointList, setCheckpointList] = useState<any[]>();
   const [allArea, setAllArea] = useState<any[]>();
   const [isAddOrUpdateSucces, setIsAddOrUpdateSucces] = useState(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -260,7 +189,7 @@ export default function Patrol() {
 
   const tableData = async () => {
     setIsLoading(true);
-    const customers = await getAllMasteCustomerData();
+    const customers = await getAllMasterCustomerData();
     const custList = customers?.documents
       .filter((c) => c.area_id.length > 0)
       .map((cust) => {
@@ -347,7 +276,10 @@ export default function Patrol() {
       setOpenAddCheckpoint(false);
     } else {
       setOpenEditCheckpoint(false);
-      if (isAddOrUpdateSucces) tableData();
+      if (isAddOrUpdateSucces) {
+        tableData();
+        setIsAddOrUpdateSucces(false);
+      }
     }
   }
 
@@ -462,227 +394,157 @@ export default function Patrol() {
           </Box>
 
           {isCheckpointPage && (
-            <TableContainer
-              className="h-screen bg-white"
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                borderRadius: "15px 15px 0px 0px",
-                boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
-              }}
-            >
-              <Table>
-                <TableHead>
-                  <TableRow
-                    sx={{ borderBottom: "1px solid #C7D4D7" }}
-                    className={`${styles.table}`}
-                  >
-                    <TableCell align="left" className="w-[4%]">
-                      {/* <Checkbox className="mt-1 mb-2"
+            <>
+              <TableContainer
+                className="h-screen bg-white"
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  borderRadius: "15px 15px 0px 0px",
+                  boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
+                }}
+              >
+                <Table>
+                  <TableHead>
+                    <TableRow
+                      sx={{ borderBottom: "1px solid #C7D4D7" }}
+                      className={`${styles.table}`}
+                    >
+                      <TableCell align="left" className="w-[4%]">
+                        {/* <Checkbox className="mt-1 mb-2"
                       checked={isSelectedAll}
                       onCheckedChange={handleCheckAll}
                     /> */}
-                    </TableCell>
-                    <TableCell align="center" className="w-[26%]">
-                      Customer
-                    </TableCell>
-                    <TableCell align="center" className="w-[26%]">
-                      Area
-                    </TableCell>
-                    <TableCell align="center" className="w-[15%]">
-                      Total Round
-                    </TableCell>
-                    <TableCell align="center" className="w-[15%]">
-                      Total Checkpoint
-                    </TableCell>
-                    <TableCell align="center" className="w-[18%]">
-                      QR Code
-                    </TableCell>
-                  </TableRow>
-                </TableHead>
+                      </TableCell>
+                      <TableCell align="center" className="w-[26%]">
+                        Customer
+                      </TableCell>
+                      <TableCell align="center" className="w-[26%]">
+                        Area
+                      </TableCell>
+                      <TableCell align="center" className="w-[15%]">
+                        Total Round
+                      </TableCell>
+                      <TableCell align="center" className="w-[15%]">
+                        Total Checkpoint
+                      </TableCell>
+                      <TableCell align="center" className="w-[18%]">
+                        QR Code
+                      </TableCell>
+                    </TableRow>
+                  </TableHead>
 
-                {/* Allow the TableBody to grow and fill vertical space */}
-                <TableBody sx={{ flexGrow: 1 }}>
-                  {rowData.map((row, index) => (
-                    <TableRow
-                      onClick={() => handleRowClick(row)} // Row click handler
-                      key={index}
-                      className={`${
-                        index % 2 === 1 ? `bg-inherit` : `bg-[#EBF4F6]`
-                      }`}
-                      sx={{
-                        cursor: "pointer",
-                        "& .MuiTableCell-root": {
-                          padding: "10px 20px 10px 20px", // Customize border color
-                        },
-                        "&:hover": {
-                          backgroundColor: "#DCE9EB", // Optional: Change background color on hover
-                        },
-                      }}
-                    >
-                      <TableCell align="left">
-                        {/* <Checkbox className="mt-1 mb-2"
+                  {/* Allow the TableBody to grow and fill vertical space */}
+                  <TableBody sx={{ flexGrow: 1 }}>
+                    {rowData.map((row, index) => (
+                      <TableRow
+                        onClick={() => handleRowClick(row)} // Row click handler
+                        key={index}
+                        className={`${
+                          index % 2 === 1 ? `bg-inherit` : `bg-[#EBF4F6]`
+                        }`}
+                        sx={{
+                          cursor: "pointer",
+                          "& .MuiTableCell-root": {
+                            padding: "10px 20px 10px 20px", // Customize border color
+                          },
+                          "&:hover": {
+                            backgroundColor: "#DCE9EB", // Optional: Change background color on hover
+                          },
+                        }}
+                      >
+                        <TableCell align="left">
+                          {/* <Checkbox className="mt-1 mb-2"
                         checked={selected[index]?.isSelected}
                         onClick={(event) => {
                           event.stopPropagation(); // Prevent row click
                           handleSelected(index);
                         }}
                       /> */}
-                      </TableCell>
+                        </TableCell>
 
-                      {/* Customer */}
-                      <TableCell align="center">{row.customerName}</TableCell>
+                        {/* Customer */}
+                        <TableCell align="center">{row.customerName}</TableCell>
 
-                      {/* Area */}
-                      <TableCell align="center">{row.areaName}</TableCell>
+                        {/* Area */}
+                        <TableCell align="center">{row.areaName}</TableCell>
 
-                      {/* Total Round */}
-                      <TableCell align="center">{row.totalRound}</TableCell>
+                        {/* Total Round */}
+                        <TableCell align="center">{row.totalRound}</TableCell>
 
-                      {/* Total Checkpoint */}
-                      <TableCell align="center">
-                        {row.totalCheckpoint}
-                      </TableCell>
+                        {/* Total Checkpoint */}
+                        <TableCell align="center">
+                          {row.totalCheckpoint}
+                        </TableCell>
 
-                      {/* ViewQR */}
-                      <TableCell align="center">
-                        {row.totalCheckpoint === 0 ? (
-                          "-"
-                        ) : (
-                          <Button
-                            style={{
-                              border: "1px solid #37B7C3",
-                              fontWeight: "bold",
-                            }}
-                            className="w-[84px] text-[#37B7C3] bg-white hover:bg-[#37B7C3] hover:text-white"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              handleOpenViewQr(row);
-                            }}
-                          >
-                            View
-                          </Button>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
+                        {/* ViewQR */}
+                        <TableCell align="center">
+                          {row.totalCheckpoint === 0 ? (
+                            "-"
+                          ) : (
+                            <Button
+                              style={{
+                                border: "1px solid #37B7C3",
+                                fontWeight: "bold",
+                              }}
+                              className="w-[84px] text-[#37B7C3] bg-white hover:bg-[#37B7C3] hover:text-white"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                handleOpenViewQr(row);
+                              }}
+                            >
+                              View
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
 
-          {!isCheckpointPage && (
-            <TableContainer
-              className="h-screen bg-white"
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                borderRadius: "15px 15px 0px 0px",
-                boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
-              }}
-            >
-              <Table>
-                <TableHead>
-                  <TableRow
-                    sx={{ borderBottom: "1px solid #C7D4D7" }}
-                    className={`${styles.table}`}
-                  >
-                    <TableCell align="left" className="w-[10%]">
-                      <Checkbox
-                        className="mt-1 mb-2"
-                        checked={isSelectedAll}
-                        onCheckedChange={handleCheckAll}
-                      />
-                    </TableCell>
-                    <TableCell align="center" className="w-[50%]">
-                      Random Patrol Reason
-                    </TableCell>
-                    <TableCell align="center" className="w-[40%]">
-                      Total Check List
-                    </TableCell>
-                  </TableRow>
-                </TableHead>
-
-                {/* Allow the TableBody to grow and fill vertical space */}
-                <TableBody sx={{ flexGrow: 1 }}>
-                  {mockRandom.map((row, index) => (
-                    <TableRow
-                      // onClick={() => handleRowClick(row)} // Row click handler
-                      key={index}
-                      className={`${
-                        index % 2 === 1 ? `bg-inherit` : `bg-[#EBF4F6]`
-                      }`}
-                      sx={{
-                        cursor: "pointer",
-                        "& .MuiTableCell-root": {
-                          padding: "10px 20px 10px 20px", // Customize border color
-                        },
-                        "&:hover": {
-                          backgroundColor: "#DCE9EB", // Optional: Change background color on hover
-                        },
-                      }}
-                    >
-                      <TableCell align="left">
-                        <Checkbox
-                          className="mt-1 mb-2"
-                          checked={selected[index]?.isSelected}
-                          onClick={(event) => {
-                            event.stopPropagation(); // Prevent row click
-                            handleSelected(index);
+              {/* TableFooter*/}
+              <TableContainer
+                className="bg-white border-t"
+                sx={{
+                  borderRadius: "0px 0px 15px 15px",
+                  boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
+                }}
+              >
+                <Table>
+                  <TableFooter className="w-full">
+                    <TableRow>
+                      <TableCell colSpan={6}>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            width: "100%",
                           }}
-                        />
+                        >
+                          <Typography>Total: {rowData.length} items</Typography>
+                          {/* <Box>
+                      <DeleteButton onDeleteBtnClick={handleDeleteCust} disable={!selected.some((item) => item.isSelected)}/>
+                      <Button
+                        style={{ marginLeft: "auto", fontWeight: "bold" }}
+                        className="w-48 enabled:bg-gradient-to-r from-[#00336C] to-[#37B7C3] hover:from-[#4C9BF5] hover:to-[#D8EAFF] 
+                               hover:text-[#00336C] disabled:bg-[#83A2AD]"
+                        onClick={() => handleAddNewPatrol()}
+                      >
+                        +New
+                      </Button>
+                    </Box> */}
+                        </Box>
                       </TableCell>
-
-                      {/* Customer */}
-                      <TableCell align="center">{row.reason}</TableCell>
-
-                      {/* Total Check List */}
-                      <TableCell align="center">{row.totalCheckList}</TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                  </TableFooter>
+                </Table>
+              </TableContainer>
+            </>
           )}
 
-          {/* TableFooter*/}
-          <TableContainer
-            className="bg-white border-t"
-            sx={{
-              borderRadius: "0px 0px 15px 15px",
-              boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
-            }}
-          >
-            <Table>
-              <TableFooter className="w-full">
-                <TableRow>
-                  <TableCell colSpan={6}>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        width: "100%",
-                      }}
-                    >
-                      <Typography>Total: {rowData.length} items</Typography>
-                      <Box>
-                        {/* <DeleteButton onDeleteBtnClick={handleDeleteCust} disable={!selected.some((item) => item.isSelected)}/>
-                        <Button
-                          style={{ marginLeft: "auto", fontWeight: "bold" }}
-                          className="w-48 enabled:bg-gradient-to-r from-[#00336C] to-[#37B7C3] hover:from-[#4C9BF5] hover:to-[#D8EAFF] 
-                                 hover:text-[#00336C] disabled:bg-[#83A2AD]"
-                          onClick={() => handleAddNewPatrol()}
-                        >
-                          +New
-                        </Button> */}
-                      </Box>
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              </TableFooter>
-            </Table>
-          </TableContainer>
+          {!isCheckpointPage && <TableMasterPatrolRandom />}
         </Box>
       </Box>
 
