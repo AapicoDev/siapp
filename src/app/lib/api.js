@@ -116,6 +116,16 @@ export async function getMasterAssignedManpowerData(shiftIds) {
     console.error("Error retrieving data:", error);
   }
 }
+export async function getAllAssignedManpowerData() {
+  try {
+    const response = await fetchDataList(databaseId, masterAssignedManpowerTableId);
+    console.log(response);
+    return response;
+  } catch (error) {
+    console.error("Error retrieving data:", error);
+    return null;
+  }
+}
 export async function getAllMasterRandomPatrolReason() {
   try {
     const response = await fetchDataList(databaseId, masterRandomPatrolReasonTableId);

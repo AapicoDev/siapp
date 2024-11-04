@@ -24,6 +24,10 @@ type ChkListData = {
   attachPhoto: any;
 };
 
+type selectedDelete = {
+  isSelected: boolean;
+  id: any;
+};
 
 export default function CheckList() {
 
@@ -66,6 +70,13 @@ export default function CheckList() {
   const [addNormmalStatus, setAddNormalStatus] = useState("");
   const [addAbnormmalStatus, setAddAbnormalStatus] = useState("");
   const [photoAmt, setPhotoAmt] = useState<number>();
+  const [isSelectedAll, setIsSelectedAll] = useState(false);
+  const [selected, setSelected] = useState<selectedDelete[]>(
+    rows.map((row) => ({
+      isSelected: false,
+      id: row.id,
+    }))
+  );
 
   // Handle Edit button click
   const handleEdit = (index: any) => {
@@ -110,6 +121,27 @@ export default function CheckList() {
     setPhotoAmt(value as unknown as number);
   };
 
+  const handleSelected = (index: number) => {
+    const newSelected = [...selected];
+    newSelected[index].isSelected = !selected[index].isSelected;
+    setSelected(newSelected);
+    const isCheckAll = !selected.some((item) => item.isSelected === false);
+    if (isCheckAll) {
+      setIsSelectedAll(true);
+    } else {
+      setIsSelectedAll(false);
+    }
+  };
+
+  const handleCheckAll = (checked: boolean) => {
+    console.log("checked =", checked)
+    setIsSelectedAll(checked);
+    const selectedAll = [...selected];
+    selectedAll.map(s => s.isSelected = checked);
+    console.log("selectedAll =", selectedAll);
+    setSelected(selectedAll);
+  };
+
   return (
     <div>
       <Navbar menu={'Master Data'} submenu={'Check List'} />
@@ -125,34 +157,42 @@ export default function CheckList() {
                   boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
                 }}
                 justifyContent="space-between"
-                className="space-x-4 p-4 flex w-fit"
+                className="space-x-4 p-4 flex w-[90%]"
               >
+                <div className="w-[28%]">
                 <LabelTextField
                   label={"Check List"}
                   placeholder={"Type here..."}
                   inputVal={addCheckList}
                   setInputVal={setAddCheckList}
                 />
+                </div>
+                
+                <div className="w-[16%]">
                 <LabelTextField
                   label={"Status: Normal"}
                   placeholder={"Type here..."}
                   inputVal={addNormmalStatus}
                   setInputVal={setAddNormalStatus}
                 />
+                </div>
+                <div className="w-[16%]">
                 <LabelTextField
                   label={"Status: Abnormal"}
                   placeholder={"Type here..."}
                   inputVal={addAbnormmalStatus}
                   setInputVal={setAddAbnormalStatus}
                 />
-
-                <Box className="w-full h-full flex space-x-2">
+                </div>
+                <div className="w-[12%] flex space-x-4">
                 <Checkbox3 className="w-9 h-9 mt-1"/>
-                <Typography className="mt-3 text-[#2C5079] text-[15px] w-[220px]">Attach photos</Typography>
+                <Typography sx={{color: "#2C5079", width: "full", mt: 1}}>Attach photos</Typography>
+                </div>
+                <div className="w-[13%]">
                 <Textbox name="attachPhotoAmt" inputType="number" placeHolder="Amount.." value={photoAmt} handleChange={handleChange}/>
-                </Box>
+                </div>
 
-                <Box className="space-x-4 w-fit flex">
+                <Box className="space-x-4 w-[15%] flex">
                   <AddButton onAddBtnClick={handleAdd}/>
                   <SearchButton onSearchBtnClick={handleSearch}/>
                 </Box>
@@ -172,7 +212,9 @@ export default function CheckList() {
               <TableHead>
                 <TableRow sx={{ borderBottom: "1px solid #C7D4D7" }}>
                 <TableCell align="left" className="w-[5%]">
-                    <Checkbox2 className="mt-1 mb-2"/>
+                    <Checkbox2 className="mt-1 mb-2"
+                        checked={isSelectedAll}
+                        onCheckedChange={handleCheckAll}/>
                   </TableCell>
                   <TableCell align="center" className="w-[19%]">Check List</TableCell>
                   <TableCell align="center" className="w-[24%]">Status: Normal</TableCell>
@@ -194,7 +236,11 @@ export default function CheckList() {
                     }
                   >
                     <TableCell align="left">
-                      <Checkbox2 />
+                      <Checkbox2
+                          checked={selected[index].isSelected}
+                          onCheckedChange={() => {
+                            handleSelected(index);
+                          }}/>
                     </TableCell>
                     <TableCell align="center" className="max-w-48">
                       {editMode[index] ? (
@@ -244,9 +290,11 @@ export default function CheckList() {
                         `${row.attachPhoto}`
                       )}
                     </TableCell>
-                    <TableCell align="center">
+                    <TableCell align="center" sx={{justifyItems: "center"}}>
                       {editMode[index] ? (
-                        <SaveButton onSaveBtnClick={handleSave} index={index}/>
+                        <div className="w-[48px] mr-8">
+                          <SaveButton onSaveBtnClick={handleSave} index={index}/>
+                        </div>
                       ) : (
                         <EditButton onEditBtnClick={handleEdit} index={index}/>
                       )}

@@ -12,7 +12,8 @@ interface LabelSelector2Props {
   itemSource: any[];
   selectedVal: any;
   id: any;
-  handleSelectedVal: (id: any, value: any) => void;
+  field? : any;
+  handleSelectedVal: (id: any, value: any, field?: any) => void;
 }
 
 export function LabelSelector2({
@@ -20,6 +21,7 @@ export function LabelSelector2({
   handleSelectedVal,
   selectedVal,
   id,
+  field,
 }: LabelSelector2Props) {
 
 
@@ -32,7 +34,7 @@ export function LabelSelector2({
           size="small"
           value={selectedVal || ""}
           onChange={(e) =>
-            handleSelectedVal(id, e.target.value)
+            handleSelectedVal(id, e.target.value, field)
           }
           className={`${
             id === null ? `text-[#83A2AD]` : ""

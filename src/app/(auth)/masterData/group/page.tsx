@@ -15,40 +15,50 @@ import { SaveButton } from "@/components/ui/buttons/saveButton";
 import { DeleteButton } from "@/components/ui/buttons/deleteButton";
 
 type RowData = {
+  id: any;
   group: string;
   description: string;
   department: number;
   customer: number;
+};
+type selectedDelete = {
+  isSelected: boolean;
+  id: any;
 };
 
 export default function Group() {
 
   const rows: RowData[] = [
     {
+      id: "1",
       group: "General Guard",
       description: "ฝ่ายรักษาความปลอดภัยและบริการ",
       department: 6,
       customer: 5,
     },
     {
+      id: "2",
       group: "Cleaning",
       description: "ฝ่ายบริการงานรักษาความสะอาด",
       department: 1,
       customer: 1,
     },
     {
+      id: "3",
       group: "IPM",
       description: "ฝ่ายบริการจัดการอาคารสถานที่",
       department: 4,
       customer: 3,
     },
     {
+      id: "4",
       group: "Cargo",
       description: "ฝ่ายปฏิบัติการภาคพื้นคลังสินค้า และไปรษณีย์ภัณฑ์",
       department: 1,
       customer: 1,
     },
     {
+      id: "5",
       group: "Airline",
       description: "กลุ่มการแพทย์",
       department: 1,
@@ -62,6 +72,13 @@ export default function Group() {
   const [rowData, setRowData] = useState(rows); // Local state for row data
   const [addGroupVal, setAddGroupVal] = useState("");
   const [addGroupDescVal, setAddGroupDescVal] = useState(""); 
+  const [isSelectedAll, setIsSelectedAll] = useState(false);
+  const [selected, setSelected] = useState<selectedDelete[]>(
+    rows.map((row) => ({
+      isSelected: false,
+      id: row.id,
+    }))
+  );
 
   // Handle Edit button click
   const handleEdit = (index: any) => {
@@ -107,6 +124,27 @@ export default function Group() {
   const handleSearch = () => {
     console.log("AddSegmentVal = ",addGroupVal);
     console.log("AddSegmentDescVal = ",addGroupDescVal);
+  };
+
+  const handleSelected = (index: number) => {
+    const newSelected = [...selected];
+    newSelected[index].isSelected = !selected[index].isSelected;
+    setSelected(newSelected);
+    const isCheckAll = !selected.some((item) => item.isSelected === false);
+    if (isCheckAll) {
+      setIsSelectedAll(true);
+    } else {
+      setIsSelectedAll(false);
+    }
+  };
+
+  const handleCheckAll = (checked: boolean) => {
+    console.log("checked =", checked)
+    setIsSelectedAll(checked);
+    const selectedAll = [...selected];
+    selectedAll.map(s => s.isSelected = checked);
+    console.log("selectedAll =", selectedAll);
+    setSelected(selectedAll);
   };
 
   return (
@@ -165,7 +203,9 @@ export default function Group() {
               <TableHead>
                 <TableRow sx={{ borderBottom: "1px solid #C7D4D7" }}>
                   <TableCell align="left" className="w-[5%]">
-                    <Checkbox2 className="mt-1 mb-2"/>
+                    <Checkbox2 className="mt-1 mb-2"
+                    checked={isSelectedAll}
+                    onCheckedChange={handleCheckAll}/>
                   </TableCell>
                   <TableCell align="center" className="w-[19%]">Group</TableCell>
                   <TableCell align="center" className="w-[24%]">Description</TableCell>
@@ -187,7 +227,10 @@ export default function Group() {
                     }
                   >
                     <TableCell align="left">
-                      <Checkbox2 />
+                      <Checkbox2 checked={selected[index].isSelected}
+                          onCheckedChange={() => {
+                            handleSelected(index);
+                          }}/>
                     </TableCell>
                     <TableCell align="center" className="max-w-48">
                       {editMode[index] ? (
@@ -215,9 +258,11 @@ export default function Group() {
                     </TableCell>
                     <TableCell align="center">{row.department}</TableCell>
                     <TableCell align="center">{row.customer}</TableCell>
-                    <TableCell align="center">
+                    <TableCell align="center" sx={{justifyItems: "center"}}>
                       {editMode[index] ? (
+                        <div className="w-[48px] mr-9">
                         <SaveButton onSaveBtnClick={handleSave} index={index}/>
+                      </div>
                       ) : (
                         <EditButton onEditBtnClick={handleEdit} index={index}/>
                       )}

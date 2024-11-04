@@ -254,9 +254,11 @@ export default function Segment() {
                     </TableCell>
                     <TableCell align="center">{row.department}</TableCell>
                     <TableCell align="center">{row.customer}</TableCell>
-                    <TableCell align="center">
+                    <TableCell align="center" sx={{justifyItems:"center"}}>
                       {editMode[index] ? (
+                        <div className="w-[48px] mr-9">
                         <SaveButton onSaveBtnClick={handleSave} index={index}/>
+                      </div>
                       ) : (
                         <EditButton onEditBtnClick={handleEdit} index={index}/>
                       )}
