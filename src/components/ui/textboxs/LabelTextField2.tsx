@@ -10,7 +10,6 @@ interface LabelTextFieldProps {
   field: any;
   id: any;
   id2?: any;
-  id3?: any;
   handleChangeVal: (id: any, field: any, value: any, id2?: any) => void;
   type?: any;
   disable?: boolean;
@@ -23,7 +22,6 @@ export default function LabelTextField2({
   field,
   id,
   id2 = undefined,
-  id3 = undefined,
   handleChangeVal,
   type = "text",
   disable = false,

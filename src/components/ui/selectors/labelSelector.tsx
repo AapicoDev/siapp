@@ -48,7 +48,7 @@ export function LabelSelector({selectorLabel, itemSource, setSelectedVal, select
       }
       inputProps={{ "aria-label": "Without label" }}
       sx={{
-        color: `${ selectedVal === `${defaultSelected}` ? `#83A2AD` : "" }`,
+        color: `${selectedVal === "" ? "#83A2AD" : "#2C5079"}`,
         borderRadius: "10px",
         "& .MuiOutlinedInput-notchedOutline": {
           border: "1px solid #1D7A9B", // Customize border color

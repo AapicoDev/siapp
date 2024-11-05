@@ -25,6 +25,7 @@ export default function LabelTextField({ label, placeholder, inputVal, setInputV
         className="w-full"
         focused
         sx={{
+          color: "#2C5079",
           "& .MuiOutlinedInput-root": {
             "&.Mui-focused fieldset": {
               border: "1px solid #1D7A9B", // Focus border color

@@ -638,12 +638,12 @@ const ViewQrCode = ({ selectedCustomer, closeModal, customerAreas }: ViewQrCodeP
                           {chkPtQRCode.chkPtname}
                         </Typography>
                         <Box className="p-2 mt-4">
-                          <div
-                            className="flex flex-col px-12 justify-center items-center"
-                            key={`${window.location.origin}${chkPtQRCode.qr}`}
+                          <div className="flex flex-col px-12 justify-center items-center"
+                            // key={`${window.location.origin}${chkPtQRCode.qr}`}
+                            key={`${chkPtQRCode.qr}`}
                           >
                             <QRCode
-                              data={`${window.location.origin}${chkPtQRCode.qr}`}
+                              data={`${chkPtQRCode.qr}`}
                               qrCode={qrCode}
                               setQrCode={setQrCode}
                             />

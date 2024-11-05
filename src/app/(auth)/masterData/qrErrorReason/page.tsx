@@ -24,6 +24,10 @@ type RowData = {
   customer: number;
 };
 
+type selectedDelete = {
+  isSelected: boolean;
+  id: any;
+};
 
 export default function QrErrorReason() {
 
@@ -94,6 +98,13 @@ export default function QrErrorReason() {
   const [addCode, setAddCode] = useState("");
   const [addQRErrorReason, setAddQRErrorReason] = useState("");
   const [selectedAddedBy, setSelectedAddedBy] = useState<number>();
+  const [isSelectedAll, setIsSelectedAll] = useState(false);
+  const [selected, setSelected] = useState<selectedDelete[]>(
+    rows.map((row) => ({
+      isSelected: false,
+      id: row.id,
+    }))
+  );
 
   // Handle Edit button click
   const handleEdit = (index: any) => {
@@ -137,6 +148,27 @@ export default function QrErrorReason() {
     setRowData((prevData) => ({ ...prevData, [name]: value }));
   };
 
+  const handleSelected = (index: number) => {
+    const newSelected = [...selected];
+    newSelected[index].isSelected = !selected[index].isSelected;
+    setSelected(newSelected);
+    const isCheckAll = !selected.some((item) => item.isSelected === false);
+    if (isCheckAll) {
+      setIsSelectedAll(true);
+    } else {
+      setIsSelectedAll(false);
+    }
+  };
+
+  const handleCheckAll = (checked: boolean) => {
+    console.log("checked =", checked)
+    setIsSelectedAll(checked);
+    const selectedAll = [...selected];
+    selectedAll.map(s => s.isSelected = checked);
+    console.log("selectedAll =", selectedAll);
+    setSelected(selectedAll);
+  };
+
   return (
     <div>
       <Navbar menu={'Master Data'} submenu={'QR Error Reason'} />
@@ -145,7 +177,6 @@ export default function QrErrorReason() {
         <Box flex={1} px={2} pb={2}>
           {/* Sub Header */}
           <Box mb={2} className="w-full flex justify-center">
-            <Box justifyContent="center">
               <Box
                 sx={{
                   bgcolor: "white",
@@ -153,28 +184,37 @@ export default function QrErrorReason() {
                   boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
                 }}
                 justifyContent="space-between"
-                className="space-x-4 p-4 flex"
+                className="space-x-4 p-4 flex w-[80%]"
               >
+                <div className="w-[18%]">
                 <LabelTextField
                   label={"Code"}
                   placeholder={"Type here..."}
                   inputVal={addCode}
                   setInputVal={setAddCode}
                 />
+                </div>
+                <div className="w-[42%]">
                 <LabelTextField
                   label={"QR Error Reason"}
                   placeholder={"Type here..."}
                   inputVal={addQRErrorReason}
                   setInputVal={setAddQRErrorReason}
                 />
-                <LabelSelector selectorLabel={"Added By"} itemSource={mockAddedBy} setSelectedVal={setSelectedAddedBy} selectedVal={selectedAddedBy} name={"addedBy"} />
-
-                <Box className="space-x-4 w-full flex">
+                </div>
+                <div className="w-[20%]">
+                <LabelSelector
+                  selectorLabel={"Added By"}
+                  itemSource={mockAddedBy}
+                  setSelectedVal={setSelectedAddedBy}
+                  selectedVal={selectedAddedBy}
+                  name={"addedBy"} />
+                </div>
+                <Box className="space-x-4 w-[20%] flex">
                   <AddButton onAddBtnClick={handleAdd}/>
                   <SearchButton onSearchBtnClick={handleSearch}/>
                 </Box>
               </Box>
-            </Box>
           </Box>
 
           <TableContainer
@@ -190,7 +230,9 @@ export default function QrErrorReason() {
               <TableHead>
                 <TableRow sx={{ borderBottom: "1px solid #C7D4D7" }}>
                 <TableCell align="left" className="w-[5%]">
-                    <Checkbox2 className="mt-1 mb-2"/>
+                    <Checkbox2 className="mt-1 mb-2"
+                    checked={isSelectedAll}
+                    onCheckedChange={handleCheckAll}/>
                   </TableCell>
                   <TableCell align="center" className="w-[24%]">Code</TableCell>
                   <TableCell align="center" className="w-[28%]">QR Error Reason</TableCell>
@@ -211,7 +253,10 @@ export default function QrErrorReason() {
                     }
                   >
                     <TableCell align="left">
-                      <Checkbox2 />
+                      <Checkbox2 checked={selected[index].isSelected}
+                          onCheckedChange={() => {
+                            handleSelected(index);
+                          }}/>
                     </TableCell>
                     <TableCell align="center" className="max-w-48">
                       {editMode[index] ? (
@@ -243,9 +288,11 @@ export default function QrErrorReason() {
                           ?.desc
                       }
                     </TableCell>
-                    <TableCell align="center">
+                    <TableCell align="center" sx={{justifyItems: "center"}}>
                       {editMode[index] ? (
-                        <SaveButton onSaveBtnClick={handleSave} index={index}/>
+                        <div className="w-[48px] mr-9">
+                          <SaveButton onSaveBtnClick={handleSave} index={index}/>
+                        </div>
                       ) : (
                         <EditButton onEditBtnClick={handleEdit} index={index}/>
                       )}

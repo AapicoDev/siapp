@@ -13,6 +13,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { Typography } from "@mui/material";
 
 interface DatePickerWithRangeProps {
   className: any; //React.HTMLAttributes<HTMLDivElement>;
@@ -38,18 +39,25 @@ export function DatePickerWithRange({
   }
 
   return (
-    <div className={cn("grid gap-2", className)}>
+    <div className={cn("grid gap-2 relative", className)}>
       <Popover>
+      <div className="relative w-full">
+      <Typography
+        className="absolute -top-2 left-3 px-1 bg-white text-[#2C5079]"
+        sx={{ fontSize:"14px", lineHeight: "1rem", fontWeight: "700" }}
+      >
+        Period
+          </Typography>
         <PopoverTrigger asChild>
           <Button
             id="date"
             variant={"outline"}
             className={cn(
-              "w-[300px] justify-center text-center font-normal text-[#1D7A9B]",
+              "w-full justify-center text-center font-normal rounded-lg border-[#1D7A9B] text-[#1D7A9B]",
               !dateRange && "text-muted-foreground"
             )}
           >
-            <CalendarIcon className="mr-2 h-5 w-5" />
+            <CalendarIcon className="mr-2 h-5 w-5 text-[#83A2AD]" />
             {dateRange?.from ? (
               dateRange.to ? (
                 <>
@@ -60,10 +68,11 @@ export function DatePickerWithRange({
                 format(dateRange.from, "dd/MM/yyyy")
               )
             ) : (
-              <span>Pick a date</span>
+              <span className="text-[#83A2AD]">Pick a date</span>
             )}
           </Button>
         </PopoverTrigger>
+        </div>
         <PopoverContent className="w-auto p-0" align="start">
           <Calendar
             initialFocus

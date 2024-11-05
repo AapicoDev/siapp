@@ -43,6 +43,7 @@ import data from "@/app/mockData.json";
 import { Textbox } from "@/components/ui/textboxs/textbox";
 import { ActiveStatusBox } from "@/components/ui/activeStatusBox";
 import { GradientButton } from "@/components/ui/buttons/gradientButton";
+import UsersForm from "@/components/users/UsersForm";
 
 type RowData = {
   id: any;
@@ -139,8 +140,8 @@ export default function UsersPage() {
   const [custAreas, setCustAreas] = useState<AreaData[]>();
   const [selectedRow, setSelectedRow] = useState<RowData | null>(null);
   const [isSelectedAll, setIsSelectedAll] = useState(false);
-  const [openAddCustModal, setShowAddCustModal] = useState(false);
-  const [openEditCustModal, setOpenEditCustModal] = useState<boolean>(false);
+  const [openAddUserModal, setOpenAddUserModal] = useState(false);
+  const [openEditUserModal, setOpenEditUserModal] = useState<boolean>(false);
   const [openViewQR, setOpenViewQR] = useState<boolean>(false);
   const [openAddContract, setOpenAddContract] = useState<boolean>(false);
   const [openEditContract, setOpenEditContract] = useState<boolean>(false);
@@ -157,15 +158,15 @@ export default function UsersPage() {
 
   useEffect(() => {}, []);
 
-  const handleAddNewCust = () => {
-    setShowAddCustModal(true);
+  const handleAddNewUser = () => {
+    setOpenAddUserModal(true);
   };
 
   const handleDeleteCust = () => {};
 
   const handleRowClick = (row: RowData) => {
     setSelectedRow(row);
-    setOpenEditCustModal(true);
+    setOpenEditUserModal(true);
 
     const custArea = mockArea.filter((a) => a.custId === row.id);
     setAreas(initialArea);
@@ -181,9 +182,9 @@ export default function UsersPage() {
 
   function handleCloseCustomerForm(isEdit: boolean) {
     if (!isEdit) {
-      setShowAddCustModal(false);
+      setOpenAddUserModal(false);
     } else {
-      setOpenEditCustModal(false);
+      setOpenEditUserModal(false);
     }
     setRowData(rows);
   }
@@ -441,7 +442,7 @@ export default function UsersPage() {
                         />
                         <GradientButton
                           content={"+ New"}
-                          onBtnClick={handleAddNewCust}
+                          onBtnClick={handleAddNewUser}
                         />
                       </Box>
                     </Box>
@@ -454,41 +455,20 @@ export default function UsersPage() {
       </Box>
 
       {/* Add customer */}
-      {openAddCustModal && (
-        <CustomerForm
+      {openAddUserModal && (
+        <UsersForm
           closeModal={handleCloseCustomerForm}
           customeraAeas={initialArea}
         />
       )}
 
       {/* Edit/Delete Customer */}
-      {openEditCustModal && (
-        <CustomerForm
+      {openEditUserModal && (
+        <UsersForm
           closeModal={handleCloseCustomerForm}
           editCustomer={selectedRow}
           customeraAeas={areas}
         />
-      )}
-
-      {openViewQR && (
-        <ViewQrCode
-          closeModal={handleCloseViewQr}
-          customerAreas={custAreas}
-          selectedCustomer={selectedRow}
-        />
-      )}
-
-      {openAddContract && (
-        <ContractForm
-          closeModal={handleCloseContractForm}
-          customerAreas={areas} selectedCustomer={undefined} isEditContract={false} custList={[]}        />
-      )}
-
-      {openEditContract && (
-        <ContractForm
-          closeModal={handleCloseContractForm}
-          customerAreas={areas}
-          selectedCustomer={selectedRow} isEditContract={false} custList={[]}        />
       )}
     </div>
   );

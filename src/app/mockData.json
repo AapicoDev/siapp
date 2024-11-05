@@ -619,6 +619,12 @@
       "fname": "กตคน์",
       "lname": "แย้มโสพิศ",
       "email": "kitty@asm-company.com"
+    },
+    {
+      "empId": "000090890",
+      "fname": "นายทดสอบ",
+      "lname": "ระบบ",
+      "email": "testtest@asm-company.com"
     }
   ],
   "permissions": [

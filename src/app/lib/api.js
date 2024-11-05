@@ -22,6 +22,7 @@ const masterShiftTableId = "671099270021b17e6d5c";
 const masterCheckpointTableId = "670f46d1001fe205beaf";
 const masterManpowerRoleTableId = "6721d7c9000b4fb3431a";
 const masterAssignedManpowerTableId = "6721d91c00335cc2011c";
+const masterRandomPatrolReasonTableId = "6719accc000ca3be7e73";
 
 const patrolRoundsTableId = "670e369a0033e51cd0f7";
 const patrolCheckpointTableId = "670e378f0015ebe884b8";
@@ -33,7 +34,7 @@ const randomPatrolTableId = "6719a886003922e7bfeb";
 const incidentTypeFilesStorageId = "6712275f002246d2f1c7";
 
 //#region Master Data
-export async function getAllMasteCustomerData() {
+export async function getAllMasterCustomerData() {
   try {
     const response = await fetchDataList(databaseId, masterCustomerTableId);
     console.log(response);
@@ -115,7 +116,78 @@ export async function getMasterAssignedManpowerData(shiftIds) {
     console.error("Error retrieving data:", error);
   }
 }
+export async function getAllAssignedManpowerData() {
+  try {
+    const response = await fetchDataList(databaseId, masterAssignedManpowerTableId);
+    console.log(response);
+    return response;
+  } catch (error) {
+    console.error("Error retrieving data:", error);
+    return null;
+  }
+}
+export async function getAllMasterRandomPatrolReason() {
+  try {
+    const response = await fetchDataList(databaseId, masterRandomPatrolReasonTableId);
+    console.log(response);
+    return response;
+  } catch (error) {
+    console.error("Error retrieving data:", error);
+  }
+}
 
+export async function addNewRandomPatrol(patrolRandomDetail) {
+  const dataToSubmit = {
+    reason: patrolRandomDetail.randomPatrolReason,
+    checkList_Id: patrolRandomDetail.checklist,
+  }
+  console.log("dataToSubmit", dataToSubmit);
+  try {
+    const response = createDocumentOnServer(databaseId, masterRandomPatrolReasonTableId, dataToSubmit);
+    return response;
+  } catch (error) {
+    console.log("Error add new random patrol reason data:", error);
+    return null;
+  }
+}
+export async function updateRandomPatrol(id, randomPatrol) {
+  const dataToSubmit = {
+    reason: randomPatrol.randomPatrolReason,
+    checkList_Id: randomPatrol.checklist,
+  }
+  console.log("dataToSubmit", dataToSubmit);
+  console.log("id", id);
+  try {
+    const response = await databases.updateDocument(
+      databaseId,
+      masterRandomPatrolReasonTableId,
+      id,
+      dataToSubmit
+    );
+    return response;
+  } catch (error) {
+    console.error("Error update Random Patrol data:", error);
+    return null;
+  }
+}
+export async function deleteRandomPatrol(id) {
+  try {
+    console.log("id:", id);
+    const deletePromises = id.map((data) => {
+      return databases.deleteDocument(
+        databaseId,
+        masterRandomPatrolReasonTableId,
+        data
+      );
+    });
+    const results = await Promise.all(deletePromises);
+    console.log("Documents delete successfully:", results);
+    return results;
+  } catch (error) {
+    console.error("Error deleting data:", error);
+    return null;
+  }
+}
 export async function deleteCheckpoint(id) {
   try {
     console.log("id:", id);
@@ -192,11 +264,19 @@ export async function updatAssignedManpower(updateAssignedMnapowerData) {
 export async function deleteAssignedManpower(id) {
   try {
     console.log("id:", id);
-    const response = await deleteDocumentOnServer(databaseId, masterAssignedManpowerTableId, id);
-    console.log(response);
-    return response;
+    const deletePromises = id.map((data) => {
+      return databases.deleteDocument(
+        databaseId,
+        masterAssignedManpowerTableId,
+        data
+      );
+    });
+    const results = await Promise.all(deletePromises);
+    console.log("Documents delete successfully:", results);
+    return results;
   } catch (error) {
     console.error("Error deleting data:", error);
+    return null;
   }
 }
 export async function addNewAssignedManpower(assignedManpowerdata) {

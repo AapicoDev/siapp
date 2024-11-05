@@ -180,6 +180,7 @@ const PatrolCheckpointFrom = ({
     []
   );
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [employeeItemSource, setEmployeeItemSource] = useState<any[]>([]);
 
   useEffect(() => {
     roundsOfArea();
@@ -356,6 +357,7 @@ const PatrolCheckpointFrom = ({
   const handleDelete = () => {};
 
   const handleSave = async () => {
+    //Checkpoit and Check List Tab
     if (tabValue === "2" || tabValue === "3") {
       //save new Checkpoint
       console.log("checkPointDatas = ", checkPointDatas);
@@ -447,7 +449,10 @@ const PatrolCheckpointFrom = ({
         console.log("updateResult =", updateResult);
         checkpointsOfArea();
       }
-    } else if (tabValue === "4") {
+    } 
+    //Manpower Tab
+    else if (tabValue === "4") {
+      //delete assigned Mnapower
       if (assignedManpowerRemoveList.length > 0) {
         console.log("assignedManpowerRemoveList=", assignedManpowerRemoveList);
         setIsLoading(true);
@@ -458,7 +463,9 @@ const PatrolCheckpointFrom = ({
         console.log("deleteResult", deleteResult);
         setAssignedManpowerRemoveList([]);
       }
+
       if (assignedManpowers.length > 0) {
+        //add new assigned Mnapower
         const newItems = assignedManpowers.filter((item) =>
           item.id?.includes("new")
         );
@@ -480,9 +487,11 @@ const PatrolCheckpointFrom = ({
           setIsLoading(false);
         }
 
+        //update assigned Mnapower
         const updateItems = assignedManpowers.filter(
           (item) => !item.id.includes("new")
         );
+        console.log("updateItems =", updateItems);
         if (updateItems.length > 0) {
           const dataToSubmit =
             updateItems?.map((man) => {
@@ -613,7 +622,16 @@ const PatrolCheckpointFrom = ({
   ) => {
     setAssignedManpowers(
       assignedManpowers.map((emp) =>
-        emp.id === id ? { ...emp, [field]: value } : emp
+        emp.id === id
+          ? {
+              ...emp,
+              [field]: value,
+              ["employeeName"]:
+                field === "employee_Id"
+                  ? employeeItemSource.find((empId) => empId.id === value).desc
+                  : emp.employeeName,
+            }
+          : emp
       )
     );
   };
@@ -633,6 +651,15 @@ const PatrolCheckpointFrom = ({
     //use unique shiftIds to find manpower roles
     const manpowerRoles = await getMasterManpowerRoleData(uniqueShiftsInPrelim);
     setfilteredManpowerData(manpowerRoles?.documents || []);
+
+    const mappedEmployeeItemSource = data.employees.map((emp) => {
+      return {
+        id: emp.empId,
+        desc: emp.fname + " " + emp.lname,
+        email: emp.email,
+      };
+    });
+    setEmployeeItemSource(mappedEmployeeItemSource);
 
     //use unique shiftIds to find assigned mnapowers
     const assignedManpower = await getMasterAssignedManpowerData(
@@ -909,514 +936,6 @@ const PatrolCheckpointFrom = ({
                 </Box>
               </Box>
             </Box>
-          ))}
-        </Box>
-      </>
-    );
-  };
-
-  // const CheckPointStep = () => {
-  //   return (
-  //     <>
-  //       <Typography
-  //         textAlign="left"
-  //         sx={{
-  //           fontSize: "14px",
-  //           paddingBottom: "0.25rem",
-  //           color: "#2C5079",
-  //           fontWeight: "700",
-  //           paddingTop: "0.75rem",
-  //         }}
-  //       >
-  //         Check Point
-  //       </Typography>
-  //       {checkPointDatas.map((checkpoint, index) => (
-  //         <Box
-  //           key={checkpoint.checkPointId}
-  //           className="flex w-full bg-[#EBF4F6] rounded-lg justify-items-center align-middle justify-between mb-3 p-3 space-x-3"
-  //         >
-  //           <Box className="w-11 h-10 bg-[#37B7C3] rounded-lg justify-center text-white p-2">
-  //             {index + 1}
-  //           </Box>
-  //           <Box className="w-full justify-center space-y-2">
-  //             <div>
-  //               <Textbox
-  //                 header={"Check Point Name"}
-  //                 inputType={"text"}
-  //                 placeHolder={"Type here..."}
-  //                 handleChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-  //                   handleFieldCheckpointChange(e, checkpoint.checkPointId)
-  //                 }
-  //                 value={checkpoint.checkPointName}
-  //                 name={"checkPointName"}
-  //               />
-  //             </div>
-  //             <div>
-  //               <Textbox
-  //                 header={"Location"}
-  //                 inputType={"text"}
-  //                 placeHolder={"Type here..."}
-  //                 handleChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-  //                   handleFieldCheckpointChange(e, checkpoint.checkPointId)
-  //                 }
-  //                 value={checkpoint.locationName}
-  //                 name={"locationName"}
-  //               />
-  //             </div>
-  //             {/* Map */}
-  //             <div className="flex w-full rounded-lg border-[#2C5079] border-[1px] bg-slate-200 p-1 justify-center">
-  //               <Image
-  //                 src={"/NoData.png"}
-  //                 alt="No Data"
-  //                 width={90}
-  //                 height={90}
-  //               />
-  //             </div>
-  //             <div className="w-full flex space-x-2 mt-2">
-  //               <Box className="flex flex-grow bg-[white] rounded-md border-[1px] border-[#2C5079] text-[#2C5079] px-1 py-2 text-sm">
-  //                 ละติจูด : {checkpoint.latitude}
-  //               </Box>
-  //               <Box className="flex flex-grow bg-[white] rounded-md border-[1px] border-[#2C5079] text-[#2C5079] px-1 py-2 text-sm">
-  //                 ลองจิจูด : {checkpoint.longitude}
-  //               </Box>
-  //               <Box className="flex flex-grow bg-[white] rounded-md border-[1px] border-[#2C5079] text-[#2C5079] px-1 py-2 text-sm">
-  //                 อัลติจูด : {checkpoint.altitude}
-  //               </Box>
-  //             </div>
-  //             <Typography
-  //               textAlign="left"
-  //               sx={{
-  //                 fontSize: "14px",
-  //                 paddingBottom: "0.25rem",
-  //                 color: "#2C5079",
-  //                 fontWeight: "700",
-  //               }}
-  //             >
-  //               Patrol Time Restriction
-  //             </Typography>
-  //             <div className="w-fit">
-  //               <Box className="flex">
-  //                 <Checkbox
-  //                   className="mb-2"
-  //                   checked={!checkpoint.isRestrictionTime}
-  //                 />
-  //                 <Typography
-  //                   sx={{
-  //                     fontSize: "14px",
-  //                     color: "#2C5079",
-  //                     mt: "0.25rem",
-  //                     ml: 1,
-  //                   }}
-  //                 >
-  //                   No Restriction
-  //                 </Typography>
-  //               </Box>
-  //               <Box className="flex">
-  //                 <Checkbox
-  //                   className="mb-2 mt-1"
-  //                   checked={checkpoint.isRestrictionTime}
-  //                 />
-  //                 <Typography
-  //                   sx={{
-  //                     fontSize: "14px",
-  //                     color: "#2C5079",
-  //                     mt: "0.5rem",
-  //                     mr: 1,
-  //                     ml: 1,
-  //                   }}
-  //                 >
-  //                   Not Exeed
-  //                 </Typography>
-  //                 <Box className="w-[15%]">
-  //                   <Textbox
-  //                     inputType={"number"}
-  //                     placeHolder={"Type here..."}
-  //                     handleChange={undefined}
-  //                     value={checkpoint.timeLimit}
-  //                     name={"timeLimit"}
-  //                   />
-  //                 </Box>
-  //                 <Typography
-  //                   sx={{
-  //                     fontSize: "14px",
-  //                     color: "#2C5079",
-  //                     mt: "0.5rem",
-  //                     ml: 1,
-  //                   }}
-  //                 >
-  //                   minutes from previous check point
-  //                 </Typography>
-  //               </Box>
-  //             </div>
-  //           </Box>
-  //           <Box className="flex align-middle ml-2 justify-around">
-  //             <Button
-  //               onClick={() => removeArea(checkpoint.areaId)}
-  //               className="bg-[#F66262] rounded-lg"
-  //             >
-  //               <Trash color="white" />
-  //             </Button>
-  //           </Box>
-  //         </Box>
-  //       ))}
-  //       <Box className="justify-start flex w-full">
-  //         <AddButton onAddBtnClick={addArea} />
-  //       </Box>
-  //     </>
-  //   );
-  // };
-
-  const CheckListStep = () => {
-    return (
-      <>
-        <Box className="w-full border-b-2 pb-3 mt-2 flex justify-end">
-          <Checkbox2
-            className="mt-1 mr-2 border-[#C7D4D7]"
-            checked={undefined}
-            onCheckedChange={undefined}
-          />
-          <Typography
-            sx={{
-              color: "#2C5079",
-              mt: 1,
-            }}
-          >
-            Same check lists of for all check point
-          </Typography>
-        </Box>
-        {checkPointDatas.map((checkpoint, index) => (
-          <div className="mb-2" key={index}>
-            <Accordion sx={{ bgcolor: "white", mb: "0.5rem" }}>
-              <AccordionSummary
-                sx={{ borderBottom: "1px solid #C7D4D7" }}
-                expandIcon={<FaSortDown />}
-                aria-controls={`panel${index}-content`}
-                id={`panel${index}-header`}
-              >
-                <Box className="w-full flex space-x-2">
-                  <Typography
-                    sx={{
-                      fontWeight: "600",
-                      color: "#4C9BF5",
-                      fontSize: "14px",
-                      paddingX: "1rem",
-                      mt: 1.5,
-                    }}
-                    className="bg-[#D8EAFF] rounded-full flex w-fit h-fit"
-                  >
-                    Check Point {index + 1}
-                  </Typography>
-                  <Box>
-                    <Typography
-                      sx={{
-                        color: "#2C5079",
-                        fontSize: "14px",
-                        textAlign: "left",
-                      }}
-                    >
-                      {checkpoint.checkPointName}
-                    </Typography>
-                    <Typography
-                      sx={{
-                        color: "#2C5079",
-                        textDecorationLine: "underline",
-                        fontSize: "14px",
-                      }}
-                    >
-                      Total : {checkpoint.checkListId.length} Check list
-                      {checkpoint.checkListId.length > 1 ? "s" : ""}
-                    </Typography>
-                  </Box>
-                </Box>
-              </AccordionSummary>
-              <AccordionDetails sx={{ p: 1 }}>
-                {checkpoint.checkListId.map((checkList, index) => (
-                  <Box
-                    key={index}
-                    sx={{
-                      bgcolor: "#EBF4F6",
-                      width: "100%",
-                      display: "flex",
-                      p: 2,
-                      mb: 1.5,
-                      borderRadius: "10px",
-                    }}
-                  >
-                    <Box className="w-11 h-10 bg-[#37B7C3] rounded-lg justify-center text-white p-2 mr-2">
-                      {index + 1}
-                    </Box>
-                    <Box className="space-y-3 w-[90%] justify-center">
-                      <Box
-                        sx={{ display: "flex", mr: 0.5 }}
-                        className="space-x-2"
-                      >
-                        <Box className="w-full">
-                          <Selector
-                            selectorLabel={"Check List"}
-                            itemSource={allCheckListDatas}
-                            handleChange={handleSelectChange}
-                            selectedVal={checkList}
-                            name={"checkListId"}
-                          />
-                        </Box>
-                      </Box>
-
-                      <Box className="space-x-3 flex">
-                        <Box sx={{ width: "50%" }}>
-                          <LabelTextDisplayBox
-                            label={"Status: Normal"}
-                            text={
-                              allCheckListDatas.find((c) => c.id === checkList)
-                                ?.normalStatus
-                            }
-                          />
-                        </Box>
-                        <Box sx={{ width: "50%" }}>
-                          <LabelTextDisplayBox
-                            label={"Status: Abnormal"}
-                            text={
-                              allCheckListDatas.find((c) => c.id === checkList)
-                                ?.abnormalStatus
-                            }
-                          />
-                        </Box>
-                      </Box>
-
-                      <Box
-                        sx={{
-                          display: "flex",
-                          mr: 0.5,
-                          textAlign: "left",
-                        }}
-                        className="space-x-3"
-                      >
-                        <Checkbox
-                          disabled={
-                            !allCheckListDatas.find((c) => c.id === checkList)
-                              ?.isNeedAttachPhoto
-                          }
-                          className="w-9 h-9 mt-1 cursor-default"
-                          checked={
-                            allCheckListDatas.find((c) => c.id === checkList)
-                              ?.isNeedAttachPhoto
-                          }
-                          onCheckedChange={undefined}
-                        />
-                        <Typography
-                          sx={{
-                            paddingRight: 1,
-                            pt: 1,
-                            color: "#2C5079",
-                          }}
-                        >
-                          Attach Photos
-                        </Typography>
-                        <Typography
-                          sx={{
-                            pt: 1,
-                            color: "#2C5079",
-                          }}
-                        >
-                          Amount :
-                        </Typography>
-                        <Box sx={{ width: "27%" }}>
-                          <LabelTextDisplayBox
-                            text={
-                              allCheckListDatas.find((c) => c.id === checkList)
-                                ?.attachPhotoAmount
-                            }
-                          />
-                        </Box>
-                      </Box>
-                    </Box>
-
-                    <Box className="flex align-middle ml-2 justify-around">
-                      <Button
-                        onClick={() => handleSave()}
-                        className="bg-[#F66262] rounded-lg"
-                      >
-                        <Trash color="white" />
-                      </Button>
-                    </Box>
-                  </Box>
-                ))}
-
-                <Box
-                  sx={{
-                    display: "flex",
-                    width: "100%",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <AddButton
-                    onAddBtnClick={(e) => addCheckList(checkpoint.checkPointId)}
-                  />
-                </Box>
-              </AccordionDetails>
-            </Accordion>
-          </div>
-        ))}
-      </>
-    );
-  };
-
-  const ManpowerStep = () => {
-    return (
-      <>
-        <Box className="w-full text-center items-center">
-          <Typography
-            sx={{
-              color: "#2C5079",
-              textDecorationLine: "underline",
-              fontSize: "16px",
-              mt: 1,
-            }}
-          >
-            Total: {areas.length} shift
-            {areas.length > 1 ? "s" : ""}
-          </Typography>
-          {areas.map((shift, index) => (
-            <div className="mb-2" key={index}>
-              <Accordion sx={{ bgcolor: "#EBF4F6", mb: "0.5rem" }}>
-                <AccordionSummary
-                  sx={{ borderBottom: "1px solid #C7D4D7" }}
-                  expandIcon={<FaSortDown />}
-                  aria-controls={`panel${index}-content`}
-                  id={`panel${index}-header`}
-                >
-                  <Box className="w-full flex justify-between">
-                    <Typography
-                      sx={{
-                        fontSize: "14px",
-                        color: "#1D7A9B",
-                        fontWeight: 700,
-                      }}
-                    >
-                      ผลัด 07:00-18:00 จ-ส
-                    </Typography>
-                    <Typography
-                      sx={{
-                        color: "#F66262",
-                        textDecorationLine: "underline",
-                        fontSize: "16px",
-                        mr: 3,
-                      }}
-                    >
-                      Required manpower : 2
-                    </Typography>
-                  </Box>
-                </AccordionSummary>
-                <AccordionDetails>
-                  {data.manpowers.map((manpower, index) => (
-                    <>
-                      <Box
-                        key={index}
-                        className="flex w-full justify-between py-1"
-                      >
-                        <div className="flex space-x-2">
-                          <Typography
-                            sx={{
-                              color: "#2C5079",
-                              textDecorationLine: "underline",
-                              fontSize: "14px",
-                            }}
-                          >
-                            ตำแหน่ง
-                          </Typography>
-                          <Typography
-                            sx={{
-                              color: "#2C5079",
-                              fontSize: "14px",
-                            }}
-                          >
-                            เจ้าหน้าที่รักษาความปลอดภัย
-                          </Typography>
-                        </div>
-                        <div className="flex space-x-2">
-                          <Typography
-                            sx={{
-                              color: "#2C5079",
-                              textDecorationLine: "underline",
-                              fontSize: "14px",
-                            }}
-                          >
-                            จำนวน :
-                          </Typography>
-                          <Typography
-                            sx={{
-                              color: "#2C5079",
-                              fontSize: "14px",
-                            }}
-                          >
-                            0/1
-                          </Typography>
-                        </div>
-                      </Box>
-                      <Box sx={{ display: "flex", width: "100%" }} key={index}>
-                        <Box
-                          key={index}
-                          sx={{
-                            bgcolor: "white",
-                            width: "100%",
-                            display: "flex",
-                            p: 2,
-                            mb: 1.5,
-                            borderRadius: "10px 0px 0px 10px",
-                          }}
-                          className="space-x-3"
-                        >
-                          <Box sx={{ width: "50%" }}>
-                            <LabelTextField2
-                              label={"ชื่อ-นามสกุล"}
-                              placeholder={"Type here..."}
-                              inputVal={manpower.nameInReport}
-                              handleChangeVal={handleFieldManpowerTypeChange}
-                              field={"nameInReport"}
-                              id={shift.id}
-                              id2={manpower.id}
-                            />
-                          </Box>
-                          <Box sx={{ width: "50%" }}>
-                            <CheckBoxDropDown
-                              itemSource={data.checkpoints}
-                              label="จุดลาดตระเวน"
-                              unit="จุด"
-                              selectedVal={[1]}
-                              handleChangeVal={handleActiveChange}
-                              id={shift.id}
-                              field={"workdays"}
-                              desc="Assigned"
-                              maxLength={8}
-                              maxDiaplay={7}
-                            />
-                          </Box>
-                        </Box>
-                        <Box sx={{ display: "flex" }}>
-                          <Button
-                            onClick={() => removeManpower(manpower.id)}
-                            className="bg-[#F66262] rounded-r-lg rounded-l-none h-[85%] px-2"
-                          >
-                            <Trash color="white" />
-                          </Button>
-                        </Box>
-                      </Box>
-                    </>
-                  ))}
-
-                  <Box
-                    sx={{
-                      display: "flex",
-                      width: "100%",
-                      justifyContent: "space-between",
-                    }}
-                  >
-                    <AddButton
-                      onAddBtnClick={(e) => addManpower(shift.id, shift.id)}
-                    />
-                  </Box>
-                </AccordionDetails>
-              </Accordion>
-            </div>
           ))}
         </Box>
       </>
@@ -1713,10 +1232,10 @@ const PatrolCheckpointFrom = ({
               )}
 
               {/* Step3--Check List */}
-              {activeStep === 2 && <CheckListStep />}
+              {/* {activeStep === 2 && <CheckListStep />} */}
 
               {/* Step3--Manpower */}
-              {activeStep === 3 && <ManpowerStep />}
+              {/* {activeStep === 3 && <ManpowerStep />} */}
             </Box>
           )}
 
@@ -1734,23 +1253,39 @@ const PatrolCheckpointFrom = ({
                     <Tab label="Manpower" value="4" />
                   </TabList>
                 </Box>
+                {/* Preliminary Tab */}
                 <TabPanel value="1" sx={{ padding: 0, py: "0.25rem" }}>
                   <PreliminaryStep />
                 </TabPanel>
+                {/* Checkpoint Tab */}
                 <TabPanel value="2" sx={{ padding: 0, py: "0.25rem" }}>
                   <>
-                    <Typography
-                      textAlign="left"
-                      sx={{
-                        fontSize: "14px",
-                        paddingBottom: "0.25rem",
-                        color: "#2C5079",
-                        fontWeight: "700",
-                        paddingTop: "0.75rem",
-                      }}
-                    >
-                      Check Point
-                    </Typography>
+                    <Box className="w-full flex justify-between mt-3">
+                      <Typography
+                        textAlign="left"
+                        sx={{
+                          fontSize: "14px",
+                          paddingBottom: "0.25rem",
+                          color: "#2C5079",
+                          fontWeight: "700",
+                        }}
+                      >
+                        Check Point
+                      </Typography>
+                      <Typography
+                        sx={{
+                          fontSize: "16px",
+                          color: "#4C9BF5",
+                          textDecorationLine: "underline",
+                        }}
+                      >
+                        Total: {checkPointDatas?.length} check point
+                        {checkPointDatas?.length !== undefined &&
+                        checkPointDatas?.length > 1
+                          ? "s"
+                          : ""}
+                      </Typography>
+                    </Box>
                     {checkPointDatas.map((checkpoint, index) => {
                       console.log(checkpoint.longitude);
 
@@ -1993,6 +1528,7 @@ const PatrolCheckpointFrom = ({
                     </Box>
                   </>
                 </TabPanel>
+                {/* Checklist Tab */}
                 <TabPanel value="3" sx={{ padding: 0, py: "0.25rem" }}>
                   <>
                     <Box className="w-full border-b-2 pb-3 mt-2 flex justify-end">
@@ -2225,12 +1761,13 @@ const PatrolCheckpointFrom = ({
                     ))}
                   </>
                 </TabPanel>
+                {/* Mnapower Tab */}
                 <TabPanel value="4" sx={{ padding: 0, py: "0.25rem" }}>
                   <>
                     <Box className="w-full text-center items-center">
                       <Typography
                         sx={{
-                          color: "#2C5079",
+                          color: "#4C9BF5",
                           textDecorationLine: "underline",
                           fontSize: "16px",
                           mt: 1,
@@ -2367,15 +1904,17 @@ const PatrolCheckpointFrom = ({
                                             className="space-x-3"
                                           >
                                             <Box sx={{ width: "50%" }}>
-                                              {/* <LabelSelector3
-                                              selectorLabel={"ชื่อ-นามสกุล"}
-                                              itemSource={data.employees}
-                                              selectedVal={man.employeeId}
-                                              field={"employeeId"}
-                                              id={man.id}
-                                              handleSelectedVal={handleFieldManpowerTypeChange}
-                                            /> */}
-                                              <LabelTextField2
+                                              <LabelSelector3
+                                                selectorLabel={"ชื่อ-นามสกุล"}
+                                                itemSource={employeeItemSource}
+                                                selectedVal={man.employee_Id}
+                                                field={"employee_Id"}
+                                                id={man.id}
+                                                handleSelectedVal={
+                                                  handleFieldManpowerTypeChange
+                                                }
+                                              />
+                                              {/* <LabelTextField2
                                                 label={"รหัสพนักงาน"}
                                                 placeholder={"Type here..."}
                                                 inputVal={man.employee_Id}
@@ -2384,7 +1923,7 @@ const PatrolCheckpointFrom = ({
                                                 handleChangeVal={
                                                   handleFieldManpowerTypeChange
                                                 }
-                                              />
+                                              /> */}
                                             </Box>
                                             <Box sx={{ width: "50%" }}>
                                               <CheckBoxDropDown

@@ -7,11 +7,13 @@ import { Edit2 } from "iconsax-react";
 interface EditButtonProps {
     onEditBtnClick: (index: number) => void;
     index: number;
+    disable?: boolean;
   }
 
-export function EditButton({ onEditBtnClick, index }: EditButtonProps) {
+export function EditButton({ onEditBtnClick, index, disable=false }: EditButtonProps) {
   return (
     <Button
+    disabled={disable}
       style={{
         border: "1px solid #37B7C3",
         fontWeight: "bold",

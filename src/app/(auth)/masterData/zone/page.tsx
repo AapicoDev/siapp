@@ -15,34 +15,43 @@ import { SaveButton } from "@/components/ui/buttons/saveButton";
 import { DeleteButton } from "@/components/ui/buttons/deleteButton";
 
 type RowData = {
-    zone: string;
+  id: any;
+  zone: string;
   description: string;
   department: number;
   customer: number;
+};
+type selectedDelete = {
+  isSelected: boolean;
+  id: any;
 };
 
 export default function Zone() {
 
   const rows: RowData[] = [
     {
+      id: "1",
       zone: "BMR",
       description: "กรุงเทพมหานครและปริมณฑล",
       department: 6,
       customer: 5,
     },
     {
+      id: "2",
         zone: "RONE",
       description: "ภาคตะวันออกเฉียงเหนือ",
       department: 1,
       customer: 1,
     },
     {
+      id: "3",
         zone: "SVN",
       description: "สนามบินสุวรรณภูมิ",
       department: 4,
       customer: 3,
     },
     {
+      id: "4",
         zone: "DMK",
       description: "สนามบินดอนเมือง",
       department: 1,
@@ -56,6 +65,13 @@ export default function Zone() {
   const [rowData, setRowData] = useState(rows); // Local state for row data
   const [addZoneVal, setAddZoneVal] = useState("");
   const [addZoneDescVal, setAddZoneDescVal] = useState(""); 
+  const [isSelectedAll, setIsSelectedAll] = useState(false);
+  const [selected, setSelected] = useState<selectedDelete[]>(
+    rows.map((row) => ({
+      isSelected: false,
+      id: row.id,
+    }))
+  );
 
   // Handle Edit button click
   const handleEdit = (index: any) => {
@@ -100,6 +116,27 @@ export default function Zone() {
   const handleSearch = () => {
     console.log("AddSegmentVal = ",addZoneVal);
     console.log("AddSegmentDescVal = ",addZoneDescVal);
+  };
+
+  const handleSelected = (index: number) => {
+    const newSelected = [...selected];
+    newSelected[index].isSelected = !selected[index].isSelected;
+    setSelected(newSelected);
+    const isCheckAll = !selected.some((item) => item.isSelected === false);
+    if (isCheckAll) {
+      setIsSelectedAll(true);
+    } else {
+      setIsSelectedAll(false);
+    }
+  };
+
+  const handleCheckAll = (checked: boolean) => {
+    console.log("checked =", checked)
+    setIsSelectedAll(checked);
+    const selectedAll = [...selected];
+    selectedAll.map(s => s.isSelected = checked);
+    console.log("selectedAll =", selectedAll);
+    setSelected(selectedAll);
   };
 
   return (
@@ -158,7 +195,9 @@ export default function Zone() {
               <TableHead>
                 <TableRow sx={{ borderBottom: "1px solid #C7D4D7" }}>
                 <TableCell align="left" className="w-[5%]">
-                    <Checkbox2 className="mt-1 mb-2"/>
+                    <Checkbox2 className="mt-1 mb-2"
+                    checked={isSelectedAll}
+                    onCheckedChange={handleCheckAll}/>
                   </TableCell>
                   <TableCell align="center" className="w-[19%]">Zone</TableCell>
                   <TableCell align="center" className="w-[24%]">Description</TableCell>
@@ -180,7 +219,10 @@ export default function Zone() {
                     }
                   >
                     <TableCell align="left">
-                      <Checkbox2 />
+                      <Checkbox2 checked={selected[index].isSelected}
+                          onCheckedChange={() => {
+                            handleSelected(index);
+                          }}/>
                     </TableCell>
                     <TableCell align="center" className="max-w-48">
                       {editMode[index] ? (
@@ -208,9 +250,11 @@ export default function Zone() {
                     </TableCell>
                     <TableCell align="center">{row.department}</TableCell>
                     <TableCell align="center">{row.customer}</TableCell>
-                    <TableCell align="center">
+                    <TableCell align="center" sx={{justifyItems:"center"}}>
                       {editMode[index] ? (
+                        <div className="w-[48px] mr-9">
                         <SaveButton onSaveBtnClick={handleSave} index={index}/>
+                      </div>
                       ) : (
                         <EditButton onEditBtnClick={handleEdit} index={index}/>
                       )}

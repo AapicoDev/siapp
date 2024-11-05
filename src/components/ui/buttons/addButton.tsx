@@ -22,7 +22,7 @@ export function AddButton({ onAddBtnClick, content="+ Add", disable=false }: Add
             event.stopPropagation(); // Prevent event propagation
             onAddBtnClick(event); // Call the click handler passed as prop
           }}
-        className="w-[84px] bg-[#1D7A9B] hover:bg-[#D9F0EC] hover:text-[#1D7A9B] px-6"
+        className="w-fit bg-[#1D7A9B] hover:bg-[#D9F0EC] hover:text-[#1D7A9B] px-6"
       >
         {content}
       </Button>
