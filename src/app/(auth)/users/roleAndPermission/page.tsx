@@ -110,7 +110,7 @@ export default function UsersPage() {
   useEffect(() => {}, []);
 
   const handleAddNewCust = () => {
-    setShowAddCustModal(true);
+    //setShowAddCustModal(true);
   };
 
   const handleDeleteCust = () => {};
@@ -239,6 +239,9 @@ export default function UsersPage() {
       <Box className="px-2">
         {/* Main Content */}
         <Box px={2} pb={2}>
+        <Typography sx={{fontWeight: "700", color: "#F66262", border: "1px solid #F66262", width: "fit-content", borderRadius: "10px", mb: 1}} className="py-1 px-2">
+                Mockup data
+            </Typography>
           {/* Sub Header */}
           <Box mb={2} className="w-full flex justify-center">
             <Box
@@ -505,8 +508,8 @@ export default function UsersPage() {
                             width: "100%",
                           }}
                         >
-                          <Typography>Total: {totalItems} items</Typography>
-                          <Box>
+                          <Typography sx={{paddingY: 1}}>Total: {permissions.length} items</Typography>
+                          {/* <Box>
                             <DeleteButton
                               onDeleteBtnClick={handleDeleteCust}
                               disable={
@@ -521,7 +524,7 @@ export default function UsersPage() {
                             >
                               + New
                             </Button>
-                          </Box>
+                          </Box> */}
                         </Box>
                       </TableCell>
                     </TableRow>

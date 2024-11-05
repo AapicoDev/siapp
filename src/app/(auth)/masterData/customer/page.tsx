@@ -469,6 +469,9 @@ export default function Customer() {
       <Box className="px-2">
         {/* Main Content */}
         <Box px={2} pb={2}>
+        <Typography sx={{fontWeight: "700", color: "#F66262", border: "1px solid #F66262", width: "fit-content", borderRadius: "10px", mb: 1}} className="py-1 px-2">
+                Mockup data
+            </Typography>
           {/* Sub Header */}
           <Box className="w-full">
             <Box justifyContent="space-between" className="flex">

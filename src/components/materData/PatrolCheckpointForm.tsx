@@ -66,7 +66,7 @@ import {
 import { Models } from "appwrite";
 
 import MapComponent from "././../MapView";
-import { Logs } from "lucide-react";
+import { useConfirmDialog } from "../ui/alertDialog/confirmDialog";
 
 interface PatrolCheckpointFromProp {
   selectedRow: any;
@@ -181,6 +181,7 @@ const PatrolCheckpointFrom = ({
   );
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [employeeItemSource, setEmployeeItemSource] = useState<any[]>([]);
+  const { confirmDialog, ConfirmAlertDialog } = useConfirmDialog();
 
   useEffect(() => {
     roundsOfArea();
@@ -357,8 +358,9 @@ const PatrolCheckpointFrom = ({
   const handleDelete = () => {};
 
   const handleSave = async () => {
+    let addNewCheckpointResult, updateCheckpointResult, deleteCheckpointResult;
+    let addNewAssignedManpowerResult, updateAssignedManpowerResult, deleteAssignedManpowerResult;
     //Checkpoit and Check List Tab
-    if (tabValue === "2" || tabValue === "3") {
       //save new Checkpoint
       console.log("checkPointDatas = ", checkPointDatas);
       const newCheckpoints = checkPointDatas.filter(
@@ -380,13 +382,13 @@ const PatrolCheckpointFrom = ({
             };
           }) || [];
         setIsLoading(true);
-        const docIds = await addNewCheckpoint(dataToSubmit);
+        addNewCheckpointResult = await addNewCheckpoint(dataToSubmit);
         setIsLoading(false);
-        if (docIds) {
+        if (addNewCheckpointResult) {
           let updateNewCheckpoints = checkPointDatas
             .filter((item) => item.status === "existed")
             .map((item) => item.checkPointId);
-          updateNewCheckpoints = updateNewCheckpoints.concat(docIds);
+          updateNewCheckpoints = updateNewCheckpoints.concat(addNewCheckpointResult);
           const resultUpdateCheckpoitsOfArea = await updateAreaData(
             prelimData.areaId,
             { checkPointIDs: updateNewCheckpoints }
@@ -399,10 +401,10 @@ const PatrolCheckpointFrom = ({
       //delete checkpoints
       if (checkpointRemoveList.length > 0) {
         setIsLoading(true);
-        const deleteResult = await deleteCheckpoint(checkpointRemoveList);
+        deleteCheckpointResult = await deleteCheckpoint(checkpointRemoveList);
         setIsLoading(false);
-        console.log("deleteResult", deleteResult);
-        if (deleteResult) {
+        console.log("deleteResult", deleteCheckpointResult);
+        if (deleteCheckpointResult) {
           setCheckpointRemoveList([]);
           const updateNewCheckpoints = checkPointDatas.map(
             (item) => item.checkPointId
@@ -444,23 +446,22 @@ const PatrolCheckpointFrom = ({
           }) || [];
         console.log("dataToSubmit =", dataToSubmit);
         setIsLoading(true);
-        const updateResult = await updateCheckpoint(dataToSubmit);
+        updateCheckpointResult = await updateCheckpoint(dataToSubmit);
         setIsLoading(false);
-        console.log("updateResult =", updateResult);
+        console.log("updateResult =", updateCheckpointResult);
         checkpointsOfArea();
       }
-    } 
+
     //Manpower Tab
-    else if (tabValue === "4") {
       //delete assigned Mnapower
       if (assignedManpowerRemoveList.length > 0) {
         console.log("assignedManpowerRemoveList=", assignedManpowerRemoveList);
         setIsLoading(true);
-        const deleteResult = await deleteAssignedManpower(
+        deleteAssignedManpowerResult = await deleteAssignedManpower(
           assignedManpowerRemoveList
         );
         setIsLoading(false);
-        console.log("deleteResult", deleteResult);
+        console.log("deleteResult", deleteAssignedManpowerResult);
         setAssignedManpowerRemoveList([]);
       }
 
@@ -483,7 +484,7 @@ const PatrolCheckpointFrom = ({
             }) || [];
           console.log("dataToSubmit", addataToSubmit);
           setIsLoading(true);
-          const docIds = await addNewAssignedManpower(addataToSubmit);
+          addNewAssignedManpowerResult = await addNewAssignedManpower(addataToSubmit);
           setIsLoading(false);
         }
 
@@ -508,13 +509,31 @@ const PatrolCheckpointFrom = ({
             }) || [];
           console.log("dataToSubmit =", dataToSubmit);
           setIsLoading(true);
-          const updateResult = await updatAssignedManpower(dataToSubmit);
+          updateAssignedManpowerResult = await updatAssignedManpower(dataToSubmit);
           setIsLoading(false);
-          console.log("updateResult =", updateResult);
+          console.log("updateResult =", updateAssignedManpowerResult);
         }
         initialShiftData();
       }
-    }
+
+      if (addNewCheckpointResult !== null && updateCheckpointResult !== null && deleteCheckpointResult !== null &&
+          addNewAssignedManpowerResult !== null && updateAssignedManpowerResult !== null && deleteAssignedManpowerResult !== null)
+          {
+        const confirmApprove = await confirmDialog(
+          "Save data Success",
+          "Save Data of Patrol Checkpoint successfully.",
+          true
+        );
+        setIsAddOrUpdateSuccess(true);
+      }
+      else {
+        const confirmApprove = await confirmDialog(
+          "Error to save data.",
+          "Error to save data",
+          true
+        );
+        setIsAddOrUpdateSuccess(false);
+      }
   };
 
   function handleCloseCustomerForm() {
@@ -1241,11 +1260,11 @@ const PatrolCheckpointFrom = ({
 
           {isEdit && (
             <Box
-              className="w-full justify-center px-6 py-2 rounded-t-lg pb-6"
+              className="w-full justify-center px-6 rounded-t-lg pb-6 bg-white"
               textAlign="center"
             >
               <TabContext value={tabValue}>
-                <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+                <Box sx={{ mt:0, width: "685px", borderBottom: 1, borderColor: "divider", position: 'fixed', zIndex: 1000, bgcolor: "white"}}>
                   <TabList onChange={handleTabChange} aria-label="areaTabs">
                     <Tab label="Preliminary" value="1" />
                     <Tab label="Check Point" value="2" />
@@ -1254,11 +1273,11 @@ const PatrolCheckpointFrom = ({
                   </TabList>
                 </Box>
                 {/* Preliminary Tab */}
-                <TabPanel value="1" sx={{ padding: 0, py: "0.25rem" }}>
+                <TabPanel value="1" sx={{ padding: 0, py: "0.25rem", pt: 6 }}>
                   <PreliminaryStep />
                 </TabPanel>
                 {/* Checkpoint Tab */}
-                <TabPanel value="2" sx={{ padding: 0, py: "0.25rem" }}>
+                <TabPanel value="2" sx={{ padding: 0, py: "0.25rem", pt: 6 }}>
                   <>
                     <Box className="w-full flex justify-between mt-3">
                       <Typography
@@ -1529,7 +1548,7 @@ const PatrolCheckpointFrom = ({
                   </>
                 </TabPanel>
                 {/* Checklist Tab */}
-                <TabPanel value="3" sx={{ padding: 0, py: "0.25rem" }}>
+                <TabPanel value="3" sx={{ padding: 0, py: "0.25rem", pt: 6 }}>
                   <>
                     <Box className="w-full border-b-2 pb-3 mt-2 flex justify-end">
                       <Checkbox2
@@ -1762,7 +1781,7 @@ const PatrolCheckpointFrom = ({
                   </>
                 </TabPanel>
                 {/* Mnapower Tab */}
-                <TabPanel value="4" sx={{ padding: 0, py: "0.25rem" }}>
+                <TabPanel value="4" sx={{ padding: 0, py: "0.25rem", pt: 6 }}>
                   <>
                     <Box className="w-full text-center items-center">
                       <Typography
@@ -2046,6 +2065,9 @@ const PatrolCheckpointFrom = ({
             </Box>
           </div>
         )}
+
+        {/* Confirm dialog */}
+        {ConfirmAlertDialog}
       </div>
     </div>
   );

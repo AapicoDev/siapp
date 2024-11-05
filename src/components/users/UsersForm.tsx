@@ -10,12 +10,13 @@ import {
   InputLabel,
   SelectChangeEvent,
   Tab,
+  Grid2,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { Input } from "@/components/ui/textboxs/input";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/buttons/button";
-import { Trash } from "iconsax-react";
+import { Add, CloseCircle, Minus, Trash } from "iconsax-react";
 import { ChangeEvent, useEffect, useState } from "react";
 import { VscRefresh } from "react-icons/vsc";
 import { Selector } from "../ui/selectors/selector";
@@ -31,142 +32,192 @@ import TabPanel from "@mui/lab/TabPanel";
 import LabelTextField2 from "../ui/textboxs/LabelTextField2";
 import { LabelSelector3 } from "../ui/selectors/labelSelector3";
 
-type RowData = {
-  hrCode: string;
-  customerId: any;
-  departmentId: any;
-  segmentId: any;
-  groupId: any;
-  zoneId: any;
-  qrCode: any;
-  contractId: any;
-  code: string;
-  isActive: boolean;
-  customerName: string;
-};
-
 type AreaData = {
   id: number;
   name: string;
 };
 
-const segments = [
-  {
-    id: 1,
-    desc: "Building",
-  },
-  {
-    id: 2,
-    desc: "Education",
-  },
-  {
-    id: 3,
-    desc: "Industrial",
-  },
-  {
-    id: 4,
-    desc: "Resident",
-  },
-];
+type RoleType = {
+  id: any;
+  desc: string;
+};
 
-const groups = [
-  {
-    id: 1,
-    desc: "General Guard",
-  },
-  {
-    id: 2,
-    desc: "Cargo",
-  },
-  {
-    id: 3,
-    desc: "Cleaning",
-  },
-];
+type FormDataType = {
+  id: any;
+  employeeId: string;
+  name: string;
+  surname: string;
+  userRoleId: any[];
+  roles: RoleType[];
+  userName: any;
+  email: any;
+  isActive: any;
+};
 
-const zones = [
-  {
-    id: 1,
-    desc: "BMR",
-  },
-  {
-    id: 2,
-    desc: "RO1",
-  },
-  {
-    id: 3,
-    desc: "SVN",
-  },
-  {
-    id: 4,
-    desc: "RO2",
-  },
-];
+type UserRoleData = {
+  id: string;
+  departmentId: any;
+  customerId: any;
+  roleIds: any[];
+};
 
-const UsersForm = ({ editCustomer, closeModal, customeraAeas }: any) => {
+interface UsersFormProps {
+  userDetail: FormDataType;
+  closeModal: any;
+  allRoles: RoleType[];
+  isEdit: boolean;
+}
+
+const UsersForm = ({
+  userDetail,
+  closeModal,
+  allRoles,
+  isEdit,
+}: UsersFormProps) => {
   const [tabValue, setTabValue] = useState("1");
-  const [isEdit, setIsEdit] = useState(false);
-  const [areas, setAreas] = useState<AreaData[]>(customeraAeas);
-  const [formHeader, setFormHeader] = useState("");
-  const [formData, setFormData] = useState(
-    editCustomer || {
-      hrCode: "",
-      customerId: null,
-      departmentId: "",
-      segmentId: "",
-      groupId: "",
-      zoneId: "",
-      qrCode: "",
-      contractId: "",
-      code: "",
-      isActive: true,
-      customerName: "",
+  const [customerItemSource, setCustomerItemSource] = useState<any[]>([]);
+  const [userRoles, setUserRoles] = useState<UserRoleData[]>([]);
+  const [formData, setFormData] = useState<FormDataType>(
+    userDetail || {
+      id: undefined,
+      employeeId: "",
+      name: "",
+      surname: "",
+      userRoleId: [],
+      roles: [],
+      userName: "",
+      email: "",
+      status: true,
     }
   );
+  const [displayRoles, setDisplayRoles] = useState<any[]>([]);
+  const [displayPermissions, setDisplayPermissions] = useState<any[]>([]);
+  const formHeader = isEdit ? "View / Edit User" : "+ New User";
 
   useEffect(() => {
-    if (editCustomer === undefined) {
-      setFormHeader("+ New User");
-      setIsEdit(false);
-    } else {
-      setFormHeader("View / Edit User");
-      setIsEdit(true);
-    }
-  });
+    itemSource();
+    initialData();
+  }, []);
+
+  useEffect(() => {
+    mapAllRolesAndPermissions();
+  }, [userRoles]);
+
+  const itemSource = () => {
+    const mapCust = data.customers?.map((cust) => {
+      return {
+        id: cust.id,
+        desc: cust.customerName,
+      };
+    });
+    setCustomerItemSource(mapCust);
+  };
+
+  const initialData = () => {
+    const mappedUserRole: UserRoleData[] = formData.userRoleId?.map((ur) => {
+      const userRole = data.userRoles.find((u) => u.id === ur);
+      return {
+        id: ur,
+        departmentId: userRole?.departmentId,
+        customerId: userRole?.customerId,
+        roleIds: userRole?.roleIds || [""],
+      };
+    });
+    console.log("mappedUserRole =", mappedUserRole);
+    setUserRoles(mappedUserRole);
+  };
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
     setTabValue(newValue);
   };
 
-  const handleSelectChange = (e: SelectChangeEvent) => {
-    const { name, value } = e.target;
-    setFormData((prevData: any) => ({ ...prevData, [name]: value }));
-    console.log("formData", formData);
-  };
-
-  const addArea = () => {
-    const latestId = areas.reduce(
-      (max, area) => (area.id > max ? area.id : max),
-      0
+  const mapAllRolesAndPermissions = () => {
+    const maproleId = Array.from(
+      new Set(userRoles.map((ur) => ur?.roleIds).flat())
     );
-    setAreas([...areas, { id: latestId + 1, name: "" }]);
+    setDisplayRoles(maproleId);
+    //const roles = data.roles.filter(d=>d.id.includes(maproleId))
+    //console.log("roles =", roles);
   };
 
-  const removeArea = (id: number) => {
-    if (areas.length > 1) {
-      const filteredAreas = areas.filter((area) => area.id !== id);
-      const reorderedAreas = filteredAreas.map((area, index) => ({
-        ...area,
-        id: index + 1, // use index of array + 1 to set new id.
-      }));
-      setAreas(reorderedAreas);
+  const addUserRole = () => {
+    setUserRoles([
+      ...userRoles,
+      {
+        id: "new" + userRoles.length,
+        departmentId: undefined,
+        customerId: undefined,
+        roleIds: [""],
+      },
+    ]);
+  };
+
+  const removeUserRole = (id: any) => {
+    if (userRoles.length > 1) {
+      const filteredUserRoles = userRoles.filter(
+        (userrole) => userrole.id !== id
+      );
+      setUserRoles(filteredUserRoles);
     }
   };
 
-  const handleAreaChange = (id: number, value: string) => {
-    setAreas(
-      areas.map((area) => (area.id === id ? { ...area, name: value } : area))
+  const addRole = (userRoleId: any) => {
+    const updatedUserRolesDatas = userRoles.map((userRole) =>
+      userRole.id === userRoleId
+        ? { ...userRole, roleIds: [...userRole.roleIds, ""] }
+        : userRole
     );
+    console.log("updatedUserRolesDatas =", updatedUserRolesDatas);
+    setUserRoles(updatedUserRolesDatas);
+  };
+
+  const removeRole = (userRoleId: any, index: any) => {
+    const updateUserRoleDatas = userRoles.map((userRole) =>
+      userRole.id === userRoleId && userRole.roleIds.length > 0
+        ? {
+            ...userRole,
+            roleIds: userRole.roleIds.filter((_, i) => i !== index),
+            //status: "edit",
+          }
+        : userRole
+    );
+    setUserRoles(updateUserRoleDatas);
+  };
+
+  const handleFieldUserRoleTypeChange = (
+    id: any,
+    id2: any,
+    field: keyof UserRoleData,
+    value: any,
+    index?: any
+  ) => {
+    if (field === "roleIds") {
+      const userRoleData: UserRoleData[] = userRoles?.map((ur) => {
+        if (ur.id === id) {
+          if (index !== undefined) {
+            const updatedroleIds = [...ur.roleIds];
+            updatedroleIds[index] = value;
+            return {
+              ...ur,
+              roleIds: updatedroleIds,
+            };
+          }
+        }
+        return ur;
+      });
+      setUserRoles(userRoleData);
+    } else {
+      setUserRoles(
+        userRoles?.map((userrole) =>
+          userrole.id === id
+            ? {
+                ...userrole,
+                [field]: value,
+              }
+            : userrole
+        )
+      );
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -175,8 +226,8 @@ const UsersForm = ({ editCustomer, closeModal, customeraAeas }: any) => {
   };
 
   const handleUndo = () => {
-    setFormData(editCustomer);
-    setAreas(customeraAeas);
+    setFormData(userDetail);
+    initialData();
   };
 
   const handleDelete = () => {};
@@ -227,9 +278,9 @@ const UsersForm = ({ editCustomer, closeModal, customeraAeas }: any) => {
         </Button2>
       </Box>
 
-      <div className="bg-white rounded-b-lg shadow-lg min-h-[544px] max-h-[654px] w-[800px]">
+      <div className="bg-white rounded-b-lg shadow-lg min-h-[504px] max-h-[654px] w-[800px]">
         {/* Body */}
-        <div className="max-h-[578px] overflow-auto">
+        <div className="max-h-[534px] overflow-auto">
           <Box
             className="w-full justify-center px-6 py-2 rounded-t-lg pb-6"
             textAlign="center"
@@ -238,7 +289,7 @@ const UsersForm = ({ editCustomer, closeModal, customeraAeas }: any) => {
               <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
                 <TabList onChange={handleTabChange} aria-label="areaTabs">
                   <Tab label="Information" value="1" />
-                  <Tab label="Permission" value="2" />
+                  <Tab label="Permission" value="2" disabled={true}/>
                 </TabList>
               </Box>
               {/* Information Tab */}
@@ -252,7 +303,7 @@ const UsersForm = ({ editCustomer, closeModal, customeraAeas }: any) => {
                         name="name"
                         inputType="text"
                         placeHolder="Type here..."
-                        value={formData?.code}
+                        value={formData?.name}
                         handleChange={handleChange}
                       />
                     </Box>
@@ -264,7 +315,7 @@ const UsersForm = ({ editCustomer, closeModal, customeraAeas }: any) => {
                         name="surname"
                         inputType="text"
                         placeHolder="Type here..."
-                        value={formData?.code}
+                        value={formData?.surname}
                         handleChange={handleChange}
                       />
                     </Box>
@@ -278,7 +329,7 @@ const UsersForm = ({ editCustomer, closeModal, customeraAeas }: any) => {
                         name="employeeId"
                         inputType="text"
                         placeHolder="Type here..."
-                        value={formData?.code}
+                        value={formData?.employeeId}
                         handleChange={handleChange}
                       />
                     </Box>
@@ -289,7 +340,7 @@ const UsersForm = ({ editCustomer, closeModal, customeraAeas }: any) => {
                         name="email"
                         inputType="text"
                         placeHolder="Type here..."
-                        value={formData?.code}
+                        value={formData?.email}
                         handleChange={handleChange}
                       />
                     </Box>
@@ -299,10 +350,10 @@ const UsersForm = ({ editCustomer, closeModal, customeraAeas }: any) => {
                     <Box className="w-1/2">
                       <Textbox
                         header="Log In Username"
-                        name="logInUsername"
+                        name="userName"
                         inputType="text"
                         placeHolder="Type here..."
-                        value={formData?.code}
+                        value={formData?.userName}
                         handleChange={handleChange}
                       />
                     </Box>
@@ -320,8 +371,8 @@ const UsersForm = ({ editCustomer, closeModal, customeraAeas }: any) => {
                       </Typography>
                       <Box className="flex">
                         <Switch
-                          name="isActive"
-                          checked={formData.isActive}
+                          name="status"
+                          checked={formData?.isActive}
                           onCheckedChange={handleActiveChange}
                         />
                         <Typography
@@ -335,7 +386,7 @@ const UsersForm = ({ editCustomer, closeModal, customeraAeas }: any) => {
                             paddingTop: "0.5rem",
                           }}
                         >
-                          {formData.isActive === true ? "Active" : "Inactive"}
+                          {formData?.isActive === true ? "Active" : "Inactive"}
                         </Typography>
                       </Box>
                     </Box>
@@ -363,107 +414,124 @@ const UsersForm = ({ editCustomer, closeModal, customeraAeas }: any) => {
                     </Typography>
                   </Box>
 
-                  {areas.map((area, index) => (
-                    <div className="mb-2 flex" key={index}>
+                  {userRoles?.map((userRole, index) => (
+                    <div className="mb-2 flex" key={`userRole` + index}>
                       <Box
-                        className=" w-full space-y-3"
+                        className="space-y-3"
                         key={index}
                         sx={{
                           bgcolor: "#EBF4F6",
                           width: "100%",
                           p: 2,
                           borderRadius: "10px 0px 0px 10px",
+                          justifyItems: "left",
                         }}
                       >
-                        <div className="flex w-full space-x-3">
-                          <Box
+                        <Grid2
+                          size={12}
+                          className="flex"
+                          container
+                          spacing={1.5}
+                        >
+                          <Grid2
+                            size={6}
                             sx={{
-                              maxWidth: "50%",
-                              width: "50%",
                               bgcolor: "white",
                               borderRadius: "10px",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
                             }}
                           >
                             <LabelSelector3
                               selectorLabel={"Department"}
                               itemSource={data.departments}
-                              selectedVal={undefined}
-                              field={"department"}
-                              id={undefined}
-                              handleSelectedVal={function (
-                                id: any,
-                                id2: any,
-                                field: any,
-                                value: any
-                              ): void {
-                                throw new Error("Function not implemented.");
-                              }}
+                              selectedVal={userRole.departmentId}
+                              field={"departmentId"}
+                              id={userRole.id}
+                              handleSelectedVal={handleFieldUserRoleTypeChange}
                             />
-                            </Box>
-
-                            <Box
+                          </Grid2>
+                          <Grid2
+                            size={6}
                             sx={{
-                              maxWidth: "50%",
-                              width: "50%",
                               bgcolor: "white",
                               borderRadius: "10px",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
                             }}
                           >
                             <LabelSelector3
                               selectorLabel={"Customer"}
-                              itemSource={data.departments}
-                              selectedVal={undefined}
-                              field={"customer"}
-                              id={undefined}
-                              handleSelectedVal={function (
-                                id: any,
-                                id2: any,
-                                field: any,
-                                value: any
-                              ): void {
-                                throw new Error("Function not implemented.");
-                              }}
+                              itemSource={customerItemSource}
+                              selectedVal={userRole.customerId}
+                              field={"customerId"}
+                              id={userRole.id}
+                              handleSelectedVal={handleFieldUserRoleTypeChange}
                             />
-                          </Box>
-                        </div>
-
-                        <div className="w-full flex space-x-3">
-                          <Box
-                            sx={{
-                              maxWidth: "50%",
-                              width: "50%",
-                              bgcolor: "white",
-                              borderRadius: "10px",
-                            }}
+                          </Grid2>
+                        </Grid2>
+                        <div className="w-full">
+                          <Grid2
+                            size={12}
+                            className="flex"
+                            container
+                            spacing={1.5}
                           >
-                            <LabelSelector3
-                              selectorLabel={"Role"}
-                              itemSource={data.departments}
-                              selectedVal={undefined}
-                              field={"role"}
-                              id={undefined}
-                              handleSelectedVal={function (
-                                id: any,
-                                id2: any,
-                                field: any,
-                                value: any
-                              ): void {
-                                throw new Error("Function not implemented.");
-                              }}
-                            />
-                          </Box>
-                          <Box
-                            sx={{
-                              maxWidth: "50%",
-                              width: "50%",
-                              borderRadius: "10px",
-                            }}
-                          ></Box>
+                            {userRole.roleIds?.map((roleId, index) => (
+                              <Grid2
+                                key={`roleId` + index}
+                                size={6}
+                                sx={{
+                                  bgcolor: "white",
+                                  borderRadius: "10px",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                }}
+                              >
+                                <Grid2
+                                  size={1}
+                                  sx={{
+                                    bgcolor: "white",
+                                    borderRadius: "10px",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                  }}
+                                ></Grid2>
+                                <LabelSelector3
+                                  selectorLabel={"Role"}
+                                  itemSource={allRoles}
+                                  selectedVal={roleId}
+                                  field={"roleIds"}
+                                  id={userRole.id}
+                                  index={index}
+                                  handleSelectedVal={
+                                    handleFieldUserRoleTypeChange
+                                  }
+                                />
+                                <Button
+                                  onClick={() => removeRole(userRole.id, index)}
+                                  className="w-fit bg-[white] rounded-lg text-[#F66262] hover:bg-[#F66262] hover:text-[white] px-1"
+                                >
+                                  <Minus size="24" />
+                                </Button>
+                              </Grid2>
+                            ))}
+                          </Grid2>
                         </div>
+                        <Button
+                          onClick={() => addRole(userRole.id)}
+                          className="w-fit bg-[#4C9BF5] hover:bg-[#2C5079] px-2"
+                        >
+                          <Add size="24" />
+                        </Button>
                       </Box>
                       <Box>
                         <Button
-                          onClick={() => removeArea(area.id)}
+                          onClick={() => removeUserRole(userRole.id)}
                           className="bg-[#F66262] rounded-r-lg rounded-l-none h-full px-2"
                         >
                           <Trash color="white" />
@@ -473,21 +541,51 @@ const UsersForm = ({ editCustomer, closeModal, customeraAeas }: any) => {
                   ))}
 
                   <Box className="justify-start flex w-full">
-                    <AddButton onAddBtnClick={addArea} />
-                  </Box>
-
-                  <Box className="w-full justify-between items-center pt-5">
-                    <Typography
-                      sx={{
-                        fontSize: "16px",
-                        color: "#4C9BF5",
-                        textDecorationLine: "underline",
-                      }}
-                    >
-                      Total: {areas.length} area{areas.length > 1 ? "s" : ""}
-                    </Typography>
+                    <AddButton onAddBtnClick={addUserRole} />
                   </Box>
                 </>
+              </TabPanel>
+              {/* Permission View Tab */}
+              <TabPanel value="2" sx={{ padding: 0 }}>
+                <Box className="flex w-full space-x-2 pt-4">
+                  <Typography
+                    textAlign="left"
+                    sx={{
+                      fontSize: "14px",
+                      paddingBottom: "0.25rem",
+                      color: "#2C5079",
+                      fontWeight: "700",
+                      paddingY: "0.25rem",
+                      paddingX: "0.5rem",
+                    }}
+                  >
+                    Roles :
+                  </Typography>
+                    {displayRoles?.map((role, index) => (
+                      <Box
+                      key={index}
+                        className="flex w-fit"
+                        sx={{
+                          bgcolor: "#EBF4F6",
+                          borderRadius: "9999px",
+                          border: "1px solid #1D7A9B",
+                        }}
+                      >
+                        <Typography
+                          textAlign="center"
+                          sx={{
+                            fontSize: "14px",
+                            paddingBottom: "0.25rem",
+                            color: "#1D7A9B",
+                            paddingY: "0.25rem",
+                            paddingX: "0.75rem",
+                          }}
+                        >
+                          {allRoles.find((ar) => ar.id === role)?.desc}
+                        </Typography>
+                      </Box>
+                    ))}
+                </Box>
               </TabPanel>
             </TabContext>
           </Box>

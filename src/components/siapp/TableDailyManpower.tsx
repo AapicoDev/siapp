@@ -165,7 +165,7 @@ export function TableDailyManpower({}: TableDailyManpowerProps) {
                 </TableCell>
 
                 {/* work Status */}
-                <TableCell align="center" className="flex justify-center">
+                <TableCell align="center" className="flex justify-items-center">
                   <WorkStatus status={row.workStatus} />
                 </TableCell>
 

@@ -194,6 +194,9 @@ export default function Manpower() {
         <Box px={2} pb={2}>
           {/* Sub Header */}
           <Box className="w-full">
+              <Typography sx={{fontWeight: "700", color: "#F66262", border: "1px solid #F66262", width: "fit-content", borderRadius: "10px"}} className="py-1 px-2">
+                Mockup data
+              </Typography>
             <Box justifyContent="space-between" className="flex">
               <Box className="space-x-4 py-4 flex w-fit">
                 <Box className="justify-center flex p-1 pb-0 bg-white rounded-lg h-10 w-30 ">

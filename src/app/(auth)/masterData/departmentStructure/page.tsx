@@ -251,6 +251,9 @@ export default function DepartmentStructure() {
       <Box className="px-2">
         {/* Main Content */}
         <Box flex={1} px={2} pb={2}>
+        <Typography sx={{fontWeight: "700", color: "#F66262", border: "1px solid #F66262", width: "fit-content", borderRadius: "10px", mb: 1}} className="py-1 px-2">
+                Mockup data
+            </Typography>
           {/* Sub Header */}
           <Box mb={2} className="w-full flex justify-center">
             <Box
@@ -450,9 +453,7 @@ export default function DepartmentStructure() {
                         onDeleteBtnClick={handleDelete}
                         disable={!selected.some(s => s.isSelected === true)}
                       />
-                      <GradientButton onBtnClick={function (event: React.MouseEvent<HTMLButtonElement, MouseEvent>): void {
-                        throw new Error("Function not implemented.");
-                      } } content={"+New Structure"} />
+                      <GradientButton onBtnClick={handleDelete} content={"+New Structure"} />
                       </div>
                     </Box>
                   </TableCell>

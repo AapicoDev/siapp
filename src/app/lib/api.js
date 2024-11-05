@@ -13,7 +13,7 @@ import {
 import { Query, ID } from "appwrite";
 const databaseId = "6707ae1c0030c33b9ab2";
 //Table ID
-//--Master Data--
+//#region --Master Data--
 const masterRoundTableId = "670f3643003e13f37bd2";
 const masterCheckListTableId = "670f555d003447303ed7"; 
 const masterAreaTableId = "6707b0f400163a29999f";
@@ -23,6 +23,7 @@ const masterCheckpointTableId = "670f46d1001fe205beaf";
 const masterManpowerRoleTableId = "6721d7c9000b4fb3431a";
 const masterAssignedManpowerTableId = "6721d91c00335cc2011c";
 const masterRandomPatrolReasonTableId = "6719accc000ca3be7e73";
+//#endregion --Master Data--
 
 const patrolRoundsTableId = "670e369a0033e51cd0f7";
 const patrolCheckpointTableId = "670e378f0015ebe884b8";
@@ -196,6 +197,7 @@ export async function deleteCheckpoint(id) {
     return response;
   } catch (error) {
     console.error("Error deleting data:", error);
+    return null;
   }
 }
 export async function addNewCheckpoint(checkpointData) {
@@ -207,6 +209,7 @@ export async function addNewCheckpoint(checkpointData) {
       documentIds.push(document.$id); // Add the document ID to the list
     } catch (error) {
       console.error('Error creating document:', error);
+      return null;
     }
   });
 
@@ -229,6 +232,7 @@ export async function updateCheckpoint(updatecheckpointData) {
     return results;
   } catch (error) {
     console.error("Error updating documents:", error);
+    return null;
   }
 }
 export async function updateAreaData(id, dataToSubmit) {
@@ -259,6 +263,7 @@ export async function updatAssignedManpower(updateAssignedMnapowerData) {
     return results;
   } catch (error) {
     console.error("Error updating documents:", error);
+    return null;
   }
 }
 export async function deleteAssignedManpower(id) {
@@ -288,6 +293,7 @@ export async function addNewAssignedManpower(assignedManpowerdata) {
       documentIds.push(document.$id); // Add the document ID to the list
     } catch (error) {
       console.error('Error creating document:', error);
+      return null;
     }
   });
 
