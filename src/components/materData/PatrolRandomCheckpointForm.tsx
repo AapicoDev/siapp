@@ -173,12 +173,22 @@ const PatrolRandomCheckpointForm = ({
     );
     if (confirmApprove) {
       setIsLoading(true);
-      const deleteResult = await deleteRandomPatrol(formData.id);
+      console.log("formData.id =", formData.id);
+      const deleteResult = await deleteRandomPatrol([formData.id]);
       setIsLoading(false);
       console.log("deleteResult =", deleteResult);
       if (deleteResult !== null) {
+        const confirmApprove = await confirmDialog(
+          "Delete Success",
+          "delete Random Parol Reason success.", true
+       );
+       if(confirmApprove){
         setIsAddOrUpdateSuccess(true);
         handleCloseForm();
+       }
+      }
+      else {
+        alert("Error occur to delete.");
       }
     }
   };

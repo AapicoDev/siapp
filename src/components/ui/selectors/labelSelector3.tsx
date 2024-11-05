@@ -11,10 +11,11 @@ interface LabelSelectorProps {
   defaultSelected?: string
   id: any;
   id2?: any
-  handleSelectedVal: (id: any, id2: any, field: any, value: any) => void;
+  handleSelectedVal: (id: any, id2: any, field: any, value: any, index?: number) => void;
+  index? : number;
 }
 
-export function LabelSelector3({selectorLabel, itemSource, handleSelectedVal, selectedVal, field , defaultSelected="Select",id, id2=undefined}:LabelSelectorProps) {
+export function LabelSelector3({selectorLabel, itemSource, handleSelectedVal, selectedVal, field , defaultSelected="Select",id, id2=undefined, index=undefined}:LabelSelectorProps) {
 
   return (
     <>
@@ -38,7 +39,7 @@ export function LabelSelector3({selectorLabel, itemSource, handleSelectedVal, se
       size="small"
       displayEmpty
       value={selectedVal || ""}
-      onChange={(e) => handleSelectedVal(id, id2, field, e.target.value)}
+      onChange={(e) => handleSelectedVal(id, id2, field, e.target.value, index)}
       renderValue={(value) =>
         value === ""
           ? `${defaultSelected}`

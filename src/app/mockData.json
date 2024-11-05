@@ -384,6 +384,19 @@
       "shiftId": "0005"
     }
   ],
+  "manpowerRoles": [
+    {
+      "id": 5,
+      "desc": "หัวหน้าเจ้าหน้าที่รักษาความปลอดภัย",
+      "permissions": [1]
+    }
+    ,
+    {
+      "id": 6,
+      "desc": "เจ้าหน้าที่รักษาความปลอดภัย",
+      "permissions": [1,2]
+    }
+  ],
   "assignedManpowers": [
     {
       "id": "pt0001",
@@ -416,7 +429,7 @@
       "isAsm": 1,
       "name": "กตคน์ แย้มโสพิศ",
       "email": "kitty@asm-company.com",
-      "otherPositionId": [1, 2],
+      "otherPositionId": ["r01", "r02"],
       "contractId": "0001-2024"
     },
     {
@@ -424,7 +437,7 @@
       "isAsm": 2,
       "name": "วัฒนา เฉลิม",
       "email": "wattana.cha@mahidol.edu",
-      "otherPositionId": [1, 2, 4],
+      "otherPositionId": ["r01", "r02", "r04"],
       "contractId": "0001-2024"
     },
     {
@@ -432,7 +445,7 @@
       "isAsm": 2,
       "name": "กตคน์ แย้มโสพิศ",
       "email": "kitty@asm-company.com",
-      "otherPositionId": [1, 2],
+      "otherPositionId": ["r01", "r02"],
       "contractId": "0002-2024"
     },
     {
@@ -440,7 +453,7 @@
       "isAsm": 1,
       "name": "สมมติ1 สมมติ1",
       "email": "numberone@mail.com",
-      "otherPositionId": [1],
+      "otherPositionId": ["r01"],
       "contractId": "0002-2024"
     },
     {
@@ -448,7 +461,7 @@
       "isAsm": 1,
       "name": "สมมติ2 สมมติ2",
       "email": "numberTwo@mail.com",
-      "otherPositionId": [2],
+      "otherPositionId": ["r02"],
       "contractId": "0003-2024"
     }
   ],
@@ -548,35 +561,119 @@
   ],
   "roles": [
     {
-      "id": 1,
+      "id": "r01",
       "desc": "QR Site Manager",
-      "permissions": [1, 2, 3, 4, 5]
+      "permissions": ["pm001", "pm002", "pm003", "pm004", "pm005"],
+      "isActive": true
+    },
+    {
+      "id": "r02",
+      "desc": "Administrator",
+      "permissions": ["pm001", "pm002", "pm003", "pm004", "pm005", "pm006","pm007"],
+      "isActive": true
+    },
+    {
+      "id": "r03",
+      "desc": "CCC",
+      "permissions": ["pm001", "pm002", "pm003"],
+      "isActive": true
+    },
+    {
+      "id": "r04",
+      "desc": "Developer",
+      "permissions": ["pm001", "pm002", "pm003", "pm004", "pm005", "pm006"],
+      "isActive": true
+    },
+    {
+      "id": "r05",
+      "desc": "หัวหน้าเจ้าหน้าที่รักษาความปลอดภัย",
+      "permissions": ["pm001"],
+      "isActive": true
+    },
+    {
+      "id": "r06",
+      "desc": "เจ้าหน้าที่รักษาความปลอดภัย",
+      "permissions": ["pm001", "pm002"],
+      "isActive": true
+    }
+  ],
+  "userRoles": [
+    {
+      "userId": 1,
+      "id": "ur01",
+      "roleIds": ["r01","r02","r03"],
+      "departmentId": 1,
+      "customerId": 1
+    },
+    {
+      "userId": 1,
+      "id": "ur02",
+      "roleIds": ["r02","r03"],
+      "departmentId": 2,
+      "customerId": 2
+    },
+    {
+      "userId": 2,
+      "id": "ur03",
+      "roleIds": ["r01","r04"],
+      "departmentId": 3,
+      "customerId": 3
+    },
+    {
+      "userId": 3,
+      "id": "ur04",
+      "roleIds": ["r02"],
+      "departmentId": 4,
+      "customerId": 4
+    },
+    {
+      "userId": 4,
+      "id": "ur05",
+      "roleIds": ["r04"],
+      "departmentId": 2,
+      "customerId": 2
+    }
+  ],
+  "user" : [
+    {
+      "id": 1,
+      "employeeId": "12345678",
+      "name": "สมมติ1",
+      "surname": "สมมติ1",
+      "userRoleId": ["ur01","ur02"],
+      "userName": "userName1",
+      "email": "user1@email.com",
+      "isActive": true
     },
     {
       "id": 2,
-      "desc": "Administrator",
-      "permissions": [1, 2, 3, 4, 5, 6, 7]
+      "employeeId": "12345679",
+      "name": "สมมติ2",
+      "surname": "สมมติ2",
+      "userRoleId": ["ur03"],
+      "userName": "userName2",
+      "email": "user2@email.com",
+      "isActive": true
     },
     {
       "id": 3,
-      "desc": "CCC",
-      "permissions": [1, 2, 3]
+      "employeeId": "12345680",
+      "name": "สมมติ3",
+      "surname": "สมมติ3",
+      "userRoleId": ["ur04"],
+      "userName": "userName3",
+      "email": "user3@email.com",
+      "isActive": true
     },
     {
       "id": 4,
-      "desc": "Developer",
-      "permissions": [1, 2, 3, 4, 5, 6]
-    },
-    {
-      "id": 5,
-      "desc": "หัวหน้าเจ้าหน้าที่รักษาความปลอดภัย",
-      "permissions": [1]
-    }
-    ,
-    {
-      "id": 6,
-      "desc": "เจ้าหน้าที่รักษาความปลอดภัย",
-      "permissions": [1,2]
+      "employeeId": "12345681",
+      "name": "สมมติ4",
+      "surname": "สมมติ4",
+      "userRoleId": ["ur05"],
+      "userName": "userName4",
+      "email": "user4@email.com",
+      "isActive": false
     }
   ],
   "activeStatus": [
@@ -629,31 +726,31 @@
   ],
   "permissions": [
     {
-      "id": 1,
+      "id": "pm001",
       "desc": "Manage Daily Report"
     },
     {
-      "id": 2,
+      "id": "pm002",
       "desc": "Manage Incident"
     },
     {
-      "id": 3,
+      "id": "pm003",
       "desc": "Manage Monthly Report"
     },
     {
-      "id": 4,
+      "id": "pm004",
       "desc": "View Daily Report"
     },
     {
-      "id": 5,
+      "id": "pm005",
       "desc": "Manage Daily Report"
     },
     {
-      "id": 6,
+      "id": "pm006",
       "desc": "Manage Incident"
     },
     {
-      "id": 7,
+      "id": "pm007",
       "desc": "Manage Monthly Report"
     }
   ],

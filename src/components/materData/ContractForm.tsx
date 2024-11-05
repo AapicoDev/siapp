@@ -1473,7 +1473,7 @@ const ContractForm = ({
                                           <Box sx={{ width: "42%" }}>
                                             <LabelSelector3
                                               selectorLabel={"ตำแหน่ง"}
-                                              itemSource={data.roles}
+                                              itemSource={data.manpowerRoles}
                                               handleSelectedVal={
                                                 handleFieldManpowerTypeChange
                                               }
@@ -1669,7 +1669,7 @@ const ContractForm = ({
                                       handleFieldPatrolAlertListTypeChange
                                     }
                                     desc={"เลือก"}
-                                    maxLength={data.roles.length}
+                                    maxLength={data.manpowerRoles.length}
                                     maxDiaplay={data.roles.length}
                                   />
                                 </Box>

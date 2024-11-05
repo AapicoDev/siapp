@@ -17,11 +17,11 @@ export function ActiveStatusBox({
    const [statusColor, setStatusColor] = useState("");
 
   useEffect(() => {
-    if (status === 1) {
+    if (status === true) {
        setStatusDesc("Active");
        setStatusColor("bg-[#86DC89]")
     }
-    else if(status === 0){
+    else if(status === false){
        setStatusDesc("Inactive");
        setStatusColor("bg-[#83A2AD]")
     }

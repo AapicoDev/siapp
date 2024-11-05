@@ -48,11 +48,19 @@ import UsersForm from "@/components/users/UsersForm";
 type RowData = {
   id: any;
   employeeId: string;
-  roleId: any;
+  name: string;
+  surname: string;
+  userRoleId: any[];
+  roles: RoleType[];
   userName: any;
   email: any;
-  status: any;
+  isActive: any;
 };
+
+type RoleType = {
+  id: any;
+  desc: string;
+}
 
 type AreaData = {
   id: number;
@@ -64,41 +72,6 @@ type selectedDelete = {
   isSelected: boolean;
   userId: string;
 };
-
-const rows: RowData[] = [
-  {
-    id: 1,
-    employeeId: "12345678",
-    roleId: 1,
-    userName: "userName1",
-    email: "email@email.com",
-    status: 1,
-  },
-  {
-    id: 2,
-    employeeId: "12345679",
-    roleId: 2,
-    userName: "userName2",
-    email: "email@email.com",
-    status: 1,
-  },
-  {
-    id: 3,
-    employeeId: "12345680",
-    roleId: 3,
-    userName: "userName3",
-    email: "email@email.com",
-    status: 1,
-  },
-  {
-    id: 4,
-    employeeId: "12345681",
-    roleId: 4,
-    userName: "userName4",
-    email: "email@email.com",
-    status: 0,
-  },
-];
 
 const mockArea: AreaData[] = [
   {
@@ -118,8 +91,6 @@ const mockArea: AreaData[] = [
   },
 ];
 
-const totalItems = rows.length;
-
 const initialArea: AreaData[] = [
   {
     id: 1,
@@ -129,37 +100,92 @@ const initialArea: AreaData[] = [
 ];
 
 export default function UsersPage() {
-  const [editMode, setEditMode] = useState(Array(rows.length).fill(false)); // Array to track edit state for each row
-  const [rowData, setRowData] = useState(rows); // Local state for row data
-  const [roles, setRoles] = useState(data.roles);
+  const [rowData, setRowData] = useState<RowData[]>([]);
+  const [allRoles, setAllRoles] = useState<RoleType[]>([]);
   const [status, setStatus] = useState(data.activeStatus);
   const [employees, setEmployees] = useState(data.employees);
   const [areas, setAreas] = useState<AreaData[]>([
     { id: 1, custId: null, name: "" },
   ]);
-  const [custAreas, setCustAreas] = useState<AreaData[]>();
-  const [selectedRow, setSelectedRow] = useState<RowData | null>(null);
+  const [selectedRow, setSelectedRow] = useState<RowData>({
+    id: undefined,
+    employeeId: "",
+    name: "",
+    surname: "",
+    userRoleId: [],
+    roles: [],
+    userName: "",
+    email: "",
+    isActive: true
+  });
   const [isSelectedAll, setIsSelectedAll] = useState(false);
   const [openAddUserModal, setOpenAddUserModal] = useState(false);
   const [openEditUserModal, setOpenEditUserModal] = useState<boolean>(false);
-  const [openViewQR, setOpenViewQR] = useState<boolean>(false);
-  const [openAddContract, setOpenAddContract] = useState<boolean>(false);
-  const [openEditContract, setOpenEditContract] = useState<boolean>(false);
   const [selectedSearchRole, setSelectedSearchRole] = useState("");
   const [selectedSearchStatus, setSelectedSearchStatus] = useState("");
   const [searchEmpIdVal, setSearchEmpIdVal] = useState("");
   const [searchVal, setSearchVal] = useState("");
   const [selected, setSelected] = useState<selectedDelete[]>(
-    rows.map((row) => ({
+    rowData.map((row) => ({
       isSelected: false, // Default value for `selected`
       userId: row.id, // Convert customerId to string for custId
     }))
   );
+  const totalItems = rowData.length;
 
-  useEffect(() => {}, []);
+  useEffect(() => {
+    tableData();
+  }, []);
+
+  useEffect(() => {
+    const newSelected: selectedDelete[] = rowData.map(row => ({
+      isSelected: false,
+      userId: row.id
+    }))
+  }, [rowData]);
+
+  const tableData = () => {
+    const mappedAllRoles : RoleType[] = data.roles.map(r => {
+      return {
+        id: r.id,
+        desc: r.desc
+      };
+    })
+    setAllRoles(mappedAllRoles);
+
+    const mappedData : RowData[] = data.user.map(user => {
+      return {
+        id: user.id,
+        employeeId: user.employeeId,
+        name: user.name,
+        surname: user.surname,
+        userRoleId: user.userRoleId,
+        roles: roleManagement(user.userRoleId, mappedAllRoles),
+        userName: user.userName,
+        email: user.email,
+        isActive: user.isActive
+      }
+    })
+    setRowData(mappedData);
+  };
+
+  function roleManagement(userRoleIds: any[], allRoles: RoleType[]) {
+    const rolesId = Array.from(
+                    new Set(userRoleIds.map(ur => data.userRoles.find(userRole => userRole.id === ur)?.roleIds).flat()));
+    const roles: RoleType[] = rolesId.map((rid) => {
+      const roleDesc = allRoles.find(ar => ar.id === rid)?.desc || "";
+      return{
+        id: rid,
+        desc: allRoles.find(ar => ar.id === rid)?.desc || ""
+      };
+    })
+    return roles;
+  }
 
   const handleAddNewUser = () => {
     setOpenAddUserModal(true);
+    console.log("rowData =", rowData);
+    console.log("allRoles =", allRoles);
   };
 
   const handleDeleteCust = () => {};
@@ -180,41 +206,13 @@ export default function UsersPage() {
     }
   };
 
-  function handleCloseCustomerForm(isEdit: boolean) {
+  function handleCloseUserForm(isEdit: boolean) {
     if (!isEdit) {
       setOpenAddUserModal(false);
     } else {
       setOpenEditUserModal(false);
     }
-    setRowData(rows);
   }
-
-  function handleCloseViewQr() {
-    setOpenViewQR(false);
-  }
-
-  function handleCloseContractForm(isEdit: boolean) {
-    if (!isEdit) {
-      setOpenAddContract(false);
-    } else {
-      setOpenEditContract(false);
-    }
-  }
-
-  const handleEditContract = (selecectedRow: any) => {
-    console.log("row =", selecectedRow);
-    setSelectedRow(selecectedRow);
-    setOpenEditContract(true);
-  };
-
-  const handleOpenViewQr = (selecectedRow: any) => {
-    setSelectedRow(selecectedRow);
-    const custArea = mockArea.filter(
-      (a) => a.custId === selecectedRow.customerId
-    );
-    setCustAreas(custArea);
-    setOpenViewQR(true);
-  };
 
   const handleSelected = (index: number) => {
     const newSelected = [...selected];
@@ -238,13 +236,6 @@ export default function UsersPage() {
     setSelected(selectedAll);
   };
 
-  const handleAddBtnOnClick = (
-    e: React.MouseEvent<HTMLButtonElement, MouseEvent>
-  ) => {
-    e.stopPropagation();
-    setOpenAddContract(true);
-  };
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     if (name === "search") {
@@ -258,6 +249,9 @@ export default function UsersPage() {
       <Box className='px-2'>
         {/* Main Content */}
         <Box px={2} pb={2}>
+        <Typography sx={{fontWeight: "700", color: "#F66262", border: "1px solid #F66262", width: "fit-content", borderRadius: "10px", mb: 1}} className="py-1 px-2">
+                Mockup data
+            </Typography>
           {/* Sub Header */}
           <Box mb={2} className='w-full flex justify-center'>
             <Box
@@ -289,7 +283,7 @@ export default function UsersPage() {
                 {/* Selector search Role */}
                 <LabelSelector
                   selectorLabel={"Role"}
-                  itemSource={roles}
+                  itemSource={allRoles}
                   setSelectedVal={setSelectedSearchRole}
                   selectedVal={selectedSearchRole}
                   name={"role"}
@@ -365,11 +359,7 @@ export default function UsersPage() {
                   <TableRow
                     onClick={() => handleRowClick(row)} // Row click handler
                     key={index}
-                    className={
-                      editMode[index]
-                        ? `bg-[#D8EAFF]`
-                        : `${index % 2 === 1 ? `bg-inherit` : `bg-[#EBF4F6]`}`
-                    }
+                    className={`${index % 2 === 1 ? `bg-inherit` : `bg-[#EBF4F6]`}`}
                     sx={{
                       cursor: "pointer",
                       "& .MuiTableCell-root": {
@@ -381,7 +371,7 @@ export default function UsersPage() {
                     }}>
                     <TableCell align='left'>
                       <Checkbox
-                        checked={selected[index].isSelected}
+                        checked={selected[index]?.isSelected}
                         onClick={(event) => {
                           event.stopPropagation(); // Prevent row click
                           handleSelected(index);
@@ -391,24 +381,23 @@ export default function UsersPage() {
 
                     <TableCell align='center'>{row.employeeId}</TableCell>
 
-                    <TableCell align='center'>
-                      {employees.find((e) => e.empId === row.employeeId)
-                        ?.fname +
-                        " " +
-                        employees.find((e) => e.empId === row.employeeId)
-                          ?.lname}
+                    <TableCell align="center">
+                      {row.name + " " + row.surname}
                     </TableCell>
 
-                    <TableCell align='center'>
-                      {roles.find((r) => r.id === row.roleId)?.desc}
+                    <TableCell align="center">
+                      {row.roles?.length > 1 ? 
+                       row.roles?.length > 2 ? `${row.roles[0]?.desc}, ${row.roles[1]?.desc},...` 
+                       : row.roles?.map((r) => r.desc).join(",") 
+                       : row.roles[0]?.desc}
                     </TableCell>
 
                     <TableCell align='center'>{row.userName}</TableCell>
 
                     <TableCell align='center'>{row.email}</TableCell>
 
-                    <TableCell align='center'>
-                      <ActiveStatusBox status={row.status} />
+                    <TableCell align="center">
+                      <ActiveStatusBox status={row.isActive} />
                     </TableCell>
                   </TableRow>
                 ))}
@@ -457,17 +446,29 @@ export default function UsersPage() {
       {/* Add customer */}
       {openAddUserModal && (
         <UsersForm
-          closeModal={handleCloseCustomerForm}
-          customeraAeas={initialArea}
-        />
+          closeModal={handleCloseUserForm}
+          userDetail={{
+            id: undefined,
+            employeeId: "",
+            name: "",
+            surname: "",
+            userRoleId: [""],
+            roles: [],
+            userName: "",
+            email: "",
+            isActive: true
+          }}
+          allRoles={allRoles}        
+          isEdit={false}/>
       )}
 
       {/* Edit/Delete Customer */}
       {openEditUserModal && (
         <UsersForm
-          closeModal={handleCloseCustomerForm}
-          editCustomer={selectedRow}
-          customeraAeas={areas}
+          closeModal={handleCloseUserForm}
+          userDetail={selectedRow}
+          allRoles={allRoles}     
+          isEdit={true}       
         />
       )}
     </div>
