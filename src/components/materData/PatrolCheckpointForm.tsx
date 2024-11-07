@@ -312,12 +312,12 @@ const PatrolCheckpointFrom = ({
     ]);
   };
 
-  const removeCheckpoint = (id: any, status: any) => {
+  const removeCheckpoint = (id: any, status: any, selectedIndex: number) => {
     if (status === "existed" || status === "edit")
       setCheckpointRemoveList(checkpointRemoveList.concat(id));
     if (checkPointDatas.length > 0) {
       const filteredCheckpoints = checkPointDatas.filter(
-        (checkpoint) => checkpoint.checkPointId !== id
+        (checkpoint, index) => index !== selectedIndex//checkpoint.checkPointId !== id
       );
       setCheckPointDatas(filteredCheckpoints);
     }
@@ -360,7 +360,7 @@ const PatrolCheckpointFrom = ({
   const handleSave = async () => {
     let addNewCheckpointResult, updateCheckpointResult, deleteCheckpointResult;
     let addNewAssignedManpowerResult, updateAssignedManpowerResult, deleteAssignedManpowerResult;
-    //Checkpoit and Check List Tab
+
       //save new Checkpoint
       console.log("checkPointDatas = ", checkPointDatas);
       const newCheckpoints = checkPointDatas.filter(
@@ -453,7 +453,7 @@ const PatrolCheckpointFrom = ({
       }
 
     //Manpower Tab
-      //delete assigned Mnapower
+      //delete assigned Manpower
       if (assignedManpowerRemoveList.length > 0) {
         console.log("assignedManpowerRemoveList=", assignedManpowerRemoveList);
         setIsLoading(true);
@@ -693,7 +693,7 @@ const PatrolCheckpointFrom = ({
           employeeName: man.employeeName,
           role_Name: man.role_Name,
           shift_Id: man.shift_Id,
-          checkpoint_IDs: man.checkpoint_IDs,
+          checkpoint_IDs: checkpointItemSource.filter(item => man.checkpoint_IDs.includes(item.id)).map(item => item.id),
           manpowerRole_Id: man.manpowerRole_Id,
         };
       }) || [];
@@ -1233,7 +1233,7 @@ const PatrolCheckpointFrom = ({
                             onClick={() =>
                               removeCheckpoint(
                                 checkpoint.checkPointId,
-                                checkpoint.status
+                                checkpoint.status,index
                               )
                             }
                             className="bg-[#F66262] rounded-lg"
@@ -1306,7 +1306,6 @@ const PatrolCheckpointFrom = ({
                       </Typography>
                     </Box>
                     {checkPointDatas.map((checkpoint, index) => {
-                      console.log(checkpoint.longitude);
 
                       return (
                         <Box
@@ -1510,9 +1509,8 @@ const PatrolCheckpointFrom = ({
                                 </Typography>
                               </Box>
                             </div>
-                            {checkpoint.status === "new" ||
-                              (checkpoint.status === "edit" && (
-                                <Typography
+                            {(checkpoint.status === "new" || checkpoint.status === "edit") 
+                              && (<Typography
                                   sx={{
                                     fontSize: "14px",
                                     color: "#F66262",
@@ -1524,14 +1522,15 @@ const PatrolCheckpointFrom = ({
                                     ? "New Checkpoint: Please save."
                                     : "Edit Checkpoint: Please save."}
                                 </Typography>
-                              ))}
+                              )}
                           </Box>
                           <Box className="flex align-middle ml-2 justify-around">
                             <Button
                               onClick={() =>
                                 removeCheckpoint(
                                   checkpoint.checkPointId,
-                                  checkpoint.status
+                                  checkpoint.status,
+                                  index
                                 )
                               }
                               className="bg-[#F66262] rounded-lg"

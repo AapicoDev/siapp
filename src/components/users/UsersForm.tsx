@@ -31,6 +31,7 @@ import TabList from "@mui/lab/TabList/TabList";
 import TabPanel from "@mui/lab/TabPanel";
 import LabelTextField2 from "../ui/textboxs/LabelTextField2";
 import { LabelSelector3 } from "../ui/selectors/labelSelector3";
+import { CheckCircle } from "../ui/checkCircle";
 
 type AreaData = {
   id: number;
@@ -136,8 +137,13 @@ const UsersForm = ({
       new Set(userRoles.map((ur) => ur?.roleIds).flat())
     );
     setDisplayRoles(maproleId);
-    //const roles = data.roles.filter(d=>d.id.includes(maproleId))
-    //console.log("roles =", roles);
+    const roles = data.roles.filter((d) => maproleId.includes(d.id));
+    const mappermission = Array.from(
+      new Set(roles.map((r) => r?.permissions).flat())
+    );
+    console.log("roles =", roles);
+    console.log("mappermission =", mappermission);
+    setDisplayPermissions(mappermission);
   };
 
   const addUserRole = () => {
@@ -278,22 +284,22 @@ const UsersForm = ({
         </Button2>
       </Box>
 
-      <div className="bg-white rounded-b-lg shadow-lg min-h-[504px] max-h-[654px] w-[800px]">
+      <div className="bg-white rounded-b-lg shadow-lg min-h-[204px] max-h-[654px] w-[800px]">
         {/* Body */}
         <div className="max-h-[534px] overflow-auto">
           <Box
-            className="w-full justify-center px-6 py-2 rounded-t-lg pb-6"
+            className="w-full justify-center px-6 rounded-t-lg pb-6"
             textAlign="center"
           >
             <TabContext value={tabValue}>
-              <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+              <Box sx={{ borderBottom: 1, width: "735px", borderColor: "divider", position: 'fixed', zIndex: 1000, bgcolor: "white"}}>
                 <TabList onChange={handleTabChange} aria-label="areaTabs">
                   <Tab label="Information" value="1" />
-                  <Tab label="Permission" value="2" disabled={true}/>
+                  <Tab label="Permission" value="2" />
                 </TabList>
               </Box>
               {/* Information Tab */}
-              <TabPanel value="1" sx={{ padding: 0, py: "0.25rem" }}>
+              <TabPanel value="1" sx={{ padding: 0, py: "0.25rem", pt: 6 }}>
                 <>
                   <Box className="flex w-full space-x-5 pt-4">
                     {/* Name */}
@@ -546,7 +552,7 @@ const UsersForm = ({
                 </>
               </TabPanel>
               {/* Permission View Tab */}
-              <TabPanel value="2" sx={{ padding: 0 }}>
+              <TabPanel value="2" sx={{ padding: 0 ,pt: 6}}>
                 <Box className="flex w-full space-x-2 pt-4">
                   <Typography
                     textAlign="left"
@@ -561,30 +567,61 @@ const UsersForm = ({
                   >
                     Roles :
                   </Typography>
-                    {displayRoles?.map((role, index) => (
-                      <Box
+                  {displayRoles?.map((role, index) => (
+                    role !== "" && <Box
                       key={index}
-                        className="flex w-fit"
+                      className="flex w-fit"
+                      sx={{
+                        bgcolor: "#EBF4F6",
+                        borderRadius: "9999px",
+                        border: "1px solid #1D7A9B",
+                      }}
+                    >
+                      <Typography
+                        textAlign="center"
                         sx={{
-                          bgcolor: "#EBF4F6",
-                          borderRadius: "9999px",
-                          border: "1px solid #1D7A9B",
+                          fontSize: "14px",
+                          paddingBottom: "0.25rem",
+                          color: "#1D7A9B",
+                          paddingY: "0.25rem",
+                          paddingX: "0.75rem",
                         }}
                       >
-                        <Typography
-                          textAlign="center"
-                          sx={{
-                            fontSize: "14px",
-                            paddingBottom: "0.25rem",
-                            color: "#1D7A9B",
-                            paddingY: "0.25rem",
-                            paddingX: "0.75rem",
-                          }}
-                        >
-                          {allRoles.find((ar) => ar.id === role)?.desc}
-                        </Typography>
-                      </Box>
-                    ))}
+                        {allRoles.find((ar) => ar.id === role)?.desc}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+                <Box sx={{p: 1}}>
+                <Typography
+                  sx={{
+                    fontSize: "16px",
+                    color: "#4C9BF5",
+                    textDecorationLine: "underline",
+                  }}
+                >
+                  Total: {displayPermissions?.length} permission
+                  {displayPermissions?.length !== undefined &&
+                  displayPermissions?.length > 1
+                    ? "s"
+                    : ""}
+                </Typography>
+                {displayPermissions.map(id => 
+                <Box display={"flex"}>
+                  <CheckCircle />
+                  <Typography
+                    textAlign="left"
+                    sx={{
+                      fontSize: "14px",
+                      paddingBottom: "0.25rem",
+                      color: "#2C5079",
+                      mt: "1rem",
+                      paddingLeft: "0.25rem",
+                    }}
+                  >
+                    {data.permissions.find(d => d.id === id)?.desc}
+                  </Typography>
+                  </Box>)}
                 </Box>
               </TabPanel>
             </TabContext>
@@ -611,6 +648,7 @@ const UsersForm = ({
 
         {isEdit && (
           <Box className="flex w-full justify-between px-6 border-t-2 pt-4 pb-4">
+            {tabValue === "1" &&
             <Button
               className="flex text-[#2C5079] pt-2 bg-transparent hover:bg-transparent underline"
               onClick={handleUndo}
@@ -620,14 +658,15 @@ const UsersForm = ({
                 size={24}
               />
               Undo all changes
-            </Button>
+            </Button>}
+            {tabValue === "1" && 
             <Box className="space-x-4">
               <DeleteBtnFooter
                 onDeleteBtnFooterClick={handleDelete}
                 disable={false}
               />
               <SaveBtnFooter onSaveBtnFooterClick={handleSave} />
-            </Box>
+            </Box>}
           </Box>
         )}
       </div>

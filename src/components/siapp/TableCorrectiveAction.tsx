@@ -311,7 +311,7 @@ export function TableCorrectiveAction({
                 >
                   <Typography>Total: {totalItems} items</Typography>
                   <Box className="w-fit flex">
-                    <Box className="w-fit p-2">
+                    <Box className="w-fit py-2">
                       <DeleteButton
                         onDeleteBtnClick={handleDelete}
                         disable={!selected.some((item) => item.isSelected)}

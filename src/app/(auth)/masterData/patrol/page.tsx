@@ -958,6 +958,7 @@ export default function Patrol() {
           closeModal={handleCloseViewQr}
           customerAreas={custAreaList}
           selectedCustomer={selectedRow}
+          selectArea={selectedRow?.areaId}
         />
       )}
 

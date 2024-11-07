@@ -386,15 +386,17 @@ export default function DailyReport() {
                       }}
                     >
                       <Typography>Total: {totalItems} items</Typography>
-                      <Box>
+                      <Box display={"flex"}>
                         <DeleteButton
                           onDeleteBtnClick={handleDeleteCust}
                           disable={!selected.some((item) => item.isSelected)}
                         />
+                        <Box className="flex w-[12rem]">
                         <GradientButton
                           content={"+ New"}
                           onBtnClick={handleAddNewCust}
                         />
+                        </Box>
                       </Box>
                     </Box>
                   </TableCell>

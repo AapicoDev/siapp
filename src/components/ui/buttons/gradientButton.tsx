@@ -21,7 +21,7 @@ export function GradientButton({ onBtnClick,content, disable=false }: GradientBu
         onBtnClick(event);
       }}
       style={{ marginLeft: "auto", fontWeight: "bold" }}
-      className="w-48 enabled:bg-gradient-to-r from-[#00336C] to-[#37B7C3] hover:from-[#4C9BF5] hover:to-[#D8EAFF] 
+      className="min-w-48 w-full enabled:bg-gradient-to-r from-[#00336C] to-[#37B7C3] hover:from-[#4C9BF5] hover:to-[#D8EAFF] 
                  hover:text-[#00336C] disabled:bg-[#83A2AD]"
     >
       {content}

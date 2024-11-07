@@ -351,7 +351,7 @@ export default function UsersPage() {
                   <TableCell align="center" className="w-[14%]">
                     Email
                   </TableCell>
-                  <TableCell align="center" className="w-[12%]">
+                  <TableCell align="center" className="w-[12%] pl-[4%]">
                     Status
                   </TableCell>
                 </TableRow>
@@ -400,7 +400,7 @@ export default function UsersPage() {
 
                     <TableCell align="center">{row.email}</TableCell>
 
-                    <TableCell align="center">
+                    <TableCell align="center" sx={{display: "flex", justifyContent: "center"}}>
                       <ActiveStatusBox status={row.isActive} />
                     </TableCell>
                   </TableRow>
@@ -430,15 +430,17 @@ export default function UsersPage() {
                       }}
                     >
                       <Typography>Total: {totalItems} items</Typography>
-                      <Box>
+                      <Box display={"flex"}>
                         <DeleteButton
                           onDeleteBtnClick={handleDeleteCust}
                           disable={!selected.some((item) => item.isSelected)}
                         />
+                        <Box className="flex w-[12rem]">
                         <GradientButton
                           content={"+ New"}
                           onBtnClick={handleAddNewUser}
                         />
+                        </Box>
                       </Box>
                     </Box>
                   </TableCell>
