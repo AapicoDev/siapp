@@ -18,6 +18,10 @@ const masterRoundTableId = "670f3643003e13f37bd2";
 const masterCheckListTableId = "670f555d003447303ed7"; 
 const masterAreaTableId = "6707b0f400163a29999f";
 const masterCustomerTableId = "6707af2b00146964c139";
+const masterDepartmentTableId = "672acb900004b4be2f80";
+const masterSegmentTableId = "672acc460030f0867d58";
+const masterGroupTableId = "672acc9a00067bb6ac35";
+const masterZoneTableId = "672acd19002824db57ce";
 const masterShiftTableId = "671099270021b17e6d5c"; 
 const masterCheckpointTableId = "670f46d1001fe205beaf";
 const masterManpowerRoleTableId = "6721d7c9000b4fb3431a";
@@ -35,6 +39,8 @@ const randomPatrolTableId = "6719a886003922e7bfeb";
 const incidentTypeFilesStorageId = "6712275f002246d2f1c7";
 
 //#region Master Data
+
+//#region master_Customer
 export async function getAllMasterCustomerData() {
   try {
     const response = await fetchDataList(databaseId, masterCustomerTableId);
@@ -44,11 +50,74 @@ export async function getAllMasterCustomerData() {
     console.error("Error retrieving data:", error);
   }
 }
+export async function updateCustomer(customerData) {
+  const dataToSubmit = {
+    CustomerName: customerData.customerName,
+    segment_Id: customerData.segment_Id,
+    group_Id: customerData.group_Id,
+    zone_Id: customerData.zone_Id,
+    department_Id: customerData.department_Id,
+    hr_code: customerData.hr_code,
+    isActive: customerData.isActive,
+    code: customerData.code,
+    //area_id: 
+  }
+  console.log("dataToSubmit", dataToSubmit);
+  try {
+    const response = await databases.updateDocument(
+      databaseId,
+      masterCustomerTableId,
+      customerData.id,
+      dataToSubmit
+    );
+    return response;
+  } catch (error) {
+    console.error("Error update Customer data:", error);
+    return null;
+  }
+}
+//#endregion master_Customer
 export async function getMasterRoundData(areaId) {
   try {
     const response = await fetchDataList(databaseId, masterRoundTableId, [
       Query.equal("areaId", areaId),
     ]);
+    console.log(response);
+    return response;
+  } catch (error) {
+    console.error("Error retrieving data:", error);
+  }
+}
+export async function getAllMasterDepartmentData() {
+  try {
+    const response = await fetchDataList(databaseId, masterDepartmentTableId);
+    console.log(response);
+    return response;
+  } catch (error) {
+    console.error("Error retrieving data:", error);
+  }
+}
+export async function getAllMasterSegmentData() {
+  try {
+    const response = await fetchDataList(databaseId, masterSegmentTableId);
+    console.log(response);
+    return response;
+  } catch (error) {
+    console.error("Error retrieving data:", error);
+  }
+}
+export async function getAllMasterGroupData() {
+  try {
+    const response = await fetchDataList(databaseId, masterGroupTableId);
+    console.log(response);
+    return response;
+  } catch (error) {
+    console.error("Error retrieving data:", error);
+  }
+}
+export async function getAllMasterZoneData() {
+  try {
+    const response = await fetchDataList(databaseId, masterZoneTableId);
     console.log(response);
     return response;
   } catch (error) {
@@ -64,6 +133,7 @@ export async function getAllMasterCheckListData() {
     console.error("Error retrieving data:", error);
   }
 }
+//#region master_Areas
 export async function getAllMasterAreaData() {
   try {
     const response = await fetchDataList(databaseId, masterAreaTableId);
@@ -73,6 +143,19 @@ export async function getAllMasterAreaData() {
     console.error("Error retrieving data:", error);
   }
 }
+export async function getMasterAreaDataWithCustomerId(customerId) {
+  try {
+    const response = await fetchDataList(databaseId, masterAreaTableId, [
+      Query.equal("CustomerId", customerId),
+    ]);
+    console.log(response);
+    return response;
+  } catch (error) {
+    console.error("Error retrieving data:", error);
+  }
+}
+//#endregion master_Areas
+
 export async function getMasterShiftData(customerId) {
   try {
     const response = await fetchDataList(databaseId, masterShiftTableId, [
@@ -192,9 +275,16 @@ export async function deleteRandomPatrol(id) {
 export async function deleteCheckpoint(id) {
   try {
     console.log("id:", id);
-    const response = await deleteDocumentOnServer(databaseId, masterCheckpointTableId, id);
-    console.log(response);
-    return response;
+    const deletePromises = id.map((data) => {
+      return databases.deleteDocument(
+        databaseId,
+        masterCheckpointTableId,
+        data
+      );
+    });
+    const results = await Promise.all(deletePromises);
+    console.log("Documents delete successfully:", results);
+    return results;
   } catch (error) {
     console.error("Error deleting data:", error);
     return null;

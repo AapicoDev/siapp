@@ -76,13 +76,11 @@ const ViewQrCode = ({ selectedCustomer, closeModal, customerAreas, selectArea=un
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const initialData = async () => {
-    setIsLoading(true);
     getCheckpoints(selectedCustomer.areaId);
-    //const areaChkPt = mockCheckpoints.filter((c) => c.areaId === areas !== undefined ? areas[0].id : undefined);
-    setIsLoading(false);
   };
 
   const getCheckpoints = async (areaId: string) => {
+    setIsLoading(true);
     const getCheckpoints = await getMasterCheckpointData(areaId);
     const mappedCheckpoints:CheckpointData[] = getCheckpoints?.documents.map((checkpoint) => {
       return {
@@ -95,9 +93,9 @@ const ViewQrCode = ({ selectedCustomer, closeModal, customerAreas, selectArea=un
         ut: checkpoint.altitude
       };
     }) || checkpoints
-    //const areaChkPt = mockCheckpoints.filter((c) => c.areaId === areas !== undefined ? areas[0].id : undefined);
     setCheckpoints(mappedCheckpoints);
     setSelectedChkPtArr(Array(mappedCheckpoints.length).fill(false));
+    setIsLoading(false);
   };
 
   useEffect(() => {

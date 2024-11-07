@@ -48,6 +48,7 @@ type RowData = {
   checkpointId: any[];
   totalRound: any;
   totalCheckpoint: any;
+  totalCheckpointOfArea: any;
   //isActive: boolean;
 };
 
@@ -220,6 +221,7 @@ export default function Patrol() {
           checkpointId: area.checkPointIDs,
           totalRound: getRound(area.$id),
           totalCheckpoint: area.checkPointIDs?.length,
+          totalCheckpointOfArea: area.checkPointIDs?.length,
         };
       }) || [];
     console.log("mappedPatrolList =", mappedPatrolList);
@@ -283,8 +285,17 @@ export default function Patrol() {
     }
   }
 
-  const handleOpenViewQr = (selecectedRow: any) => {
-    setSelectedRow(selecectedRow);
+  const handleOpenViewQr = (selecectedRow: RowData) => {
+    let sumChkPt = 0;
+    allArea?.forEach((area) => {
+      sumChkPt += area.checkPointIDs?.length
+    });
+    console.log("allArea =", allArea)
+    console.log("sumChkPt =", sumChkPt)
+    const calChkPtOfAllArea = selecectedRow;
+    calChkPtOfAllArea.totalCheckpoint = sumChkPt;
+    setSelectedRow(calChkPtOfAllArea);
+
     const custAreaList = allArea
       ?.filter((a) => a.CustomerId === selecectedRow.customerId)
       .map((area) => {
@@ -474,12 +485,12 @@ export default function Patrol() {
 
                         {/* Total Checkpoint */}
                         <TableCell align="center">
-                          {row.totalCheckpoint}
+                          {row.totalCheckpointOfArea}
                         </TableCell>
 
                         {/* ViewQR */}
                         <TableCell align="center">
-                          {row.totalCheckpoint === 0 ? (
+                          {row.totalCheckpointOfArea === 0 ? (
                             "-"
                           ) : (
                             <Button

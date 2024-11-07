@@ -297,7 +297,7 @@ const PatrolCheckpointFrom = ({
     setCheckPointDatas([
       ...checkPointDatas,
       {
-        checkPointId: checkPointDatas.length + 1,
+        checkPointId: Date.now(),
         checkPointName: "",
         areaId: prelimData.areaId,
         locationName: "",
@@ -440,7 +440,7 @@ const PatrolCheckpointFrom = ({
                 longitude: checkPoint.longitude,
                 altitude: checkPoint.altitude,
                 isRestrictionTime: checkPoint.isRestrictionTime,
-                timeLimit: checkPoint.timeLimit,
+                timeLimit: parseInt(checkPoint.timeLimit),
                 checkListId: checkPoint.checkListId,
               },
             };
@@ -592,15 +592,15 @@ const PatrolCheckpointFrom = ({
     checkpointId: any,
     field: keyof CheckPointData,
     value: any,
-    index?: number
+    selectedIndex?: number
   ) => {
     if (field === "checkListId") {
       const checkpointList: CheckPointData[] = checkPointDatas.map(
         (checkpoint) => {
           if (checkpoint.checkPointId === checkpointId) {
-            if (index !== undefined) {
+            if (selectedIndex !== undefined) {
               const updatedCheckListId = [...checkpoint.checkListId];
-              updatedCheckListId[index] = value;
+              updatedCheckListId[selectedIndex] = value;
 
               return {
                 ...checkpoint,
@@ -1104,7 +1104,7 @@ const PatrolCheckpointFrom = ({
                               ) =>
                                 handleFieldCheckpointChange(
                                   e,
-                                  checkpoint.checkPointId
+                                  checkpoint.checkPointId,
                                 )
                               }
                               value={checkpoint.checkPointName}
@@ -1623,6 +1623,7 @@ const PatrolCheckpointFrom = ({
                                     color: "#2C5079",
                                     textDecorationLine: "underline",
                                     fontSize: "14px",
+                                    textAlign: "left",
                                   }}
                                 >
                                   Total : {checkpoint.checkListId.length} Check
