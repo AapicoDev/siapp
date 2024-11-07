@@ -340,7 +340,7 @@ const PatrolCheckpointFrom = ({
         ? {
             ...checkpoint,
             checkListId: checkpoint.checkListId.filter((_, i) => i !== index),
-            status: "edit",
+            status: checkpoint.status === "new" ? checkpoint.status : "edit",
           }
         : checkpoint
     );
@@ -377,13 +377,14 @@ const PatrolCheckpointFrom = ({
               longitude: checkPoint.longitude,
               altitude: checkPoint.altitude,
               isRestrictionTime: checkPoint.isRestrictionTime,
-              timeLimit: checkPoint.timeLimit,
+              timeLimit: parseInt(checkPoint.timeLimit),
               checkListId: checkPoint.checkListId,
             };
           }) || [];
         setIsLoading(true);
         addNewCheckpointResult = await addNewCheckpoint(dataToSubmit);
         setIsLoading(false);
+        console.log("addNewCheckpointResult", addNewCheckpointResult);
         if (addNewCheckpointResult) {
           let updateNewCheckpoints = checkPointDatas
             .filter((item) => item.status === "existed")

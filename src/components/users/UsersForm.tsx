@@ -606,8 +606,8 @@ const UsersForm = ({
                     ? "s"
                     : ""}
                 </Typography>
-                {displayPermissions.map(id => 
-                <Box display={"flex"}>
+                {displayPermissions.map((id, index) => 
+                <Box key={index} display={"flex"}>
                   <CheckCircle />
                   <Typography
                     textAlign="left"
