@@ -52,6 +52,7 @@ import CheckBoxDropDown from "../ui/checkBoxDropDown";
 import AlertToDatail from "./AlertToDetail";
 import { Checkbox as Checkbox3 } from "@/components/ui/checkbox3";
 import Image from "next/image";
+import { getMasterManpowerRoleData, getMasterShiftData, queryMasterContract } from "@/app/lib/api";
 
 type AreaData = {
   id: number;
@@ -107,6 +108,18 @@ type PatrolAlertListType = {
   desc: any;
 };
 
+type ContractType = {
+  id: string;
+  desc: string;
+  customer_Id: string;
+  startDate: Date;
+  endDate: Date;
+  attachments: string[];
+  isActive: boolean;
+  shift_Ids: string[];
+  alertTo_Ids: string[];
+};
+
 const mockIsSameDayList = [
   {
     id: 1,
@@ -132,23 +145,23 @@ const ContractForm = ({
   closeModal,
   customerAreas,
   isEditContract,
-  isFromCustomerPage = true, 
+  isFromCustomerPage = true,
   custList = [{ id: 1, desc: "" }],
 }: ContractFormProps) => {
   const [isEdit, setIsEdit] = useState(isEditContract);
   const [customer, setCustomer] = useState(
     selectedCustomer || {
-      hrCode: "",
-      customerId: null,
-      departmentId: "",
-      segmentId: "",
-      groupId: "",
-      zoneId: "",
-      qrCode: "",
-      contractId: "",
+      hr_code: "",
+      id: "",
+      department_Id: "",
+      segment_Id: "",
+      group_Id: "",
+      zone_Id: "",
       code: "",
       isActive: true,
       customerName: "",
+      areaId: [],
+      contractTotal: 0,
     }
   );
   const [areas, setAreas] = useState<AreaData[]>(customerAreas);
@@ -198,9 +211,19 @@ const ContractForm = ({
       latestRoundID: 0,
     },
   ]);
-  const [contractList, setContractList] = useState<any[]>([]); //[{id: "", desc: ""}]
-  const [selectedContractId, setSelectedContractId] = useState("");
-  const [attachmentList, setAttachmentList] = useState<any[]>([""]);
+  const [contractList, setContractList] = useState<ContractType[]>([]);
+  const [selectedContract, setSelectedContract] = useState<ContractType>({
+    id: "",
+    desc: "",
+    customer_Id: "",
+    startDate: new Date(),
+    endDate: addDays(new Date(), 1),
+    attachments: [],
+    isActive: true,
+    shift_Ids: [],
+    alertTo_Ids: [],
+  });
+  const [attachmentList, setAttachmentList] = useState<any[]>([]);
   const [startDate, setStartDate] = useState<Date>(new Date());
   const [finishDate, setFinishDate] = useState<Date>(addDays(new Date(), 1));
   const [date, setDate] = useState<DateRange>({
@@ -214,8 +237,8 @@ const ContractForm = ({
   const [deleteAlertToList, setDeleteAlertToList] = useState<any[]>([]);
   const [showAlertToDeatil, setShowAlertToDeatil] = useState(false);
   const [selectedALertTo, setSelectedALertTo] = useState<PatrolAlertListType>();
-  const [isContractActive, setIsContractActive] = useState(false);
   const [selectNewFile, setSelectNewFile] = useState<any[]>([]);
+  const [allContracts, setAllContracts] = useState<ContractType[]>([]);
 
   useEffect(() => {
     if (!isEdit) {
@@ -223,9 +246,13 @@ const ContractForm = ({
     } else {
       setFormHeader("View / Edit Contract");
     }
-    const initialSeelctedContract = contractListInitial();
-    contractDetail(initialSeelctedContract);
-    initialData();
+    const initialize = async () => {
+      const initialSelctedContract = await contractListInitial();
+      console.log("initialSeelctedContract =", initialSelctedContract);
+      contractDetail(initialSelctedContract);
+      //initialData();
+    };
+    initialize();
   }, [areas]);
 
   const initialData = () => {
@@ -237,29 +264,52 @@ const ContractForm = ({
     });
   };
 
-  const contractListInitial = () => {
-    const contracts = data.contracts.filter(
-      (c) => c.customerId === customer.customerId && (!isFromCustomerPage ? customer.id === c.id : true) //&& c.isActive
-    );
-    const mappedContract = contracts.map((contract) => ({
-      id: contract.id,
-      desc: contract.id,
-    }));
+  const contractListInitial = async () => {
+    // const contracts = data.contracts.filter(
+    //   (c) => c.customerId === customer.customerId && (!isFromCustomerPage ? customer.id === c.id : true) //&& c.isActive
+    // );
+    const contracts = await queryMasterContract("customer_Id", customer.id);
+    setAllContracts(contracts?.documents.map((contract) => ({
+      id: contract.$id,
+      desc: contract.contractNo,
+      customer_Id: contract.customer_Id,
+      startDate: contract.startDate,
+      endDate: contract.endDate,
+      attachments: contract.attachments,
+      isActive: contract.isActive,
+      shift_Ids: contract.shift_Ids,
+      alertTo_Ids: contract.alertTo_Ids,
+    })) || []);
+    const mappedContract =
+      contracts?.documents.map((contract) => ({
+        id: contract.$id,
+        desc: contract.contractNo,
+        customer_Id: contract.customer_Id,
+        startDate: contract.startDate,
+        endDate: contract.endDate,
+        attachments: contract.attachments,
+        isActive: contract.isActive,
+        shift_Ids: contract.shift_Ids,
+        alertTo_Ids: contract.alertTo_Ids,
+      })) || [];
     console.log("mappedContract", mappedContract);
     setContractList(mappedContract);
-    setSelectedContractId(mappedContract[0]?.id || "");
-    return mappedContract[0]?.id;
+    console.log("mappedContract[0]", mappedContract[0]);
+    setSelectedContract(mappedContract[0] || selectedContract);
+    return mappedContract[0];
   };
 
   const addNewContractinitial = (selectedCustId: any) => {
     //Mapped area
-    const customerAreas: AreaData[] = data.areas.filter(area => area.custId === selectedCustId).map((area) => ({
-      id: area.id,
-      custId: area.custId,
-      name: area.name,
-      totalChkPt: 0,
-      round: []
-    }));
+    const customerAreas: AreaData[] = data.areas
+      .filter((area) => area.custId === selectedCustId)
+      .map((area) => ({
+        id: area.id,
+        custId: area.custId,
+        name: area.name,
+        totalChkPt: 0,
+        round: [],
+      }));
     setAreas(customerAreas);
     // const mappedAreaList: AreaListType[] = customerAreas.map((area: AreaData) => {
     //   return {
@@ -289,13 +339,63 @@ const ContractForm = ({
       setCustomerAdd(value);
       addNewContractinitial(value);
     } else if (name === "selectedContractId") {
-      setSelectedContractId(value);
-      contractDetail(value);
-      console.log("customer =", customer)
+      contractDetail(selectedContract);
+      console.log("customer =", customer);
     }
   };
 
-  const contractDetail = (selectedContract: any = "") => {
+  function formatToISOString(date: Date): string {
+    const timezoneOffset = date.getTimezoneOffset() * 60000; // Offset in milliseconds
+    const adjustedDate = new Date(date.getTime() - timezoneOffset);
+    console.log("adjustDate =", adjustedDate.toISOString());
+    return adjustedDate.toISOString();
+  }
+
+  const handleFieldContractChange = (e: any, name?: string) => {
+    let fieldName: keyof ContractType;
+    let value: any;
+    if (name === "startDate" || name === "endDate") {
+      fieldName = name;
+      value = formatToISOString(e);
+    } else {
+      fieldName = e.target.name;
+      value = e.target.value;
+    }
+    if(fieldName === "id"){
+      console.log("allContracts =", allContracts);
+      setSelectedContract(allContracts.find(contract => contract.id === value) || selectedContract);
+      contractDetail(allContracts.find(contract => contract.id === value) || allContracts[0]);
+    }
+    setSelectedContract((prevData: any) => ({
+      ...prevData,
+      [fieldName]: value,
+    }));
+  };
+
+  const contractDetail = async (
+    selectedContract: ContractType
+  ) => {
+    // Not use StartDate - FinishDate
+    const filteredContract = data.contracts.find(
+      (c) => c.id === selectedContract.id
+    );
+    setDate({
+      from: new Date(filteredContract?.startDate || "") || date?.from,
+      to: new Date(filteredContract?.finishDate || "") || date?.to,
+    });
+
+    //attachmentList
+    console.log("selectedContract =", selectedContract);
+    const filesName = selectedContract.attachments.map((file) => {
+      const split = file.split(";;");
+      return {
+        fileName: split[0],
+        fileUrl: split[1],
+      };
+    });
+    console.log("filesName =", filesName);
+    setAttachmentList(filesName);
+
     //Mapped area
     const mappedAreaList: AreaListType[] = areas.map((area: AreaData) => {
       return {
@@ -315,47 +415,27 @@ const ContractForm = ({
     );
     setAreaList(mappedAreaList);
 
-    // StartDate - FinishDate
-    const filteredContract = data.contracts.find(
-      (c) => c.id === selectedContract
-    );
-    setDate({
-      from: new Date(filteredContract?.startDate || "") || date?.from,
-      to: new Date(filteredContract?.finishDate || "") || date?.to,
-    });
-    setStartDate(new Date(filteredContract?.startDate || new Date()));
-    setFinishDate(new Date(filteredContract?.finishDate || addDays(new Date(), 1)));
-
-    //attachmentList
-    const attachments = filteredContract?.attachment;
-    setAttachmentList(attachments || attachmentList);
-
-    console.log("filteredContract.isActive =", filteredContract?.isActive);
-    setIsContractActive(filteredContract?.isActive || isContractActive);
-    if (!filteredContract?.isActive) {
-      handleContractInactive(true);
-    }
-    console.log("isContractActive =", isContractActive);
-
     // Shift list
-    const filteredShift = data.shifts?.filter(
-      (s) => s.contractId === selectedContract
+    const shiftsOfContract = await getMasterShiftData("contractID", selectedContract.id)
+    const mappedShiftList: ShiftListType[] = await Promise.all(
+        shiftsOfContract?.documents?.map(async (shift) => {
+          const manpowers = await mappedManpowerOfEachShift(shift.$id); // await resolves manpowers array
+          return {
+            id: shift.$id,
+            desc: shift.shiftName,
+            workdays: shift.workDays,
+            manpowers, // Already resolved
+          };
+      }) || shiftList
     );
-    const mappedShiftList: ShiftListType[] =
-      filteredShift.map((shift) => ({
-        id: shift.id,
-        desc: shift.name,
-        workdays: shift.workdays,
-        manpowers: mappedManpowerOfEachShift(shift.id), //shift.filteredShift
-      })) || shiftList;
     setShiftList(mappedShiftList);
     calTotalManPowerOfAllShift(mappedShiftList);
-    console.log("filteredContract =", filteredContract);
+    console.log("shiftsOfContract =", shiftsOfContract);
     console.log("mappedShiftList =", mappedShiftList);
 
     //Alert to List
     const filteredAlertTo = data.patrolAlertTo.filter(
-      (al) => al.contractId === selectedContract
+      (al) => al.contractId === selectedContract.id
     );
     console.log("filteredAlertTo =", filteredAlertTo);
     const mappedAlertList: PatrolAlertListType[] =
@@ -379,8 +459,17 @@ const ContractForm = ({
     setAsmAlertNames(asmAlertNameList);
   };
 
-  const mappedManpowerOfEachShift = (shiftId: any) => {
-    return data.manpowers.filter((m) => m.shiftId === shiftId);
+  const mappedManpowerOfEachShift = async (shiftId: any) => {
+    const manpowerRolesOfShift = await getMasterManpowerRoleData(shiftId);
+    const mappedManpower: ManpowerType[] = manpowerRolesOfShift?.documents.map(man => {
+      return{
+        id: man.$id,
+        nameInReport: man.nameInReport,
+        roleId: man.role_Id,
+        quantity: man.requireQuantity
+      }
+    }) || [];
+    return mappedManpower;
   };
 
   const calTotalManPowerOfAllShift = (shiftList: ShiftListType[]) => {
@@ -409,10 +498,14 @@ const ContractForm = ({
           item.id === roundId ? { ...item, [field]: value } : item
         );
 
-        if (((field === "startTimeHr" ||
+        if (
+          ((field === "startTimeHr" ||
             "startTimeMin" ||
             "finishTimeHr" ||
-            "finishTimeMin" ) && value.length <= 2) || field === "isSameDay") {
+            "finishTimeMin") &&
+            value.length <= 2) ||
+          field === "isSameDay"
+        ) {
           updatedRoundData = calMinutes(roundId, updatedRoundData);
         }
         // Return the updated area object
@@ -427,7 +520,7 @@ const ContractForm = ({
 
     // Set the updated areaList
     setAreaList(updatedAreaList);
-    console.log("updatedAreaList =", updatedAreaList)
+    console.log("updatedAreaList =", updatedAreaList);
   };
 
   const handleFieldShiftListTypeChange = (
@@ -568,11 +661,14 @@ const ContractForm = ({
     );
 
     const mappedAlertList: PatrolAlertListType[] =
-    updatedPatrolAlertList.map((alertTo) => ({
+      updatedPatrolAlertList.map((alertTo) => ({
         id: alertTo.id,
         isAsm: alertTo.isAsm,
         name: alertTo.name,
-        email: alertTo.isAsm ===1 ? asmAlertNames.find((a) => a.desc === alertTo.name)?.email : alertTo.email,
+        email:
+          alertTo.isAsm === 1
+            ? asmAlertNames.find((a) => a.desc === alertTo.name)?.email
+            : alertTo.email,
         otherPositionId: alertTo.otherPositionId,
         desc: alertTo.name,
       })) || alertToList;
@@ -642,7 +738,7 @@ const ContractForm = ({
           } else mins = 0;
         } else {
           //if (finishTotalMins <= startTotalMins) {
-            finishTotalMins += 24 * 60;
+          finishTotalMins += 24 * 60;
           //}
           mins = finishTotalMins - startTotalMins;
         }
@@ -728,21 +824,24 @@ const ContractForm = ({
     //setFormData((prevData: any) => ({ ...prevData, [name]: value }));
   };
 
-  const handleUndo = () => {
+  const handleUndo = async () => {
     console.log("initialData");
     initialData();
-    const initialSeelctedContract = contractListInitial();
+    const initialSeelctedContract = await contractListInitial();
     contractDetail(initialSeelctedContract);
   };
 
   const handleDelete = () => {};
 
   const handleSave = () => {
-    console.log("alertToList = ", alertToList);
+    console.log("selectedCustomer = ", selectedCustomer);
+    console.log("customerAreas = ", customerAreas);
+    console.log("custList = ", custList);
+    console.log("selectedContract = ", selectedContract);
   };
 
   const handleSubmit = () => {
-    console.log("customerAdd =", customerAdd)
+    console.log("customerAdd =", customerAdd);
   };
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
@@ -807,7 +906,10 @@ const ContractForm = ({
       "image/gif",
     ];
     const maxFileSize = 2 * 1024 * 1024; // 2 MB in bytes
-    if (!files) {console.log("!files"); return;};
+    if (!files) {
+      console.log("!files");
+      return;
+    }
     const file = files[0];
     if (!allowedTypes.includes(file?.type)) {
       alert("Only PDF, JPG, PNG, and GIF files are allowed.");
@@ -840,15 +942,24 @@ const ContractForm = ({
   }
 
   const handleContractInactive = (checked: boolean) => {
-    if (checked) setIsContractActive(false);
+    if (checked) {
+      setSelectedContract((prevData: any) => ({
+        ...prevData,
+        ["isActive"]: false,
+      }));
+    }
   };
-
   const handleContractActive = (checked: boolean) => {
-    if (checked) setIsContractActive(true);
+    if (checked) {
+      setSelectedContract((prevData: any) => ({
+        ...prevData,
+        ["isActive"]: true,
+      }));
+    }
   };
 
   const handleRemoveNewFile = (fileName: any) => {
-    const remainFile = selectNewFile.filter(f => f.name != fileName);
+    const remainFile = selectNewFile.filter((f) => f.name != fileName);
     setSelectNewFile(remainFile);
   };
 
@@ -926,18 +1037,19 @@ const ContractForm = ({
                             </Typography>
                           </Box>
 
-                          {isFromCustomerPage &&
-                          <Typography
-                            sx={{
-                              color: "#4C9BF5",
-                              textDecorationLine: "underline",
-                              fontSize: "16px",
-                            }}
-                            textAlign={"left"}
-                          >
-                            Total : {contractList.length} contract
-                            {contractList.length > 1 ? "s" : ""}
-                          </Typography>}
+                          {isFromCustomerPage && (
+                            <Typography
+                              sx={{
+                                color: "#4C9BF5",
+                                textDecorationLine: "underline",
+                                fontSize: "16px",
+                              }}
+                              textAlign={"left"}
+                            >
+                              Total : {contractList.length} contract
+                              {contractList.length > 1 ? "s" : ""}
+                            </Typography>
+                          )}
                         </Box>
 
                         <Box className="w-[30%] flex justify-end">
@@ -954,12 +1066,14 @@ const ContractForm = ({
                     <Box className="flex w-full space-x-5 pt-2">
                       <Box className="w-1/2">
                         <Selector
-                          disable={!isFromCustomerPage && contractList.length < 2}
+                          disable={
+                            !isFromCustomerPage && contractList.length < 2
+                          }
                           selectorLabel={"Contract No."}
                           itemSource={contractList}
-                          handleChange={handleSelectChange}
-                          selectedVal={selectedContractId}
-                          name={"selectedContractId"}
+                          handleChange={handleFieldContractChange}
+                          selectedVal={selectedContract.id}
+                          name={"id"}
                         />
                       </Box>
 
@@ -997,14 +1111,14 @@ const ContractForm = ({
                           <Box
                             sx={{ borderRadius: "10px" }}
                             className={`${
-                              isContractActive
+                              selectedContract.isActive
                                 ? `bg-[#E2F7E1] border-[#86DC89]`
                                 : `bg-white border-[#2C5079]`
                             } flex p-1 h-fit border-[1px] w-1/2`}
                           >
                             <Checkbox3
                               onCheckedChange={handleContractActive}
-                              checked={isContractActive}
+                              checked={selectedContract.isActive}
                             />
                             <Typography
                               sx={{ color: "#2C5079" }}
@@ -1016,14 +1130,14 @@ const ContractForm = ({
                           <Box
                             sx={{ borderRadius: "10px" }}
                             className={`${
-                              !isContractActive
+                              !selectedContract.isActive
                                 ? `bg-[#E2F7E1] border-[#86DC89]`
                                 : `bg-white border-[#2C5079]`
                             } flex p-1 h-fit border-[1px] w-1/2`}
                           >
                             <Checkbox3
                               onCheckedChange={handleContractInactive}
-                              checked={!isContractActive}
+                              checked={!selectedContract.isActive}
                             />
                             <Typography
                               className="py-1 px-2"
@@ -1050,8 +1164,10 @@ const ContractForm = ({
                           Start Date
                         </Typography>
                         <DatePicker
-                          date={startDate}
-                          setDate={setStartDate}
+                          date={new Date(selectedContract.startDate)}
+                          setDate={(e) =>
+                            handleFieldContractChange(e, "startDate")
+                          }
                           h={"h-10"}
                         />
                       </Box>
@@ -1069,8 +1185,10 @@ const ContractForm = ({
                           End Date
                         </Typography>
                         <DatePicker
-                          date={finishDate}
-                          setDate={setFinishDate}
+                          date={new Date(selectedContract.endDate)}
+                          setDate={(e) =>
+                            handleFieldContractChange(e, "endDate")
+                          }
                           h={"h-10"}
                         />
                       </Box>
@@ -1106,24 +1224,30 @@ const ContractForm = ({
                           <Box
                             key={index}
                             sx={{ borderRadius: "10px" }}
-                            className="justify-between flex p-1 bg-white max-w-[220px] border-[1px] border-[#4C9BF5]"
+                            className="justify-between flex p-1 bg-white w-full border-[1px] border-[#4C9BF5]"
                           >
-                            <Typography
-                              sx={{
-                                color: "#2C5079",
-                                ml: "0.25rem",
-                                paddingY: "0.25rem",
-                                width: "90%"
-                              }}
+                            <a
+                              target="_blank"
+                              href={attach.fileUrl}
+                              className="w-full flex justify-between"
                             >
-                              {attach.length > 18 ? attach.substring(0, 18)+"..." : attach}
-                            </Typography>
-                            <Trash
+                              <Typography className="py-1 px-2 text-[#2C5079]">
+                                {attach.fileName.length > 17
+                                  ? attach.fileName.substring(0, 17) + "..."
+                                  : attach.fileName}
+                              </Typography>
+                              <GoArrowUpRight
+                                size={24}
+                                color="#4C9BF5"
+                                style={{ marginTop: 5 }}
+                              />
+                              {/* <Trash
                               size={22}
                               color="#F66262"
                               style={{ marginTop: 5 }}
                               className="cursor-pointer"
-                            />
+                            /> */}
+                            </a>
                           </Box>
                         </Grid2>
                       ))}
@@ -1142,11 +1266,15 @@ const ContractForm = ({
                         New Upload Files :
                       </Typography>
                     )}
-                    <Grid2 container sx={{ width: "100%", mb:1.5 }} spacing={2}>
+                    <Grid2
+                      container
+                      sx={{ width: "100%", mb: 1.5 }}
+                      spacing={2}
+                    >
                       {selectNewFile.map((file, index) => (
                         <Grid2 size={4} key={index}>
                           <Box className="justify-between flex p-1 bg-white border-[1px] border-[#4C9BF5] rounded-lg">
-                          <Typography className="py-1 pl-1 text-[#2C5079] w-[90%]">
+                            <Typography className="py-1 pl-1 text-[#2C5079] w-[90%]">
                               {file.name.length > 17
                                 ? file.name.substring(0, 17) + "..."
                                 : file.name}
@@ -1181,7 +1309,7 @@ const ContractForm = ({
                   </Box>
                 )}
 
-                {/* Add New Customer */}
+                {/* Add New Contract */}
                 {!isEdit && (
                   <Box>
                     <Box className="flex w-full space-x-5 pt-2">
@@ -1220,7 +1348,11 @@ const ContractForm = ({
                         >
                           Start Date
                         </Typography>
-                        <DatePicker date={startDate} setDate={setStartDate} h={"h-10"} />
+                        <DatePicker
+                          date={startDate}
+                          setDate={setStartDate}
+                          h={"h-10"}
+                        />
                       </Box>
 
                       <Box className="w-1/2">
@@ -1235,7 +1367,11 @@ const ContractForm = ({
                         >
                           End Date
                         </Typography>
-                        <DatePicker h={"h-10"} date={finishDate} setDate={setFinishDate}/>
+                        <DatePicker
+                          h={"h-10"}
+                          date={finishDate}
+                          setDate={setFinishDate}
+                        />
                       </Box>
                     </Box>
 
@@ -1251,7 +1387,11 @@ const ContractForm = ({
                     >
                       Attachment
                     </Typography>
-                    <Grid2 container sx={{ width: "100%", mb:1.5 }} spacing={2}>
+                    <Grid2
+                      container
+                      sx={{ width: "100%", mb: 1.5 }}
+                      spacing={2}
+                    >
                       {selectNewFile.map((file, index) => (
                         <Grid2 size={4} key={index}>
                           <Box className="justify-between flex p-1 bg-white border-[1px] border-[#4C9BF5] rounded-lg">
@@ -1398,16 +1538,21 @@ const ContractForm = ({
                         </Typography>
                         {shiftList.length < 1 && (
                           <div className="flex flex-col h-full items-center justify-center">
-                          <Image src={"/NoData.png"} alt="No Data" width={80} height={80} />
-                          <Typography
-                          sx={{
-                            color: "#83A2AD",
-                            fontSize: "16px",
-                            mb: "0.25rem",
-                          }}
-                        >
-                          Please Add Shift
-                        </Typography>
+                            <Image
+                              src={"/NoData.png"}
+                              alt="No Data"
+                              width={80}
+                              height={80}
+                            />
+                            <Typography
+                              sx={{
+                                color: "#83A2AD",
+                                fontSize: "16px",
+                                mb: "0.25rem",
+                              }}
+                            >
+                              Please Add Shift
+                            </Typography>
                           </div>
                         )}
                         {shiftList.map((shift, index) => (
@@ -1731,16 +1876,23 @@ const ContractForm = ({
                         </Typography>
                         {areas.length < 1 && (
                           <div className="flex flex-col h-full items-center justify-center">
-                          <Image src={"/NoData.png"} alt="No Data" width={80} height={80} />
-                          <Typography
-                          sx={{
-                            color: "#83A2AD",
-                            fontSize: "16px",
-                            mb: "0.25rem",
-                          }}
-                        >
-                          {customerAdd==="" ? "Please select Customer" : "Please add area"}
-                        </Typography>
+                            <Image
+                              src={"/NoData.png"}
+                              alt="No Data"
+                              width={80}
+                              height={80}
+                            />
+                            <Typography
+                              sx={{
+                                color: "#83A2AD",
+                                fontSize: "16px",
+                                mb: "0.25rem",
+                              }}
+                            >
+                              {customerAdd === ""
+                                ? "Please select Customer"
+                                : "Please add area"}
+                            </Typography>
                           </div>
                         )}
                         {areaList.map((area, index) => (

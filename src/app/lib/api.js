@@ -27,6 +27,7 @@ const masterCheckpointTableId = "670f46d1001fe205beaf";
 const masterManpowerRoleTableId = "6721d7c9000b4fb3431a";
 const masterAssignedManpowerTableId = "6721d91c00335cc2011c";
 const masterRandomPatrolReasonTableId = "6719accc000ca3be7e73";
+const masterContrtactTableId = "672d8495000cf8fb50de";
 //#endregion --Master Data--
 
 const patrolRoundsTableId = "670e369a0033e51cd0f7";
@@ -50,24 +51,13 @@ export async function getAllMasterCustomerData() {
     console.error("Error retrieving data:", error);
   }
 }
-export async function updateCustomer(customerData) {
-  const dataToSubmit = {
-    CustomerName: customerData.customerName,
-    segment_Id: customerData.segment_Id,
-    group_Id: customerData.group_Id,
-    zone_Id: customerData.zone_Id,
-    department_Id: customerData.department_Id,
-    hr_code: customerData.hr_code,
-    isActive: customerData.isActive,
-    code: customerData.code,
-    //area_id: 
-  }
-  console.log("dataToSubmit", dataToSubmit);
+export async function updateCustomer(dataToSubmit, id) {
+  console.log("id:", id);
   try {
     const response = await databases.updateDocument(
       databaseId,
       masterCustomerTableId,
-      customerData.id,
+      id,
       dataToSubmit
     );
     return response;
@@ -76,7 +66,126 @@ export async function updateCustomer(customerData) {
     return null;
   }
 }
+export async function addNewCustomer(dataToSubmit) {
+  console.log("dataToSubmit", dataToSubmit);
+  try {
+    const response = createDocumentOnServer(databaseId, masterCustomerTableId, dataToSubmit);
+    return response;
+  } catch (error) {
+    console.log("Error add new customer data:", error);
+    return null;
+  }
+}
+export async function deleteCustomer(id) {
+  try {
+    console.log("id:", id);
+    const deletePromises = id.map((data) => {
+      return databases.deleteDocument(
+        databaseId,
+        masterCustomerTableId,
+        data
+      );
+    });
+    const results = await Promise.all(deletePromises);
+    console.log("Documents delete successfully:", results);
+    return results;
+  } catch (error) {
+    console.error("Error deleting data:", error);
+    return null;
+  }
+}
 //#endregion master_Customer
+
+//#region master_Areas
+export async function getAllMasterAreaData() {
+  try {
+    const response = await fetchDataList(databaseId, masterAreaTableId);
+    console.log(response);
+    return response;
+  } catch (error) {
+    console.error("Error retrieving data:", error);
+  }
+}
+export async function getMasterAreaDataWithCustomerId(customerId) {
+  try {
+    const response = await fetchDataList(databaseId, masterAreaTableId, [
+      Query.equal("CustomerId", customerId),
+    ]);
+    console.log(response);
+    return response;
+  } catch (error) {
+    console.error("Error retrieving data:", error);
+  }
+}
+export async function addNewArea(areaData) {
+  const documentIds = [];
+  const promises = areaData.map(async (data) => {
+    try {
+      const document = await databases.createDocument(databaseId, masterAreaTableId, 'unique()', data);
+      console.log('Document created:', document.$id);
+      documentIds.push(document.$id); // Add the document ID to the list
+    } catch (error) {
+      console.error('Error creating document:', error);
+      return null;
+    }
+});
+
+  // Wait for all promises to resolve
+  await Promise.all(promises);
+  return documentIds;
+}
+export async function deleteArea(id) {
+  try {
+    console.log("id:", id);
+    const deletePromises = id.map((data) => {
+      return databases.deleteDocument(
+        databaseId,
+        masterAreaTableId,
+        data
+      );
+    });
+    const results = await Promise.all(deletePromises);
+    console.log("Documents delete successfully:", results);
+    return results;
+  } catch (error) {
+    console.error("Error deleting data:", error);
+    return null;
+  }
+}
+export async function updateArea(updateAreaData) {
+  try {
+    const updatePromises = updateAreaData.map((data) => {
+      return databases.updateDocument(
+        databaseId,
+        masterAreaTableId,
+        data.documentId, // each object should include documentId to specify the document
+        data.updateFields // fields you want to update in each document
+      );
+    });
+    const results = await Promise.all(updatePromises);
+    console.log("Documents updated successfully:", results);
+    return results;
+  } catch (error) {
+    console.error("Error updating documents:", error);
+    return null;
+  }
+}
+//#endregion master_Areas
+
+//#region master_Contrtacts
+export async function queryMasterContract(field, value) {
+  try {
+    const response = await fetchDataList(databaseId, masterContrtactTableId, [
+      Query.equal(field, value),
+    ]);
+    console.log(response);
+    return response;
+  } catch (error) {
+    console.error("Error retrieving data:", error);
+  }
+}
+//#endregion master_Contrtacts
+
 export async function getMasterRoundData(areaId) {
   try {
     const response = await fetchDataList(databaseId, masterRoundTableId, [
@@ -133,33 +242,11 @@ export async function getAllMasterCheckListData() {
     console.error("Error retrieving data:", error);
   }
 }
-//#region master_Areas
-export async function getAllMasterAreaData() {
-  try {
-    const response = await fetchDataList(databaseId, masterAreaTableId);
-    console.log(response);
-    return response;
-  } catch (error) {
-    console.error("Error retrieving data:", error);
-  }
-}
-export async function getMasterAreaDataWithCustomerId(customerId) {
-  try {
-    const response = await fetchDataList(databaseId, masterAreaTableId, [
-      Query.equal("CustomerId", customerId),
-    ]);
-    console.log(response);
-    return response;
-  } catch (error) {
-    console.error("Error retrieving data:", error);
-  }
-}
-//#endregion master_Areas
 
-export async function getMasterShiftData(customerId) {
+export async function getMasterShiftData(field, value) {
   try {
     const response = await fetchDataList(databaseId, masterShiftTableId, [
-      Query.equal("customerID", customerId),
+      Query.equal(field, value),
     ]);
     console.log(response);
     return response;
@@ -393,6 +480,7 @@ export async function addNewAssignedManpower(assignedManpowerdata) {
 }
 //#endregion Master Data
 
+//#region SIAPP
 export async function getPatrolRoundData() {
   try {
     const response = await fetchDataList(databaseId, patrolRoundsTableId);
@@ -554,3 +642,4 @@ export async function getAllRandomPatrolCheckpointData() {
     console.error("Error retrieving RandomPatrolCheckpointData data:", error);
   }
 }
+//#endregion SIAPP

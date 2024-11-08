@@ -446,16 +446,16 @@ const IncidentForm = ({
                 {mappedFileName.map((file, index) => (
                   <Grid2 size={4} key={index}>
                     <Box className="justify-between flex p-1 bg-white border-[1px] border-[#4C9BF5] rounded-lg">
-                    <a target="_blank" href={file.fileUrl} className="flex justify-between">
+                    <a target="_blank" href={file.fileUrl} className="w-full flex justify-between">
                       <Typography className="py-1 px-2 text-[#2C5079]">
-                        {file.fileName.length > 20 ? file.fileName.substring(0, 20)+"..." : file.fileName}
+                        {file.fileName.length > 17 ? file.fileName.substring(0, 17)+"..." : file.fileName}
                       </Typography>
-                      </a>
                       <GoArrowUpRight
                         size={24}
                         color="#4C9BF5"
                         style={{ marginTop: 5 }}
                       />
+                      </a>
                       
                       {/* <Trash
                         size={24}
@@ -497,7 +497,7 @@ const IncidentForm = ({
                   <Grid2 size={4} key={index}>
                     <Box className="justify-between flex p-1 bg-white border-[1px] border-[#4C9BF5] rounded-lg">
                       <Typography className="py-1 px-2 text-[#2C5079]">
-                        {file.name.length > 20 ? file.name.substring(0, 20)+"..." : file.name}
+                        {file.name.length > 17 ? file.name.substring(0, 17)+"..." : file.name}
                       </Typography>
                       <Trash
                         onClick={() => handleRemoveNewFile(file.name)}

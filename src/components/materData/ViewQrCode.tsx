@@ -76,11 +76,13 @@ const ViewQrCode = ({ selectedCustomer, closeModal, customerAreas, selectArea=un
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const initialData = async () => {
-    getCheckpoints(selectedCustomer.areaId);
+    console.log("selectedCustomer.areaId =", selectedCustomer.areaId);
+    getCheckpoints(selectedArea);
   };
 
   const getCheckpoints = async (areaId: string) => {
     setIsLoading(true);
+    console.log("selectedArea =", selectedArea);
     const getCheckpoints = await getMasterCheckpointData(areaId);
     const mappedCheckpoints:CheckpointData[] = getCheckpoints?.documents.map((checkpoint) => {
       return {
