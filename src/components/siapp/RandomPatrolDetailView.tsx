@@ -17,7 +17,7 @@ import { SaveBtnFooter } from "../ui/buttons/saveBtnFooter";
 import { IoClose } from "react-icons/io5";
 import { PatrolStatus } from "./PatrolStatus";
 import { CheckListStatus } from "./CheckListStatus";
-import { getPatrolCheckList, getMasterRoundData } from "../../app/lib/api";
+import { getPatrolCheckList } from "../../app/lib/api";
 import { Row } from "react-day-picker";
 import { formatDate } from "date-fns";
 

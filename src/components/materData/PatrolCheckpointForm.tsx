@@ -51,7 +51,7 @@ import {
   getMasterAreaDataWithCustomerId,
   getMasterAssignedManpowerData,
   getMasterCheckpointData,
-  getMasterManpowerRoleData,
+  getMasterManpowerPositionData,
   updatAssignedManpower,
   updateAreaData,
   updateCheckpoint,
@@ -195,7 +195,7 @@ const PatrolCheckpointFrom = ({
 
   const roundsOfArea = async () => {
     setIsLoading(true);
-    const rounds = await getMasterRoundData(prelimData.areaId);
+    const rounds = await getMasterRoundData([{ field: "areaId", value: prelimData.areaId }]);
     const filteredRound = rounds?.documents.filter(
       (round) => round.isActive === true
     );
@@ -480,7 +480,7 @@ const PatrolCheckpointFrom = ({
                 employeeName: man.employeeName,
                 shift_Id: man.shift_Id,
                 checkpoint_IDs: man.checkpoint_IDs,
-                manpowerRole_Id: man.manpowerRole_Id,
+                manpowerPosition_Id: man.manpowerPosition_Id,
               };
             }) || [];
           console.log("dataToSubmit", addataToSubmit);
@@ -504,7 +504,7 @@ const PatrolCheckpointFrom = ({
                   employeeName: man.employeeName,
                   shift_Id: man.shift_Id,
                   checkpoint_IDs: man.checkpoint_IDs,
-                  manpowerRole_Id: man.manpowerRole_Id,
+                  manpowerPosition_Id: man.manpowerPosition_Id,
                 },
               };
             }) || [];
@@ -662,8 +662,7 @@ const PatrolCheckpointFrom = ({
     const filteredshiftDatas: ShiftData[] = uniqueShiftsInPrelim.map((s) => {
       return {
         shiftId: s,
-        shiftName: shiftsOfCustomer.find((shift) => shift.shiftId === s)
-          .shiftName,
+        shiftName: shiftsOfCustomer.find((shift) => shift.shiftId === s)?.shiftName,
       };
     });
     console.log("shiftDatas =", filteredshiftDatas);
@@ -672,7 +671,7 @@ const PatrolCheckpointFrom = ({
     setIsLoading(true);
     //use unique shiftIds to find manpower roles
     if(uniqueShiftsInPrelim.length > 0){
-      const manpowerRoles = await getMasterManpowerRoleData(uniqueShiftsInPrelim);
+      const manpowerRoles = await getMasterManpowerPositionData(uniqueShiftsInPrelim);
       setfilteredManpowerData(manpowerRoles?.documents || []);
 
       //use unique shiftIds to find assigned mnapowers
@@ -686,10 +685,10 @@ const PatrolCheckpointFrom = ({
           id: man.$id,
           employee_Id: man.employee_Id,
           employeeName: man.employeeName,
-          role_Name: man.role_Name,
+          position_Name: man.position_Name,
           shift_Id: man.shift_Id,
           checkpoint_IDs: checkpointItemSource.filter(item => man.checkpoint_IDs.includes(item.id)).map(item => item.id),
-          manpowerRole_Id: man.manpowerRole_Id,
+          manpowerPosition_Id: man.manpowerPosition_Id,
         };
       }) || [];
     setAssignedManpowers(mappedAssigned || []);
@@ -723,7 +722,7 @@ const PatrolCheckpointFrom = ({
         id: "new" + assignedManpowers.length + 1,
         employee_Id: "",
         employeeName: "",
-        manpowerRole_Id: roleId,
+        manpowerPosition_Id: roleId,
         shift_Id: shiftId,
         checkpoint_IDs: [],
       },
@@ -1804,7 +1803,7 @@ const PatrolCheckpointFrom = ({
                       </Typography>
                       {shiftDatas.map((shift, index) => (
                         <div className="mb-2" key={index}>
-                          <Accordion sx={{ bgcolor: "#EBF4F6", mb: "0.5rem" }}>
+                          <Accordion key={"acc" + index} sx={{ bgcolor: "#EBF4F6", mb: "0.5rem" }}>
                             <AccordionSummary
                               sx={{ borderBottom: "1px solid #C7D4D7" }}
                               expandIcon={<FaSortDown />}
@@ -1873,7 +1872,7 @@ const PatrolCheckpointFrom = ({
                                             // data.roles.find(
                                             //   (r) => r.id === role.roleId
                                             // )?.desc
-                                            role.role_Name
+                                            role.position_Name
                                           }
                                         </Typography>
                                       </div>
@@ -1896,7 +1895,7 @@ const PatrolCheckpointFrom = ({
                                           {
                                             assignedManpowers?.filter(
                                               (item) =>
-                                                item.manpowerRole_Id ===
+                                                item.manpowerPosition_Id ===
                                                 role.$id
                                             ).length
                                           }
@@ -1907,7 +1906,7 @@ const PatrolCheckpointFrom = ({
                                     {assignedManpowers
                                       ?.filter(
                                         (item) =>
-                                          item.manpowerRole_Id === role.$id
+                                          item.manpowerPosition_Id === role.$id
                                       )
                                       .map((man: any, index: number) => (
                                         <Box
@@ -1998,7 +1997,7 @@ const PatrolCheckpointFrom = ({
                                         disable={
                                           assignedManpowers?.filter(
                                             (item) =>
-                                              item.manpowerRole_Id === role.$id
+                                              item.manpowerPosition_Id === role.$id
                                           ).length === role.requireQuantity
                                         }
                                         onAddBtnClick={(e) =>

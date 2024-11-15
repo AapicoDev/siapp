@@ -75,6 +75,7 @@ type AreaData = {
   id: string;
   custId: any;
   name: string;
+  roundIds: string[];
 };
 
 type selectedDelete = {
@@ -154,29 +155,6 @@ const zones = [
   },
 ];
 
-const mockArea: AreaData[] = [
-  {
-    id: "1",
-    custId: 1,
-    name: "อาคาร1",
-  },
-  {
-    id: "2",
-    custId: 1,
-    name: "อาคารใหญ่",
-  },
-  {
-    id: "3",
-    custId: 2,
-    name: "อาคาร2",
-  },
-  {
-    id: "4",
-    custId: 3,
-    name: "หน้าประตูทางออก 1",
-  },
-];
-
 const mockChkPt = [
   {
     areaId: "1",
@@ -203,6 +181,7 @@ const initialArea: AreaData[] = [
     id: "",
     custId: "",
     name: "",
+    roundIds: []
   },
 ];
 
@@ -211,13 +190,10 @@ export default function Customer() {
   const [customerNameList, setCustomerNameList] = useState([
     { id: 1, desc: "" },
   ]);
-  const [areas, setAreas] = useState<AreaData[]>([
-    { id: "", custId: null, name: "" },
-  ]);
   const [custAreas, setCustAreas] = useState<AreaData[]>([]);
   const [selectedRow, setSelectedRow] = useState<RowData | null>(null);
   const [isSelectedAll, setIsSelectedAll] = useState(false);
-  const [openAddCustModal, setShowAddCustModal] = useState(false);
+  const [showAddCustModal, setShowAddCustModal] = useState(false);
   const [openEditCustModal, setOpenEditCustModal] = useState<boolean>(false);
   const [openFilterModal, setOpenFilterModal] = useState<boolean>(false);
   const [selectedSegmentFilter, setSelectedSegmentFilter] = useState();
@@ -284,19 +260,17 @@ export default function Customer() {
   useEffect(() => {
     initialData();
     tableData();
-    custNameList();
-  }, []);
+  }, [isCustomerPage]);
 
   useEffect(() => {
     if (isAddOrUpdateSucces) {
       tableData();
-      custNameList();
       setIsAddOrUpdateSucces(false);
     }
   }, [isAddOrUpdateSucces]);
 
-  const custNameList = () => {
-    const custName = rowData.map((cust) => ({
+  const custNameList = (mappedRowData: RowData[]) => {
+    const custName = mappedRowData.map((cust) => ({
       id: cust.id,
       desc: cust.customerName,
     }));
@@ -383,7 +357,7 @@ export default function Customer() {
       custId: row.id,
     }));
     setSelected(mapSelect);
-
+    custNameList(tableData);
     setIsLoading(false);
   };
 
@@ -470,10 +444,10 @@ export default function Customer() {
     }
   }
 
-  const handleEditContract = (selecectedRow: any) => {
+  const handleEditContract = async (selecectedRow: any) => {
     console.log("row =", selecectedRow);
     setSelectedRow(selecectedRow);
-    handleCustArea(selecectedRow);
+    await handleCustArea(selecectedRow);
     setOpenEditContract(true);
   };
 
@@ -495,6 +469,7 @@ export default function Customer() {
           id: doc.$id,
           custId: doc.CustomerId,
           name: doc.name,
+          roundIds: doc.roundIDs,
         };
       }) || [];
     console.log("custArea =", custArea);
@@ -525,7 +500,7 @@ export default function Customer() {
     setSelected(selectedAll);
   };
 
-  const handleAddBtnOnClick = (
+  const handleAddContract = (
     e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
     selectedRow: any
   ) => {
@@ -562,20 +537,6 @@ export default function Customer() {
       <Box className="px-2">
         {/* Main Content */}
         <Box px={2} pb={2}>
-          {/* <Typography
-            sx={{
-              fontWeight: "700",
-              color: "#F66262",
-              border: "1px solid #F66262",
-              width: "fit-content",
-              borderRadius: "10px",
-              mb: 1,
-            }}
-            className="py-1 px-2"
-          >
-            Mockup data
-          </Typography> */}
-          {/* Sub Header */}
           <Box className="w-full">
             <Box justifyContent="space-between" className="flex">
               <Box className="space-x-4 py-4 flex">
@@ -766,15 +727,13 @@ export default function Customer() {
                       {/* Contract */}
                       <TableCell align="center">
                         {row.contractTotal === 0 ? (
-                          <AddButton 
-                          onAddBtnClick={function (event: React.MouseEvent<HTMLButtonElement, MouseEvent>): void {} }
-                          //onAddBtnClick={(e) => handleAddBtnOnClick(e, row)}
+                          <AddButton                         
+                            onAddBtnClick={(e) => handleAddContract(e, row)}
                           />
                         ) : (
                           <ViewButton
-                              //onViewBtnClick={handleEditContract}
-                              row={row} 
-                              onViewBtnClick={function (event: React.MouseEvent<HTMLButtonElement, MouseEvent>): void {} }                          />
+                              onViewBtnClick={handleEditContract}
+                              row={row}                      />
                         )}
                       </TableCell>
                     </TableRow>
@@ -785,7 +744,7 @@ export default function Customer() {
           )}
 
           {!isCustomerPage && (
-            <TableContract contractData={mockContract} custData={rowData} />
+            <TableContract contractData={mockContract} custData={customerNameList} />
           )}
 
           {/* TableFooter*/}
@@ -835,10 +794,10 @@ export default function Customer() {
       </Box>
 
       {/* Add customer */}
-      {openAddCustModal && (
+      {showAddCustModal && (
         <CustomerForm
           closeModal={handleCloseCustomerForm}
-          customeraAeas={initialArea}
+          customeraAeas={[]}
           departmantItemSource={departmantItemSource}
           allSegment={allSegment}
           allGroup={allGroup}
@@ -1054,6 +1013,7 @@ export default function Customer() {
           selectedCustomer={selectedRow}
           isEditContract={false}
           custList={[customerNameList.find((c) => c.id === selectedRow?.id)]}
+          setIsAddOrUpdateSuccess={setIsAddOrUpdateSucces}
         />
       )}
 
@@ -1064,6 +1024,7 @@ export default function Customer() {
           selectedCustomer={selectedRow}
           isEditContract={true}
           custList={customerNameList}
+          setIsAddOrUpdateSuccess={setIsAddOrUpdateSucces}
         />
       )}
 

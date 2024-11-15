@@ -12,6 +12,7 @@ import {
   AccordionSummary,
   AccordionDetails,
   Grid2,
+  CircularProgress,
 } from "@mui/material";
 import TabContext from "@mui/lab/TabContext";
 import TabList from "@mui/lab/TabList";
@@ -52,7 +53,33 @@ import CheckBoxDropDown from "../ui/checkBoxDropDown";
 import AlertToDatail from "./AlertToDetail";
 import { Checkbox as Checkbox3 } from "@/components/ui/checkbox3";
 import Image from "next/image";
-import { getMasterManpowerRoleData, getMasterShiftData, queryMasterContract } from "@/app/lib/api";
+import {
+  addNewContract,
+  addNewManpowerPosition,
+  addNewPatrolAlertTo,
+  addNewRoundData,
+  addNewShifts,
+  deleteContract,
+  deleteManpowerPosition,
+  deletePatrolAlertTo,
+  deleteRoundData,
+  deleteShift,
+  getMasterAreaData,
+  getMasterAreaDataWithCustomerId,
+  getMasterManpowerPositionData,
+  getMasterPatrolAlertToData,
+  getMasterRoundData,
+  getMasterShiftData,
+  queryMasterContract,
+  updateArea,
+  updateContract,
+  updateDataOfContract,
+  updateManpowerPosition,
+  updatePatrolAlertTo,
+  updateRoundData,
+  updateShifts,
+} from "@/app/lib/api";
+import { useConfirmDialog } from "../../components/ui/alertDialog/confirmDialog";
 
 type AreaData = {
   id: number;
@@ -60,10 +87,12 @@ type AreaData = {
   name: string;
   totalChkPt: number;
   round: any[];
+  roundIds: string[];
 };
 
 type RoundData = {
-  id: number;
+  id: any;
+  areaId: any;
   number: any;
   startTimeHr: any;
   startTimeMin: any;
@@ -75,6 +104,7 @@ type RoundData = {
   alertTo: any;
   isNeed: any;
   isStrictOrder: any;
+  status: string;
 };
 
 type AreaListType = {
@@ -82,7 +112,9 @@ type AreaListType = {
   areaName: any;
   totalChkPt: any;
   roundList: RoundData[];
+  roundIdList: string[];
   latestRoundID: number;
+  areaStatus: string;
 };
 
 type ShiftListType = {
@@ -90,22 +122,30 @@ type ShiftListType = {
   desc: any;
   workdays: any[];
   manpowers: ManpowerType[];
+  manpowerIdList: string[];
+  status: string;
 };
 
 type ManpowerType = {
   id: any;
+  shiftId: string;
+  customerId: string;
   nameInReport: string;
-  roleId: any;
+  positionId: any;
+  positionName: string;
   quantity: number;
+  status: string;
 };
 
 type PatrolAlertListType = {
   id: any;
+  empId: any;
   isAsm: any;
   name: string;
   email: string;
-  otherPositionId: any[];
+  otherRoleId: any[];
   desc: any;
+  status: string;
 };
 
 type ContractType = {
@@ -118,6 +158,8 @@ type ContractType = {
   isActive: boolean;
   shift_Ids: string[];
   alertTo_Ids: string[];
+  status: string;
+  isActivePreviousValue: boolean;
 };
 
 const mockIsSameDayList = [
@@ -138,6 +180,7 @@ interface ContractFormProps {
   isEditContract: boolean;
   custList: any[];
   isFromCustomerPage?: boolean;
+  setIsAddOrUpdateSuccess: any;
 }
 
 const ContractForm = ({
@@ -147,7 +190,10 @@ const ContractForm = ({
   isEditContract,
   isFromCustomerPage = true,
   custList = [{ id: 1, desc: "" }],
+  setIsAddOrUpdateSuccess,
 }: ContractFormProps) => {
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const { confirmDialog, ConfirmAlertDialog } = useConfirmDialog();
   const [isEdit, setIsEdit] = useState(isEditContract);
   const [customer, setCustomer] = useState(
     selectedCustomer || {
@@ -177,12 +223,19 @@ const ContractForm = ({
   const [areaOpen, setAreaOpen] = useState(Array(areas.length).fill(false)); // Array to track edit state for each row
 
   const [isSameDayList, setIsSameDayList] = useState<any[]>(mockIsSameDayList);
-  const [shiftList, setShiftList] = useState<ShiftListType[]>([
-    { id: 0, desc: "", workdays: [], manpowers: [] },
-  ]);
+  const [shiftList, setShiftList] = useState<ShiftListType[]>([]);
   const [totalManpower, setTotalManpower] = useState(0);
   const [alertToList, setAlertToList] = useState<PatrolAlertListType[]>([
-    { id: 0, isAsm: 0, name: "", email: "", otherPositionId: [], desc: "" },
+    {
+      id: 0,
+      empId: undefined,
+      isAsm: 0,
+      name: "",
+      email: "",
+      otherRoleId: [],
+      desc: "",
+      status: "",
+    },
   ]);
   const [asmAlertNames, setAsmAlertNames] = useState<any[]>([
     { id: "", desc: "", email: "" },
@@ -195,6 +248,7 @@ const ContractForm = ({
       roundList: [
         {
           id: 1,
+          areaId: "",
           number: "",
           startTimeHr: "",
           finishTimeHr: "",
@@ -206,9 +260,12 @@ const ContractForm = ({
           alertTo: [],
           isNeed: false,
           isStrictOrder: false,
+          status: "new",
         },
       ],
+      roundIdList: [],
       latestRoundID: 0,
+      areaStatus: "existed",
     },
   ]);
   const [contractList, setContractList] = useState<ContractType[]>([]);
@@ -222,10 +279,12 @@ const ContractForm = ({
     isActive: true,
     shift_Ids: [],
     alertTo_Ids: [],
+    status: "new",
+    isActivePreviousValue: false
   });
   const [attachmentList, setAttachmentList] = useState<any[]>([]);
-  const [startDate, setStartDate] = useState<Date>(new Date());
-  const [finishDate, setFinishDate] = useState<Date>(addDays(new Date(), 1));
+  const [addContractStartDate, setAddContractStartDate] = useState<Date>(new Date());
+  const [addContractFinishDate, setAddContractFinishDate] = useState<Date>(addDays(new Date(), 1));
   const [date, setDate] = useState<DateRange>({
     from: new Date(),
     to: addDays(new Date(), 1),
@@ -238,7 +297,7 @@ const ContractForm = ({
   const [showAlertToDeatil, setShowAlertToDeatil] = useState(false);
   const [selectedALertTo, setSelectedALertTo] = useState<PatrolAlertListType>();
   const [selectNewFile, setSelectNewFile] = useState<any[]>([]);
-  const [allContracts, setAllContracts] = useState<ContractType[]>([]);
+  const [allContractsOfCustomer, setAllContractsOfCustomer] = useState<ContractType[]>([]);
 
   useEffect(() => {
     if (!isEdit) {
@@ -249,11 +308,12 @@ const ContractForm = ({
     const initialize = async () => {
       const initialSelctedContract = await contractListInitial();
       console.log("initialSeelctedContract =", initialSelctedContract);
-      contractDetail(initialSelctedContract);
+      contractDetail(initialSelctedContract.length > 0 ? initialSelctedContract[0] : selectedContract);
       //initialData();
     };
     initialize();
   }, [areas]);
+
 
   const initialData = () => {
     areas.forEach((area) => {
@@ -268,18 +328,15 @@ const ContractForm = ({
     // const contracts = data.contracts.filter(
     //   (c) => c.customerId === customer.customerId && (!isFromCustomerPage ? customer.id === c.id : true) //&& c.isActive
     // );
-    const contracts = await queryMasterContract("customer_Id", customer.id);
-    setAllContracts(contracts?.documents.map((contract) => ({
-      id: contract.$id,
-      desc: contract.contractNo,
-      customer_Id: contract.customer_Id,
-      startDate: contract.startDate,
-      endDate: contract.endDate,
-      attachments: contract.attachments,
-      isActive: contract.isActive,
-      shift_Ids: contract.shift_Ids,
-      alertTo_Ids: contract.alertTo_Ids,
-    })) || []);
+    let queryContract;
+    if(isFromCustomerPage){
+      queryContract = {field: "customer_Id", value: customer.id};
+    }
+    else {
+      queryContract = {field: "$id", value: customer.selectedContractId || ""};
+    }
+    console.log("queryContract = ", queryContract)
+    const contracts = await queryMasterContract(queryContract.field,queryContract.value);
     const mappedContract =
       contracts?.documents.map((contract) => ({
         id: contract.$id,
@@ -291,12 +348,31 @@ const ContractForm = ({
         isActive: contract.isActive,
         shift_Ids: contract.shift_Ids,
         alertTo_Ids: contract.alertTo_Ids,
+        status: "existed",
+        isActivePreviousValue: contract.isActive,
       })) || [];
     console.log("mappedContract", mappedContract);
     setContractList(mappedContract);
     console.log("mappedContract[0]", mappedContract[0]);
+
+    const contractsOfCustomer = await queryMasterContract("customer_Id", customer.id);
+    setAllContractsOfCustomer(
+      contractsOfCustomer?.documents.map((contract) => ({
+        id: contract.$id,
+        desc: contract.contractNo,
+        customer_Id: contract.customer_Id,
+        startDate: contract.startDate,
+        endDate: contract.endDate,
+        attachments: contract.attachments,
+        isActive: contract.isActive,
+        shift_Ids: contract.shift_Ids,
+        alertTo_Ids: contract.alertTo_Ids,
+        status: "existed",
+        isActivePreviousValue: contract.isActive,
+      })) || []
+    );
     setSelectedContract(mappedContract[0] || selectedContract);
-    return mappedContract[0];
+    return mappedContract;
   };
 
   const addNewContractinitial = (selectedCustId: any) => {
@@ -309,6 +385,7 @@ const ContractForm = ({
         name: area.name,
         totalChkPt: 0,
         round: [],
+        roundIds: [],
       }));
     setAreas(customerAreas);
     // const mappedAreaList: AreaListType[] = customerAreas.map((area: AreaData) => {
@@ -333,7 +410,6 @@ const ContractForm = ({
   const handleSelectChange = (e: SelectChangeEvent) => {
     const { name, value } = e.target;
     console.log("selected =", e.target);
-    console.log("contrtactList =", contractList);
     if (name === "addContractCustomer") {
       console.log("customerAdd = ", value);
       setCustomerAdd(value);
@@ -357,36 +433,46 @@ const ContractForm = ({
     if (name === "startDate" || name === "endDate") {
       fieldName = name;
       value = formatToISOString(e);
-    } else {
+    } 
+    else {
       fieldName = e.target.name;
       value = e.target.value;
     }
-    if(fieldName === "id"){
-      console.log("allContracts =", allContracts);
-      setSelectedContract(allContracts.find(contract => contract.id === value) || selectedContract);
-      contractDetail(allContracts.find(contract => contract.id === value) || allContracts[0]);
+    if (fieldName === "id") {
+      console.log("contractList =", contractList);
+      setSelectedContract(
+        contractList.find((contract) => contract.id === value) || selectedContract
+      );
+      contractDetail(
+        contractList.find((contract) => contract.id === value) || contractList[0]
+      );
     }
-    setSelectedContract((prevData: any) => ({
+    setSelectedContract((prevData: ContractType) => ({
       ...prevData,
       [fieldName]: value,
+      status:
+        fieldName === "id"
+          ? prevData.status
+          : prevData.status === "new"
+          ? "new"
+          : "edit",
     }));
   };
 
-  const contractDetail = async (
-    selectedContract: ContractType
-  ) => {
-    // Not use StartDate - FinishDate
-    const filteredContract = data.contracts.find(
-      (c) => c.id === selectedContract.id
-    );
-    setDate({
-      from: new Date(filteredContract?.startDate || "") || date?.from,
-      to: new Date(filteredContract?.finishDate || "") || date?.to,
-    });
+  const contractDetail = async (selectedContract: ContractType) => {
+    //#region Not use StartDate - FinishDate
+    // const filteredContract = data.contracts.find(
+    //   (c) => c.id === selectedContract.id
+    // );
+    // setDate({
+    //   from: new Date(filteredContract?.startDate || "") || date?.from,
+    //   to: new Date(filteredContract?.finishDate || "") || date?.to,
+    // });
+    //#endregion
 
     //attachmentList
     console.log("selectedContract =", selectedContract);
-    const filesName = selectedContract.attachments.map((file) => {
+    const filesName = selectedContract.attachments?.map((file) => {
       const split = file.split(";;");
       return {
         fileName: split[0],
@@ -397,15 +483,20 @@ const ContractForm = ({
     setAttachmentList(filesName);
 
     //Mapped area
-    const mappedAreaList: AreaListType[] = areas.map((area: AreaData) => {
-      return {
-        areaId: area.id, // Mapping `id` from AreaData
-        areaName: area.name, // Mapping `name` from AreaData
-        totalChkPt: area.totalChkPt, // Mapping `totalChkPt` from AreaData
-        roundList: roundManagement(area.id, selectedContract), // Assigning the filtered round data
-        latestRoundID: 0,
-      };
-    });
+    const mappedAreaList: AreaListType[] = await Promise.all(
+      areas.map(async (area: AreaData) => {
+        const roundList = await roundManagement(area.id, selectedContract.id);
+        return {
+          areaId: area.id, // Mapping `id` from AreaData
+          areaName: area.name, // Mapping `name` from AreaData
+          totalChkPt: area.totalChkPt, // Mapping `totalChkPt` from AreaData
+          roundList,
+          roundIdList: area.roundIds,
+          latestRoundID: 0,
+          areaStatus: "existed",
+        };
+      })
+    );
     mappedAreaList.map(
       (a) =>
         (a.latestRoundID = a.roundList.reduce(
@@ -416,59 +507,106 @@ const ContractForm = ({
     setAreaList(mappedAreaList);
 
     // Shift list
-    const shiftsOfContract = await getMasterShiftData("contractID", selectedContract.id)
-    const mappedShiftList: ShiftListType[] = await Promise.all(
-        shiftsOfContract?.documents?.map(async (shift) => {
-          const manpowers = await mappedManpowerOfEachShift(shift.$id); // await resolves manpowers array
-          return {
-            id: shift.$id,
-            desc: shift.shiftName,
-            workdays: shift.workDays,
-            manpowers, // Already resolved
-          };
-      }) || shiftList
-    );
-    setShiftList(mappedShiftList);
-    calTotalManPowerOfAllShift(mappedShiftList);
+    const shiftsOfContract = await getShiftsOfContract(selectedContract.id);
+    setShiftList(shiftsOfContract);
+    calTotalManPowerOfAllShift(shiftsOfContract);
     console.log("shiftsOfContract =", shiftsOfContract);
-    console.log("mappedShiftList =", mappedShiftList);
 
     //Alert to List
-    const filteredAlertTo = data.patrolAlertTo.filter(
-      (al) => al.contractId === selectedContract.id
+    const patrolAlertToOfContract = await getAlertToOfContract(
+      selectedContract.id
     );
-    console.log("filteredAlertTo =", filteredAlertTo);
-    const mappedAlertList: PatrolAlertListType[] =
-      filteredAlertTo.map((alertTo) => ({
-        id: alertTo.id,
-        isAsm: alertTo.isAsm,
-        name: alertTo.name,
-        email: alertTo.email,
-        otherPositionId: alertTo.otherPositionId,
-        desc: alertTo.name,
-      })) || alertToList;
-    setAlertToList(mappedAlertList || alertToList);
-    console.log("mappedAlertList =", mappedAlertList);
+    setAlertToList(patrolAlertToOfContract || alertToList);
+    console.log("mappedAlertList =", patrolAlertToOfContract);
 
     //asmAlertNames
     const asmAlertNameList = data.employees.map((a) => ({
-      id: a.fname + " " + a.lname,
+      id: a.empId,
       desc: a.fname + " " + a.lname,
       email: a.email,
     }));
     setAsmAlertNames(asmAlertNameList);
   };
 
+  async function getShiftsOfContract(contractId: string) {
+    const shiftsOfContract = await getMasterShiftData("contractID", contractId);
+    const mappedShiftList: ShiftListType[] = await Promise.all(
+      shiftsOfContract?.documents?.map(async (shift) => {
+        const manpowers = await mappedManpowerOfEachShift(shift.$id);
+        return {
+          id: shift.$id,
+          desc: shift.shiftName,
+          workdays: shift.workDays,
+          manpowers,
+          manpowerIdList: shift.manpowerID_List,
+          status: "existed",
+        };
+      }) || shiftList
+    );
+    return mappedShiftList;
+  }
+
+  async function getAlertToOfContract(contractId: string) {
+    const patrolAlertToOfContract = await getMasterPatrolAlertToData(
+      contractId
+    );
+    console.log("patrolAlertToOfContract =", patrolAlertToOfContract);
+    const mappedAlertList: PatrolAlertListType[] =
+      patrolAlertToOfContract?.documents.map((alertTo) => ({
+        id: alertTo.$id,
+        empId: alertTo.employee_Id,
+        isAsm: alertTo.isASM,
+        name: alertTo.name,
+        email: alertTo.email,
+        otherRoleId: alertTo.otherRole_Id,
+        desc: alertTo.name,
+        status: "existed",
+      })) || alertToList;
+    setAlertToList(mappedAlertList || alertToList);
+    console.log("mappedAlertList =", mappedAlertList);
+    return mappedAlertList;
+  }
+
+  async function getAreaAndRound() {
+    const mappedAreaList: AreaListType[] = await Promise.all(
+      areas.map(async (area: AreaData) => {
+        const roundList = await roundManagement(area.id, selectedContract.id);
+        return {
+          areaId: area.id, // Mapping `id` from AreaData
+          areaName: area.name, // Mapping `name` from AreaData
+          totalChkPt: area.totalChkPt, // Mapping `totalChkPt` from AreaData
+          roundList,
+          roundIdList: area.roundIds,
+          latestRoundID: 0,
+          areaStatus: "existed",
+        };
+      })
+    );
+    mappedAreaList.map(
+      (a) =>
+        (a.latestRoundID = a.roundList.reduce(
+          (max, round) => (round.id > max ? round.id : max),
+          0
+        ))
+    );
+    return mappedAreaList;
+  }
+
   const mappedManpowerOfEachShift = async (shiftId: any) => {
-    const manpowerRolesOfShift = await getMasterManpowerRoleData(shiftId);
-    const mappedManpower: ManpowerType[] = manpowerRolesOfShift?.documents.map(man => {
-      return{
-        id: man.$id,
-        nameInReport: man.nameInReport,
-        roleId: man.role_Id,
-        quantity: man.requireQuantity
-      }
-    }) || [];
+    const manpowerRolesOfShift = await getMasterManpowerPositionData(shiftId);
+    const mappedManpower: ManpowerType[] =
+      manpowerRolesOfShift?.documents.map((man) => {
+        return {
+          id: man.$id,
+          shiftId: shiftId,
+          customerId: man.customer_Id,
+          nameInReport: man.nameInReport,
+          positionId: man.position_Id,
+          positionName: man.position_Name,
+          quantity: man.requireQuantity,
+          status: "existed",
+        };
+      }) || [];
     return mappedManpower;
   };
 
@@ -495,7 +633,13 @@ const ContractForm = ({
       if (area.areaId === areaId) {
         // Update the roundList for the matched areaId
         let updatedRoundData = area.roundList.map((item) =>
-          item.id === roundId ? { ...item, [field]: value } : item
+          item.id === roundId
+            ? {
+                ...item,
+                [field]: value,
+                status: item.status === "new" ? "new" : "edit",
+              }
+            : item
         );
 
         if (
@@ -511,6 +655,7 @@ const ContractForm = ({
         // Return the updated area object
         return {
           ...area,
+          areaStatus: "edit",
           roundList: updatedRoundData, // Update the roundList with the modified rounds
         };
       }
@@ -533,25 +678,40 @@ const ContractForm = ({
       value = data.daysOfWeek.map((day) => day.id);
     }
     const updatedShiftList = shiftList.map((shift) =>
-      shift.id === shiftId ? { ...shift, [field]: value } : shift
+      shift.id === shiftId
+        ? {
+            ...shift,
+            [field]: value,
+            status: shift.status === "new" ? "new" : "edit",
+          }
+        : shift
     );
     setShiftList(updatedShiftList);
   };
 
   const addShift = () => {
-    const latestId = shiftList.reduce(
-      (max, area) => (area.id > max ? area.id : max),
-      0
-    );
     setShiftList([
       ...shiftList,
-      { id: latestId + 1, desc: "", workdays: [], manpowers: [] },
+      {
+        id: `${Date.now()}`,
+        desc: "",
+        workdays: [],
+        manpowers: [],
+        manpowerIdList: [],
+        status: "new",
+      },
     ]);
   };
 
-  const removeShift = (id: number) => {
+  const removeShift = (id: any) => {
     const deleteShiftIds = deleteShiftList;
-    if (!deleteShiftIds.includes(id)) deleteShiftIds?.push(id);
+    const selectedShift = shiftList.find((shift) => shift.id === id);
+    if (
+      !deleteShiftIds.includes(id) &&
+      (selectedShift?.status === "existed" || selectedShift?.status === "edit")
+    ) {
+      deleteShiftIds?.push(id);
+    }
     setDeleteShiftList(deleteShiftIds);
 
     if (shiftList.length > 0) {
@@ -575,17 +735,21 @@ const ContractForm = ({
       if (shift.id === shiftId) {
         const updatedManpowerData = shift.manpowers.map((item) =>
           item.id === manpowerId
-            ? { ...item, [field]: field === "quantity" ? Number(value) : value }
+            ? {
+                ...item,
+                [field]: field === "quantity" ? Number(value) : value,
+                status: item.status === "new" ? "new" : "edit",
+              }
             : item
         );
         return {
           ...shift,
           manpowers: updatedManpowerData,
+          status: "edit",
         };
       }
       return shift;
     });
-    console.log("updatedShiftList = ", updatedShiftList);
     setShiftList(updatedShiftList);
     calTotalManPowerOfAllShift(updatedShiftList);
   };
@@ -594,22 +758,21 @@ const ContractForm = ({
     const mappedShiftList: ShiftListType[] = shiftList.map((shift) => {
       if (shift.id === selectedShift) {
         return {
-          id: shift.id,
-          desc: shift.desc,
-          workdays: shift.workdays,
+          ...shift,
           manpowers: [
             ...shift.manpowers,
             {
-              id:
-                shift.manpowers.reduce(
-                  (max, mp) => (mp.id > max ? mp.id : max),
-                  0
-                ) + 1,
+              id: Date.now().toString(),
+              shiftId: shift.id,
+              customerId: selectedContract.customer_Id,
               nameInReport: "",
-              roleId: undefined,
+              positionId: undefined,
+              positionName: "",
               quantity: 0,
+              status: "new",
             },
           ],
+          status: "edit",
         };
       } else {
         return shift;
@@ -618,27 +781,39 @@ const ContractForm = ({
     setShiftList(mappedShiftList);
   };
 
-  const removeManpower = (selectedShiftId: any, selectedMapowerId: any) => {
+  const removeManpower = (selectedShiftId: any, selectedManpowerId: any) => {
     const manpowers =
       shiftList.find((s) => s.id === selectedShiftId)?.manpowers || [];
+    const selectedManpower = shiftList
+      .find((s) => s.id === selectedShiftId)
+      ?.manpowers.find((man) => man.id === selectedManpowerId);
 
     const deleteManpowerIds = deleteManpowerList;
-    if (!deleteManpowerIds.includes(selectedMapowerId))
-      deleteManpowerIds?.push(selectedMapowerId);
-    setDeleteManpowerList(deleteManpowerIds);
+    const uniqueManpowerId = Array.from(
+      new Set(deleteManpowerIds?.map((item: any) => item.manpowerId))
+    );
+    if (
+      !uniqueManpowerId.includes(selectedManpower?.id) &&
+      selectedManpower?.status !== "new"
+    ) {
+      deleteManpowerIds?.push({
+        shiftId: selectedShiftId,
+        manpowerId: selectedManpowerId,
+      });
+      setDeleteManpowerList(deleteManpowerIds);
+    }
 
     if (manpowers.length > 0) {
       const filterManpowers = manpowers.filter(
-        (mp) => mp.id !== selectedMapowerId
+        (mp) => mp.id !== selectedManpowerId
       );
       const mappedShiftList: ShiftListType[] = shiftList.map((shift) => {
         if (shift.id === selectedShiftId) {
           {
             return {
-              id: shift.id,
-              desc: shift.desc,
-              workdays: shift.workdays,
+              ...shift,
               manpowers: filterManpowers,
+              status: "edit",
             };
           }
         } else {
@@ -646,6 +821,7 @@ const ContractForm = ({
         }
       });
       setShiftList(mappedShiftList);
+      console.log("mappedShiftList =", mappedShiftList);
       calTotalManPowerOfAllShift(mappedShiftList);
     }
   };
@@ -657,20 +833,34 @@ const ContractForm = ({
     value: any
   ) => {
     const updatedPatrolAlertList = alertToList.map((alertTo) =>
-      alertTo.id === patrolAlertId ? { ...alertTo, [field]: value } : alertTo
+      alertTo.id === patrolAlertId
+        ? {
+            ...alertTo,
+            [field]: value,
+            status: alertTo.status === "new" ? "new" : "edit",
+          }
+        : alertTo
     );
 
     const mappedAlertList: PatrolAlertListType[] =
       updatedPatrolAlertList.map((alertTo) => ({
         id: alertTo.id,
+        empId: alertTo.isAsm === 1 ? alertTo.empId : "",
         isAsm: alertTo.isAsm,
-        name: alertTo.name,
+        name:
+          alertTo.isAsm === 1
+            ? asmAlertNames.find((a) => a.id === alertTo.empId)?.desc
+            : alertTo.name,
         email:
           alertTo.isAsm === 1
-            ? asmAlertNames.find((a) => a.desc === alertTo.name)?.email
+            ? asmAlertNames.find((a) => a.id === alertTo.empId)?.email
             : alertTo.email,
-        otherPositionId: alertTo.otherPositionId,
-        desc: alertTo.name,
+        otherRoleId: alertTo.otherRoleId,
+        desc:
+          alertTo.isAsm === 1
+            ? asmAlertNames.find((a) => a.id === alertTo.empId)?.desc
+            : alertTo.name,
+        status: alertTo.status,
       })) || alertToList;
     setAlertToList(mappedAlertList || alertToList);
   };
@@ -683,19 +873,24 @@ const ContractForm = ({
     setAlertToList([
       ...alertToList,
       {
-        id: "al000" + (alertToList.length + 1).toString(),
+        id: Date.now().toString(),
+        empId: "",
         isAsm: undefined,
         name: "",
         email: "",
-        otherPositionId: [],
+        otherRoleId: [],
         desc: "",
+        status: "new",
       },
     ]);
   };
 
-  const removeAlertToList = (id: number) => {
+  const removeAlertToList = (id: any) => {
     const deleteAlertIds = deleteAlertToList;
-    if (!deleteAlertIds.includes(id)) deleteAlertIds?.push(id);
+    const selectedAlertTo = alertToList.find((alert) => alert.id === id);
+    if (!deleteAlertIds.includes(id) && selectedAlertTo?.status !== "new") {
+      deleteAlertIds?.push(id);
+    }
     setDeleteAlertToList(deleteAlertIds);
 
     if (alertToList.length > 0) {
@@ -710,7 +905,6 @@ const ContractForm = ({
     if (value > maxVal || value < 0) {
       value = "0" + 0;
     }
-    console.log("value = ", value);
     if (value.length === 1) {
       value = "0" + value;
     }
@@ -721,6 +915,7 @@ const ContractForm = ({
   };
 
   const calMinutes = (roundId: any, roundList: RoundData[]) => {
+    console.log("roundList =", roundList);
     const rounds: RoundData[] = roundList.map((item) => {
       if (item.id === roundId) {
         let mins = 0;
@@ -753,27 +948,28 @@ const ContractForm = ({
     const mappedAreaList: AreaListType[] = areaList.map((area) => {
       if (area.areaId === selectedAreaId) {
         return {
-          areaId: area.areaId,
-          areaName: area.areaName,
-          totalChkPt: area.totalChkPt,
+          ...area,
           roundList: [
             ...area.roundList,
             {
-              id: area.latestRoundID + 1,
+              id: Date.now().toString(),
+              areaId: area.areaId,
               number: "",
               startTimeHr: "00",
               finishTimeHr: "00",
               startTimeMin: "00",
               finishTimeMin: "00",
               totalTimeMin: "0",
-              isSameDay: undefined,
+              isSameDay: 1,
               shift: "",
               alertTo: [],
               isNeed: false,
               isStrictOrder: false,
+              status: "new",
             },
           ],
           latestRoundID: area.latestRoundID + 1,
+          areaStatus: "edit",
         };
       } else {
         return area;
@@ -786,12 +982,23 @@ const ContractForm = ({
   const removeRound = (selectedAreaId: any, selectedRoundId: any) => {
     const rounds = areaList.find((a) => a.areaId === selectedAreaId)?.roundList;
     console.log("rounds=", rounds);
+    const selectedRound = rounds?.find((r) => r.id === selectedRoundId);
 
-    const deleteRoundId = deleteRoundList;
-    if (!deleteRoundId.includes(selectedRoundId))
-      deleteRoundId?.push(selectedRoundId);
-    setDeleteRoundList(deleteRoundId);
-    console.log("deleteRoundId = ", deleteRoundId);
+    const deleteRoundIds = deleteRoundList;
+    const uniqueRoundIds = Array.from(
+      new Set(deleteRoundIds?.map((item: any) => item.roundId))
+    );
+    if (
+      !uniqueRoundIds.includes(selectedRoundId) &&
+      selectedRound?.status !== "new"
+    ) {
+      deleteRoundIds?.push({
+        areaId: selectedAreaId,
+        roundId: selectedRoundId,
+      });
+      setDeleteRoundList(deleteRoundIds);
+      console.log("deleteRoundIds = ", deleteRoundIds);
+    }
 
     if (rounds != undefined && rounds?.length > 0) {
       const filterRounds = rounds.filter(
@@ -805,7 +1012,9 @@ const ContractForm = ({
               areaName: area.areaName,
               totalChkPt: area.totalChkPt,
               roundList: filterRounds,
+              roundIdList: filterRounds.map((round) => round.id),
               latestRoundID: area.latestRoundID,
+              areaStatus: "edit",
             };
           }
         } else {
@@ -825,76 +1034,1033 @@ const ContractForm = ({
   };
 
   const handleUndo = async () => {
-    console.log("initialData");
-    initialData();
-    const initialSeelctedContract = await contractListInitial();
-    contractDetail(initialSeelctedContract);
+    let selectedContractBeforeUndo = selectedContract;
+    const initialSelctedContract = await contractListInitial();
+    selectedContractBeforeUndo = initialSelctedContract.find(c => c.id === selectedContractBeforeUndo.id) || initialSelctedContract[0];
+    setSelectedContract(selectedContractBeforeUndo);
+    await contractDetail(selectedContractBeforeUndo);
+    setSelectNewFile([]);
+    setDeleteShiftList([]);
+    setDeleteManpowerList([]);
+    setDeleteAlertToList([]);
+    setDeleteRoundList([]);
   };
 
-  const handleDelete = () => {};
+  const handleDelete = async () => {
+    console.log("shiftList = ", shiftList);
+    console.log("deleteManpowerList = ", deleteManpowerList);
+    console.log("areaList = ", areaList);
+    console.log("selectedContract =", selectedContract);
+    const confirmApprove = await confirmDialog(
+      "Delete Contract",
+      "Do you want to delete this contract?", false, "danger"
+   );
+   if (confirmApprove) {
 
-  const handleSave = () => {
-    console.log("selectedCustomer = ", selectedCustomer);
-    console.log("customerAreas = ", customerAreas);
-    console.log("custList = ", custList);
-    console.log("selectedContract = ", selectedContract);
+    //Delete shifts, alertTo, ManpowerPositions of contract
+    let deleteContractResult = null;
+        const roundOfContract = await getMasterRoundData([{field: "contractId", value: selectedContract.id}]);
+        const patrolAlertToOfContract = await getMasterPatrolAlertToData(selectedContract.id);
+        const shiftOfContract = await getMasterShiftData("contractID",selectedContract.id);
+        const shiftIds = shiftOfContract?.documents?.map(shift => shift.$id);
+        let manpowerPositionOfShift;
+        if(shiftIds !== undefined && shiftIds?.length > 0 ){
+          manpowerPositionOfShift = await getMasterManpowerPositionData(shiftIds);
+        }
+        if(patrolAlertToOfContract?.total !== undefined && patrolAlertToOfContract?.total > 0) {
+          const deleteAlertToResult = await deletePatrolAlertTo(patrolAlertToOfContract?.documents?.map(alert => alert.$id));
+          if(deleteAlertToResult === null) console.error("error to delete AlertToList of contract id:", selectedContract.id);
+        }
+        if(roundOfContract?.total !== undefined && roundOfContract?.total > 0) {
+          const deleteRoundResult = await deleteRoundData(roundOfContract?.documents?.map(round => round.$id));
+          if(deleteRoundResult === null) console.error("error to delete Round of contract id:", selectedContract.id);
+        }
+        if(manpowerPositionOfShift?.total !== undefined && manpowerPositionOfShift?.total > 0) {
+          const deleteManpowerPositionResult = await deleteManpowerPosition(manpowerPositionOfShift?.documents?.map(man => man.$id));
+          if(deleteManpowerPositionResult === null) console.error("error to delete ManpowerPOsition of shift ids:", manpowerPositionOfShift);
+        }
+        if(shiftIds !== undefined && shiftIds?.length > 0){
+          const deleteShiftResult = await deleteShift(shiftIds);
+          if(deleteShiftResult === null) console.error("error to delete Shift of contract id", selectedContract.id);
+        }
+        deleteContractResult = await deleteContract([selectedContract.id]);
+        console.log("deleteCustResult =", deleteContractResult);
+     if (deleteContractResult !== null) {
+       const confirmApprove = await confirmDialog(
+         "Delete Success",
+         "delete customer success.", true
+      );
+      if(confirmApprove){
+       setIsAddOrUpdateSuccess(true);
+       handleCloseContractForm();
+      }
+     }
+     else {
+       alert("Error occur to delete.");
+     }
+    }
+   }
+
+  const handleSave = async () => {
+    console.log("shiftList = ", shiftList);
+    //#region  -- Tab Shift --
+    if (tabValue === "1") {
+      let addNewShiftResult, deleteShiftResult, updateShiftResult;
+      let updateShiftsOfContract = shiftList.map((item) => item.id);
+      // Add new shift
+      const newShift = shiftList.filter((shift) => shift.status === "new");
+      if (newShift.length > 0) {
+        const dataToSubmit =
+          newShift?.map((newShift) => {
+            return {
+              shiftName: newShift.desc,
+              customerID: selectedContract.customer_Id,
+              customerName: customer?.customerName,
+              contractID: selectedContract.id,
+              workDays: newShift.workdays,
+              manpowerID_List: [],
+              isActive: selectedContract.isActive,
+            };
+          }) || [];
+        console.log("new shift dataToSubmit =", dataToSubmit);
+        setIsLoading(true);
+        addNewShiftResult = await addNewShifts(dataToSubmit);
+        setIsLoading(false);
+        if (addNewShiftResult !== null) {
+          if (addNewShiftResult) {
+            updateShiftsOfContract = shiftList
+              .filter(
+                (item) => item.status === "existed" || item.status === "edit"
+              )
+              .map((item) => item.id);
+            updateShiftsOfContract =
+              updateShiftsOfContract.concat(addNewShiftResult);
+            console.log("updateShiftOfContract =", updateShiftsOfContract);
+            const resultUpdateShiftIofContract = await updateContract(
+              selectedContract.id,
+              { shift_Ids: updateShiftsOfContract }
+            );
+          }
+        }
+      }
+
+      // Delete Shifts
+      if (deleteShiftList.length > 0) {
+        console.log("deleteShiftList =", deleteShiftList);
+        setIsLoading(true);
+        deleteShiftResult = await deleteShift(deleteShiftList);
+        setIsLoading(false);
+        //console.log("deleteResult", deleteCheckpointResult);
+        if (deleteShiftResult != null) {
+          setIsLoading(true);
+          deleteShiftList.map(async shiftId => {
+            const manpowerOfShift = await getMasterManpowerPositionData(shiftId);
+            const manpowerId = manpowerOfShift?.documents?.map(man => man.$id);
+            console.log("manpowerId =", manpowerId);
+            const deleteManpowerOfShiftResult = await deleteManpowerPosition(manpowerId);
+            if(deleteManpowerOfShiftResult === null){
+              console.error("Error to delete mnapower of shift ", shiftId);
+            }
+          })
+          setDeleteShiftList([]);
+          const resultUpdateShiftOfContract = await updateContract(
+            selectedContract.id,
+            { shift_Ids: updateShiftsOfContract }
+          );
+          setIsLoading(false);
+        }
+      }
+
+      // Edit Shift
+      const editShiftList = shiftList.filter(
+        (shift) => shift.status === "edit"
+      );
+      console.log("editShiftList = ", editShiftList);
+      if (editShiftList.length > 0) {
+        const dataToSubmit =
+          editShiftList?.map((shift) => {
+            return {
+              documentId: shift.id,
+              updateFields: {
+                shiftName: shift.desc,
+                workDays: shift.workdays,
+                isActive: selectedContract.isActive,
+              },
+            };
+          }) || [];
+        console.log("dataToSubmit =", dataToSubmit);
+        setIsLoading(true);
+        updateShiftResult = await updateShifts(dataToSubmit);
+        setIsLoading(false);
+      }
+
+      let dataShiftUpdate = false;
+      if (
+        newShift.length > 0 ||
+        editShiftList.length > 0 ||
+        deleteShiftList.length > 0
+      ) {
+        dataShiftUpdate = true;
+      }
+
+      if (dataShiftUpdate) {
+        if (
+          addNewShiftResult !== null &&
+          updateShiftResult !== null &&
+          deleteShiftResult !== null
+        ) {
+          const confirmApprove = await confirmDialog(
+            "Save shift data Success",
+            "Save shift Data of Contract successfully.",
+            true,
+            "success"
+          );
+          const updatedShift = await getShiftsOfContract(selectedContract.id);
+          setShiftList(updatedShift);
+          setIsAddOrUpdateSuccess(true);
+        } else {
+          const confirmApprove = await confirmDialog(
+            "Error to save shift data.",
+            "Error to save shift data",
+            true,
+            "danger"
+          );
+          setIsAddOrUpdateSuccess(false);
+        }
+      }
+    }
+    //#endregion
+
+    //#region -- Tab Manpower --
+    else if (tabValue === "2") {
+      let addNewManpowerPositionResult: any, deleteManpowerPositioResult, updateManpowerPositioResult;
+      let updateManpowerIdOfShift;
+
+      const manpowerChangesInShift = shiftList.filter(
+        (shift) => shift.status === "edit"
+      );
+      console.log("manpowerChangesInShift =", manpowerChangesInShift);
+
+      //Add Manpower Position
+      const manpowerPositionNew = manpowerChangesInShift.flatMap((shift) =>
+        shift.manpowers.filter((man) => man.status === "new")
+      );
+      if (manpowerPositionNew.length > 0) {
+        const dataToSubmit =
+          manpowerPositionNew?.map((mpPosition) => {
+            return {
+              nameInReport: mpPosition.nameInReport,
+              requireQuantity: mpPosition.quantity,
+              shift_Id: mpPosition.shiftId,
+              customer_Id: mpPosition.customerId,
+              position_Id: mpPosition.positionId,
+              position_Name: data.positions.find(
+                (item) => item.id === mpPosition.positionId
+              )?.desc,
+            };
+          }) || [];
+        console.log("New Manpower dataToSubmit =", dataToSubmit);
+        setIsLoading(true);
+        addNewManpowerPositionResult = await addNewManpowerPosition(
+          dataToSubmit
+        );
+        setIsLoading(false);
+        console.log(
+          "addNewManpowerPositionResult =",
+          addNewManpowerPositionResult
+        );
+        if (addNewManpowerPositionResult !== null) {
+          if (addNewManpowerPositionResult.length > 0) {
+            const uniqueShiftIdToUpdate = Array.from(
+              new Set(
+                addNewManpowerPositionResult?.map((item: any) => item.shiftId)
+              )
+            );
+            let shiftToUpdate = manpowerChangesInShift.filter((shift) =>
+              uniqueShiftIdToUpdate.includes(shift.id)
+            );
+            shiftToUpdate = shiftToUpdate.map((shift) => {
+              const matchingShiftIds = addNewManpowerPositionResult
+                ?.filter((r: any) => r.shiftId === shift.id)
+                .map((r: any) => r.id); // Extract id values
+              // Concatenate matching ids to manpowerIdList
+              return {
+                ...shift,
+                manpowerIdList: shift.manpowerIdList.concat(matchingShiftIds),
+              };
+            });
+            console.log("shiftToUpdate Add Manpower =", shiftToUpdate);
+            const dataToSubmit =
+              shiftToUpdate?.map((shift) => {
+                return {
+                  documentId: shift.id,
+                  updateFields: {
+                    manpowerID_List: shift.manpowerIdList,
+                  },
+                };
+              }) || [];
+            console.log(
+              "Update Add manpower to Shift dataToSubmit =",
+              dataToSubmit
+            );
+            setIsLoading(true);
+            updateManpowerIdOfShift = await updateShifts(dataToSubmit);
+            setIsLoading(false);
+            if (updateManpowerIdOfShift === null) {
+              const confirmApprove = await confirmDialog(
+                "Error to update shift data.",
+                "Error to update manpowerId list of shift data",
+                true,
+                "danger"
+              );
+            }
+          }
+        }
+      }
+
+      // Delete Mnapower Position
+      console.log("deleteManpowerList =", deleteManpowerList);
+      const uniqueDeleteManpowerId = Array.from(
+        new Set(deleteManpowerList?.map((item: any) => item.manpowerId))
+      );
+      const uniquShiftId = Array.from(
+        new Set(deleteManpowerList?.map((item: any) => item.shiftId))
+      );
+      if (deleteManpowerList.length > 0) {
+        const shiftToUpdateDeleteManpowerId = await getMasterShiftData(
+          "$id",
+          uniquShiftId
+        );
+        console.log(
+          "shiftToUpdate =",
+          shiftToUpdateDeleteManpowerId?.documents
+        );
+        setIsLoading(true);
+        deleteManpowerPositioResult = await deleteManpowerPosition(
+          uniqueDeleteManpowerId
+        );
+        setIsLoading(false);
+        if (deleteManpowerPositioResult != null) {
+          setDeleteManpowerList([]);
+          const dataToSubmit =
+            shiftToUpdateDeleteManpowerId?.documents?.map((shift) => {
+              return {
+                documentId: shift.$id,
+                updateFields: {
+                  manpowerID_List: shift.manpowerID_List.filter(
+                    (id: any) => !uniqueDeleteManpowerId.includes(id)
+                  ),
+                },
+              };
+            }) || [];
+          console.log("delete Manpower dataToSubmit =", dataToSubmit);
+          setIsLoading(true);
+          updateManpowerIdOfShift = await updateShifts(dataToSubmit);
+          setIsLoading(false);
+          if (updateManpowerIdOfShift === null) {
+            const confirmApprove = await confirmDialog(
+              "Error to update shift data.",
+              "Error to update manpowerId list of shift data",
+              true,
+              "danger"
+            );
+          }
+        }
+      }
+
+      // Update Manpower Position
+      const manpowerPositionUpdate = manpowerChangesInShift.flatMap((shift) =>
+        shift.manpowers.filter((man) => man.status === "edit")
+      );
+      if (manpowerPositionUpdate.length > 0) {
+        const dataToSubmit =
+          manpowerPositionUpdate?.map((mpPosition) => {
+            return {
+              documentId: mpPosition.id,
+              updateFields: {
+                nameInReport: mpPosition.nameInReport,
+                requireQuantity: mpPosition.quantity,
+                shift_Id: mpPosition.shiftId,
+                customer_Id: mpPosition.customerId,
+                position_Id: mpPosition.positionId,
+                position_Name: data.positions.find(
+                  (item) => item.id === mpPosition.positionId
+                )?.desc,
+              },
+            };
+          }) || [];
+        console.log("update shift dataToSubmit =", dataToSubmit);
+        setIsLoading(true);
+        updateManpowerPositioResult = await updateManpowerPosition(
+          dataToSubmit
+        );
+        setIsLoading(false);
+      }
+
+      let dataManpowerPositionUpdate = false;
+      if (manpowerPositionNew.length > 0 || manpowerPositionUpdate.length > 0 || deleteManpowerList.length > 0) {
+        dataManpowerPositionUpdate = true;
+      }
+
+      if(dataManpowerPositionUpdate) {
+        if ( addNewManpowerPositionResult !== null &&
+          deleteManpowerPositioResult !== null &&
+          updateManpowerPositioResult !== null) {
+          const confirmApprove = await confirmDialog(
+            "Save Manpower data Success",
+            "Save manpower Data of Shift successfully.",
+            true,
+            "success"
+          );
+          const updatedShift = await getShiftsOfContract(selectedContract.id);
+          setShiftList(updatedShift);
+          setIsAddOrUpdateSuccess(true);
+        } else {
+          const confirmApprove = await confirmDialog(
+            "Error to save data.",
+            "Error to save manpower data",
+            true,
+            "danger"
+          );
+          setIsAddOrUpdateSuccess(false);
+        }
+      } 
+    }
+    //#endregion -- Manpower Tab --
+
+    //#region  -- Tab Patrol Alert List
+    if (tabValue === "3") {
+      let addNewAlertToResult, deleteAlertToResult, updateAlertToResult;
+      let updateAlertToOfContract = alertToList.map((item) => item.id);
+      console.log("updateAlertToOfContract =", updateAlertToOfContract);
+      // Add new Patrol Alert List
+      const newAlertTo = alertToList.filter((alert) => alert.status === "new");
+      console.log("newAlertTo =", newAlertTo);
+      if (newAlertTo.length > 0) {
+        const dataToSubmit =
+          newAlertTo?.map((alertTo) => {
+            return {
+              name: alertTo.name,
+              email: alertTo.email,
+              isASM: alertTo.isAsm,
+              otherRole_Id: alertTo.otherRoleId,
+              contract_Id: selectedContract.id,
+              isActive: selectedContract.isActive,
+              employee_Id: alertTo.empId,
+            };
+          }) || [];
+        console.log("new alertTo dataToSubmit =", dataToSubmit);
+        setIsLoading(true);
+        addNewAlertToResult = await addNewPatrolAlertTo(dataToSubmit);
+        setIsLoading(false);
+        if (addNewAlertToResult !== null) {
+          if (addNewAlertToResult) {
+            updateAlertToOfContract = alertToList
+              .filter(
+                (item) => item.status === "existed" || item.status === "edit"
+              )
+              .map((item) => item.id);
+            updateAlertToOfContract =
+              updateAlertToOfContract.concat(addNewAlertToResult);
+            console.log("updateAlertToOfContract =", updateAlertToOfContract);
+            const resultUpdateAlertToOfContract = await updateContract(
+              selectedContract.id,
+              { alertTo_Ids: updateAlertToOfContract }
+            );
+          }
+        }
+      }
+
+      // Delete Patrol Alert List
+      console.log("deleteAlertToList =", deleteAlertToList);
+      if (deleteAlertToList.length > 0) {
+        setIsLoading(true);
+        deleteAlertToResult = await deletePatrolAlertTo(deleteAlertToList);
+        setIsLoading(false);
+        //console.log("deleteResult", deleteCheckpointResult);
+        if (deleteAlertToResult != null) {
+          setDeleteAlertToList([]);
+          setIsLoading(true);
+          const resultUpdateShiftOfContract = await updateContract(
+            selectedContract.id,
+            { alertTo_Ids: updateAlertToOfContract }
+          );
+          setIsLoading(false);
+        }
+      }
+
+      // Edit Patrol Alert List
+      const editAlertList = alertToList.filter(
+        (alert) => alert.status === "edit"
+      );
+      console.log("editAlertList = ", editAlertList);
+      if (editAlertList.length > 0) {
+        const dataToSubmit =
+          editAlertList?.map((alertTo) => {
+            return {
+              documentId: alertTo.id,
+              updateFields: {
+                name: alertTo.name,
+                email: alertTo.email,
+                isASM: alertTo.isAsm,
+                otherRole_Id: alertTo.otherRoleId,
+                isActive: selectedContract.isActive,
+                employee_Id: alertTo.empId,
+              },
+            };
+          }) || [];
+        console.log("dataToSubmit =", dataToSubmit);
+        setIsLoading(true);
+        updateAlertToResult = await updatePatrolAlertTo(dataToSubmit);
+        setIsLoading(false);
+      }
+
+      let dataPatrolAlertListUpdate = false;
+      if (newAlertTo.length > 0 || editAlertList.length > 0 || deleteAlertToList.length > 0) {
+        dataPatrolAlertListUpdate = true;
+      }
+
+      if(dataPatrolAlertListUpdate){
+        if (
+          addNewAlertToResult !== null &&
+          updateAlertToResult !== null &&
+          deleteAlertToResult !== null
+        ) {
+          const confirmApprove = await confirmDialog(
+            "Save Patrol Alert List data Success",
+            "Save Patrol Alert List of Contract successfully.",
+            true,
+            "success"
+          );
+          const updatedLaertTolist = await getAlertToOfContract(
+            selectedContract.id
+          );
+          setAlertToList(updatedLaertTolist);
+          setIsAddOrUpdateSuccess(true);
+        } else {
+          const confirmApprove = await confirmDialog(
+            "Error to save Patrol Alert List data.",
+            "Error to save Patrol Alert List data",
+            true,
+            "danger"
+          );
+          setIsAddOrUpdateSuccess(false);
+        }
+      }
+    }
+    //#endregion
+
+    //#region -- Tab Round --
+    if (tabValue === "4") {
+      console.log("areaList =", areaList);
+      let addNewRoundResult: any, deleteRoundResult, updateRoundResult;
+      let updateRoundOfArea;
+
+      const roundChangesInArea = areaList.filter(
+        (area) => area.areaStatus === "edit"
+      );
+      console.log("roundChangesInArea =", roundChangesInArea);
+
+      //Add Round
+      const newRound = roundChangesInArea.flatMap((area) =>
+        area.roundList.filter((round) => round.status === "new")
+      );
+      if (newRound.length > 0) {
+        const dataToSubmit =
+          newRound?.map((newRound) => {
+            return {
+              contractId: selectedContract.id,
+              areaId: newRound.areaId,
+              endTime: mapToDateTime(
+                newRound.finishTimeHr,
+                newRound.finishTimeMin
+              ),
+              startTime: mapToDateTime(
+                newRound.startTimeHr,
+                newRound.startTimeMin
+              ),
+              totalTime: parseInt(newRound.totalTimeMin),
+              shiftId: newRound.shift,
+              roundNo: newRound.number,
+              isStrictOrder: newRound.isStrictOrder,
+              isNeedto: newRound.isNeed,
+              isSameDay: newRound.isSameDay === 1 ? true : false,
+              alertTo: newRound.alertTo,
+              isActive: selectedContract.isActive,
+            };
+          }) || [];
+        console.log("New Round dataToSubmit =", dataToSubmit);
+        setIsLoading(true);
+        addNewRoundResult = await addNewRoundData(dataToSubmit);
+        setIsLoading(false);
+        console.log("addNewRoundResult =", addNewRoundResult);
+        if (addNewRoundResult !== null) {
+          if (addNewRoundResult.length > 0) {
+            const uniqueAreaIdToUpdate = Array.from(
+              new Set(addNewRoundResult?.map((item: any) => item.areaId))
+            );
+            let areaToUpdate = roundChangesInArea.filter((area) =>
+              uniqueAreaIdToUpdate.includes(area.areaId)
+            );
+            console.log("areaToUpdate =", areaToUpdate);
+            areaToUpdate = areaToUpdate.map((area) => {
+              const newRoundIdOfArea = addNewRoundResult
+                ?.filter((r: any) => r.areaId === area.areaId)
+                .map((r: any) => r.id); // Extract id values
+              return {
+                ...area,
+                roundIdList: area.roundIdList.concat(newRoundIdOfArea),
+              };
+            });
+            console.log("areaToUpdate Add Round =", areaToUpdate);
+            const dataToSubmit =
+              areaToUpdate?.map((area) => {
+                return {
+                  documentId: area.areaId,
+                  updateFields: {
+                    roundIDs: area.roundIdList,
+                  },
+                };
+              }) || [];
+            console.log(
+              "Update Addded Round to area dataToSubmit =",
+              dataToSubmit
+            );
+            setIsLoading(true);
+            updateRoundOfArea = await updateArea(dataToSubmit);
+            setIsLoading(false);
+            if (updateRoundOfArea === null) {
+              const confirmApprove = await confirmDialog(
+                "Error to update Area data.",
+                "Error to update round ID list of area data",
+                true,
+                "danger"
+              );
+            }
+          }
+        }
+      }
+
+      // Delete Round
+      console.log("deleteRoundList =", deleteRoundList);
+      const uniqueDeleteRoundId = Array.from(
+        new Set(deleteRoundList?.map((item: any) => item.roundId))
+      );
+      const uniquAreaId = Array.from(
+        new Set(deleteRoundList?.map((item: any) => item.areaId))
+      );
+      if (deleteRoundList.length > 0) {
+        const areaToUpdateDeleteRoundId = await getMasterAreaData(
+          "$id",
+          uniquAreaId
+        );
+        console.log(
+          "areaToUpdateDeleteRoundId =",
+          areaToUpdateDeleteRoundId?.documents
+        );
+        setIsLoading(true);
+        deleteRoundResult = await deleteRoundData(uniqueDeleteRoundId);
+        setIsLoading(false);
+        if (deleteRoundResult != null) {
+          setDeleteRoundList([]);
+          const dataToSubmit =
+            areaToUpdateDeleteRoundId?.documents?.map((area) => {
+              return {
+                documentId: area.$id,
+                updateFields: {
+                  roundIDs: area.roundIDs.filter(
+                    (id: any) => !uniqueDeleteRoundId.includes(id)
+                  ),
+                },
+              };
+            }) || [];
+          console.log("delete RoundIds dataToSubmit =", dataToSubmit);
+          setIsLoading(true);
+          updateRoundOfArea = await updateArea(dataToSubmit);
+          setIsLoading(false);
+          if (updateRoundOfArea === null) {
+            const confirmApprove = await confirmDialog(
+              "Error to update Area data.",
+              "Error to update Round Id list of Area data",
+              true,
+              "danger"
+            );
+          }
+        }
+      }
+
+      // Update Manpower Position
+      const updateRounds = roundChangesInArea.flatMap((area) =>
+        area.roundList.filter((round) => round.status === "edit")
+      );
+      console.log("updateRounds =", updateRounds);
+      if (updateRounds.length > 0) {
+        const dataToSubmit =
+          updateRounds?.map((updateRound) => {
+            return {
+              documentId: updateRound.id,
+              updateFields: {
+                contractId: selectedContract.id,
+                areaId: updateRound.areaId,
+                endTime: mapToDateTime(
+                  updateRound.finishTimeHr,
+                  updateRound.finishTimeMin
+                ),
+                startTime: mapToDateTime(
+                  updateRound.startTimeHr,
+                  updateRound.startTimeMin
+                ),
+                totalTime: parseInt(updateRound.totalTimeMin),
+                shiftId: updateRound.shift,
+                roundNo: updateRound.number,
+                isStrictOrder: updateRound.isStrictOrder,
+                isNeedto: updateRound.isNeed,
+                isSameDay: updateRound.isSameDay === 1 ? true : false,
+                alertTo: updateRound.alertTo,
+                isActive: selectedContract.isActive,
+              },
+            };
+          }) || [];
+        console.log("update round dataToSubmit =", dataToSubmit);
+        setIsLoading(true);
+        updateRoundResult = await updateRoundData(dataToSubmit);
+        setIsLoading(false);
+      }
+
+      let dataRoundUpdate = false;
+      if (newRound.length > 0 || updateRounds.length > 0 || deleteRoundList.length > 0) {
+        dataRoundUpdate = true;
+      }
+
+      if(dataRoundUpdate){
+        if (
+          addNewRoundResult !== null &&
+          deleteRoundResult !== null &&
+          updateRoundResult !== null
+        ) {
+          const confirmApprove = await confirmDialog(
+            "Save Round data Success",
+            "Save Round Data of Area successfully.",
+            true,
+            "success"
+          );
+          const updatedRound = await getAreaAndRound();
+          setAreaList(updatedRound);
+          setIsAddOrUpdateSuccess(true);
+        } else {
+          const confirmApprove = await confirmDialog(
+            "Error to save data.",
+            "Error to save Round data",
+            true,
+            "danger"
+          );
+          setIsAddOrUpdateSuccess(false);
+        }
+      }
+    }
+    //#endregion -- Tab Round --
+
+    //Update Contract Data
+    if (selectedContract.status === "edit" || selectNewFile?.length > 0) {
+      const contractDataToSubmit = {
+        id: selectedContract.id,
+        startDate: selectedContract.startDate,
+        endDate: selectedContract.endDate,
+        attachments: selectedContract.attachments,
+        isActive: selectedContract.isActive,
+      };
+      console.log("selectedContract =", selectedContract);
+      setIsLoading(true);
+      const resultUpdateDataOfContract = await updateDataOfContract(
+        contractDataToSubmit,
+        selectNewFile
+      );
+      setIsLoading(false);
+      if (resultUpdateDataOfContract !== null) {
+        let updateShiftResult, updatePatrolAlertResult, updateRoundAlertResult;
+        // -- Update isActive of Shift, PatrolAlertList, Round --
+        if(selectedContract.isActive !== selectedContract.isActivePreviousValue){
+          const shiftOfContract = await getMasterShiftData("contractID", selectedContract.id);
+          const patrolAlertListOfContract = await getMasterPatrolAlertToData(selectedContract.id);
+          const roundOfContract = await getMasterRoundData([{field: "contractId", value: selectedContract.id}]);
+          if (shiftOfContract?.documents !== undefined && shiftOfContract?.documents.length > 0) {
+            const isActiveOfShiftToSubmit =
+              shiftOfContract.documents?.map((shift) => {
+                return {
+                  documentId: shift.$id,
+                  updateFields: {
+                    isActive: selectedContract.isActive,
+                  },
+                };
+              }) || [];
+            console.log("isActiveOfShiftToSubmit =", isActiveOfShiftToSubmit);
+            setIsLoading(true);
+            updateShiftResult = await updateShifts(isActiveOfShiftToSubmit);
+            setIsLoading(false);
+            if(updateShiftResult === null) console.log("error to update isActive of Shift");
+          }
+          if (patrolAlertListOfContract?.documents !== undefined && patrolAlertListOfContract?.documents.length > 0) {
+            const isActiveOfPatrolAlertToSubmit =
+              patrolAlertListOfContract.documents?.map((alert) => {
+                return {
+                  documentId: alert.$id,
+                  updateFields: {
+                    isActive: selectedContract.isActive,
+                  },
+                };
+              }) || [];
+            console.log("isActiveOfPatrolAlertToSubmit =", isActiveOfPatrolAlertToSubmit);
+            setIsLoading(true);
+            updatePatrolAlertResult = await updatePatrolAlertTo(isActiveOfPatrolAlertToSubmit);
+            setIsLoading(false);
+            if(updatePatrolAlertResult === null) console.log("error to update isActive of Patrol Alert List");
+
+          }
+          if (roundOfContract?.documents !== undefined && roundOfContract?.documents.length > 0) {
+            const isActiveOfRoundToSubmit =
+              roundOfContract.documents?.map((alert) => {
+                return {
+                  documentId: alert.$id,
+                  updateFields: {
+                    isActive: selectedContract.isActive,
+                  },
+                };
+              }) || [];
+            console.log("isActiveOfRoundToSubmit =", isActiveOfRoundToSubmit);
+            setIsLoading(true);
+            updateRoundAlertResult = await updateRoundData(isActiveOfRoundToSubmit);
+            setIsLoading(false);
+            if(updateRoundAlertResult === null) console.log("error to update isActive of Round.");
+          }
+          if(updateShiftResult === null || updatePatrolAlertResult === null || updateRoundAlertResult === null){
+            const confirmApprove = await confirmDialog(
+              "Error to save data.",
+              "Error to save isActive of Shift or PatrolAlertToList or Round of Contract data",
+              true,
+              "danger"
+            );
+          }
+        }
+
+        // -- Pull updated contract value --
+        setSelectNewFile([]);
+        let selectedContractBeforeSave = selectedContract;
+        const mappedConract = await contractListInitial();
+        console.log("mappedConract =", mappedConract);
+        console.log("selectedContract =", selectedContract);
+        selectedContractBeforeSave = mappedConract.find(c => c.id === selectedContractBeforeSave.id) || mappedConract[0];
+        setSelectedContract(selectedContractBeforeSave);
+        await contractDetail(selectedContractBeforeSave);
+        const confirmApprove = await confirmDialog(
+          "Save Contract data Success",
+          "Save Contract Data successfully.",
+          true,
+          "success"
+        );
+        setIsAddOrUpdateSuccess(true);
+      } else {
+        const confirmApprove = await confirmDialog(
+          "Error to save data.",
+          "Error to save Contract data",
+          true,
+          "danger"
+        );
+        setIsAddOrUpdateSuccess(false);
+      }
+    }
   };
 
-  const handleSubmit = () => {
+  function mapToDateTime(hr: string, min: string, targetDate = new Date()) {
+    targetDate.setUTCHours(parseInt(hr), parseInt(min), 0, 0);
+    // Convert to ISO string and replace the 'Z' with timezone offset "+00:00"
+    return targetDate.toISOString().replace("Z", "+00:00");
+  }
+
+  const handleSubmit = async () => {
     console.log("customerAdd =", customerAdd);
+    console.log("addContractStartDate =", addContractStartDate)
+    console.log("addContractFinishDate =", addContractFinishDate)
+    console.log("addContractNo =", addContractNo)
+    console.log("selectNewFile =", selectNewFile)
+    console.log("selectedContract =", selectedContract)
+    console.log("custList =", custList)
+    const contractDataToSubmit = {
+      contractNo: addContractNo,
+      customer_Id: customerAdd,
+      customerName: custList.find(cust => cust.id === customerAdd).desc,
+      startDate: addContractStartDate,
+      endDate: addContractFinishDate,
+      attachments: selectedContract.attachments,
+      shift_Ids: selectedContract.shift_Ids,
+      alertTo_Ids: selectedContract.alertTo_Ids,
+      isActive: false,
+    };
+    console.log("contractDataToSubmit =", contractDataToSubmit);
+    console.log("selectNewFile =", selectNewFile);
+    setIsLoading(true);
+    const resultAddNewContract = await addNewContract(
+      contractDataToSubmit,
+      selectNewFile
+    );
+    setIsLoading(false);
+    if(resultAddNewContract !== null){
+      const dialogRresult = await confirmDialog(
+        "Submit new Contract data Success",
+        "Submit new contract Data successfully.",
+        true,
+        "success"
+      );
+      if(dialogRresult){
+        setIsAddOrUpdateSuccess(true);
+        closeModal(isEdit);
+      }
+    }
+    else {
+      const confirmApprove = await confirmDialog(
+        "Error to add new contract data.",
+        "Error to add new contract data",
+        true,
+        "danger"
+      );
+      setIsAddOrUpdateSuccess(false);
+    }
   };
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
+  const handleTabChange = async (
+    event: React.SyntheticEvent,
+    newValue: string
+  ) => {
+    if(isEdit){
+      if (tabValue === "1") {
+        //Shift Tab
+        if (
+          deleteShiftList.length > 0 ||
+          shiftList.some(
+            (shift) => shift.status === "edit" || shift.status === "new"
+          )
+        ) {
+          const dialogResult = await warningChangeTab();
+          if (dialogResult) return;
+        }
+      } else if (tabValue === "2") {
+        //Manpower Tab
+        if (
+          deleteManpowerList.length > 0 ||
+          shiftList.some((shift) => shift.status === "edit")
+        ) {
+          const dialogResult = await warningChangeTab();
+          if (dialogResult) return;
+        }
+      } else if (tabValue === "3") {
+        //Patrol Alert List Tab
+        if (
+          deleteAlertToList.length > 0 ||
+          alertToList.some(
+            (alert) => alert.status === "edit" || alert.status === "new"
+          )
+        ) {
+          const dialogResult = await warningChangeTab();
+          if (dialogResult) return;
+        }
+      } else if (tabValue === "4") {
+        //Round Tab
+        if (
+          deleteRoundList.length > 0 ||
+          areaList.some((area) => area.areaStatus === "edit")
+        ) {
+          const dialogResult = await warningChangeTab();
+          if (dialogResult) return;
+        }
+      }
+    }
     setTabValue(newValue);
   };
 
-  function roundManagement(areaId: any, contractId: any) {
-    const filteredRound = data.rounds.filter(
-      (round) => round.areaId === areaId && round.contrtactId === contractId
+  async function warningChangeTab() {
+    const confirmApprove = await confirmDialog(
+      "Please save changes.",
+      "Please save changes before change tab.",
+      true,
+      "warning"
     );
-    const roundDataArray: RoundData[] = filteredRound.map((round) => ({
-      id: round.id,
-      number: round.roundNo,
-      startTimeHr: new Date(round.startTime)
-        .getHours()
-        .toString()
-        .padStart(2, "0"),
-      startTimeMin: new Date(round.startTime)
-        .getMinutes()
-        .toString()
-        .padStart(2, "0"),
-      finishTimeHr: new Date(round.finishTime)
-        .getHours()
-        .toString()
-        .padStart(2, "0"),
-      finishTimeMin: new Date(round.finishTime)
-        .getMinutes()
-        .toString()
-        .padStart(2, "0"),
-      totalTimeMin: calMinFromDate(round.startTime, round.finishTime),
-      isSameDay: round.isSameDay,
-      shift: round.shiftId,
-      alertTo: round.alertTo,
-      isNeed: round.isNeedto,
-      isStrictOrder: round.isStrictOrder,
-    }));
+    return confirmApprove;
+  }
+
+  async function roundManagement(areaId: any, contractId: any) {
+    const roundOfAreaAndContract = await getMasterRoundData([
+      { field: "areaId", value: areaId },
+      { field: "contractId", value: contractId },
+    ]);
+    const roundDataArray: RoundData[] =
+      roundOfAreaAndContract?.documents.map((round) => ({
+        id: round.$id,
+        areaId: areaId,
+        number: round.roundNo,
+        startTimeHr: new Date(round.startTime)
+          .getUTCHours()
+          .toString()
+          .padStart(2, "0"),
+        startTimeMin: new Date(round.startTime)
+          .getMinutes()
+          .toString()
+          .padStart(2, "0"),
+        finishTimeHr: new Date(round.endTime)
+          .getUTCHours()
+          .toString()
+          .padStart(2, "0"),
+        finishTimeMin: new Date(round.endTime)
+          .getMinutes()
+          .toString()
+          .padStart(2, "0"),
+        totalTimeMin: calMinFromDate(round.startTime, round.endTime),
+        isSameDay: round.isSameDay === true ? 1 : 2,
+        shift: round.shiftId,
+        alertTo: round.alertTo,
+        isNeed: round.isNeedto,
+        isStrictOrder: round.isStrictOrder,
+        status: "existed",
+      })) || [];
 
     console.log("roundDataArray =", roundDataArray);
     return roundDataArray;
   }
 
   function calMinFromDate(start: any, finish: any) {
+    const finishHr = new Date(finish).getUTCHours();
+    const startHr = new Date(start).getUTCHours();
+    console.log("finishHr =", finishHr);
+    console.log("startHr =", startHr);
     const hoursToMins =
-      Math.abs(new Date(finish).getHours() - new Date(start).getHours()) * 60;
+      Math.abs(
+        (finishHr === 0 ? 24 : finishHr) - (startHr === 0 ? 24 : startHr)
+      ) * 60;
+    console.log("hoursToMins = ", hoursToMins);
     const sumMins =
       hoursToMins +
-      new Date(start).getMinutes() +
-      new Date(finish).getMinutes();
+      (new Date(finish).getMinutes() - new Date(start).getMinutes());
+    console.log("sumMins = ", sumMins);
     return sumMins;
   }
 
-  function handleCloseContractForm() {
-    closeModal(isEdit);
+  async function handleCloseContractForm() {
+    if(isEdit){
+      const isShiftEdit = shiftList.some(shift => shift.status === "edit" || shift.status === "new") || deleteShiftList.length > 0;
+      const isPatrolAlertToListEdit = alertToList.some(alert => alert.status === "edit" || alert.status === "new") || deleteAlertToList.length > 0;
+      const isRoundEdit = areaList.some(area => area.areaStatus === "edit") || deleteRoundList.length > 0;
+      if(isShiftEdit || isPatrolAlertToListEdit || isRoundEdit || selectedContract.status === "edit"){
+        const confirmClose = await confirmDialog(
+          "Close without saving?",
+          "Do you want to close this window without saving?",
+          false,
+          "warning"
+        );
+        if(!confirmClose) return;
+      }
+      closeModal(isEdit);
+    }
+    else{
+      closeModal(isEdit);
+    }
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -943,17 +2109,28 @@ const ContractForm = ({
 
   const handleContractInactive = (checked: boolean) => {
     if (checked) {
-      setSelectedContract((prevData: any) => ({
+      setSelectedContract((prevData: ContractType) => ({
         ...prevData,
         ["isActive"]: false,
+        status: prevData.status === "new" ? "new" : "edit",
       }));
     }
   };
-  const handleContractActive = (checked: boolean) => {
+  const handleContractActive = async (checked: boolean) => {
     if (checked) {
-      setSelectedContract((prevData: any) => ({
+      if(allContractsOfCustomer.some(contract => contract.isActive === true && contract.id !== selectedContract.id)){
+        const confirmClose = await confirmDialog(
+          "Contract of customer can Active only one contract.",
+          "Please check current Active contract",
+          true,
+          "warning"
+        );
+        return;
+      }
+      setSelectedContract((prevData: ContractType) => ({
         ...prevData,
         ["isActive"]: true,
+        status: prevData.status === "new" ? "new" : "edit",
       }));
     }
   };
@@ -1002,9 +2179,9 @@ const ContractForm = ({
               <IoClose size={26} />
             </Button2>
           </Box>
-          <div className="bg-white rounded-b-lg shadow-lg min-h-[544px] max-h-[654px] w-[700px]">
+          <div className={`bg-white rounded-b-lg shadow-lg min-h-${isEdit ? `[544px]`: `[344px]`} max-h-[654px] w-[700px]`}> 
             {/* Body */}
-            <div className="max-h-[528px] min-h-[528px] overflow-auto">
+            <div className={`max-h-${isEdit ? `[528px]`: `[328px]`} min-h-${isEdit ? `[528px]`: `[328px]`} overflow-auto`}>
               <Box className="w-full px-6 py-2 rounded-t-lg pb-6">
                 {/* View / Edit Customer */}
                 {isEdit && (
@@ -1306,131 +2483,8 @@ const ContractForm = ({
                         />
                       </FormControl>
                     </Box>
-                  </Box>
-                )}
 
-                {/* Add New Contract */}
-                {!isEdit && (
-                  <Box>
-                    <Box className="flex w-full space-x-5 pt-2">
-                      <Box className="w-1/2">
-                        <Selector
-                          selectorLabel={"Customer"}
-                          itemSource={customerList}
-                          handleChange={handleSelectChange}
-                          selectedVal={customerAdd}
-                          name={"addContractCustomer"}
-                        />
-                      </Box>
-
-                      <Box className="w-1/2">
-                        <Textbox
-                          header="Contract Number"
-                          name="contractNumber"
-                          inputType="text"
-                          placeHolder="Type here..."
-                          value={addContractNo}
-                          handleChange={handleChange}
-                        />
-                      </Box>
-                    </Box>
-
-                    <Box className="flex w-full space-x-5 pt-2">
-                      <Box className="w-1/2">
-                        <Typography
-                          textAlign="left"
-                          sx={{
-                            fontWeight: "700",
-                            color: "#2C5079",
-                            fontSize: "14px",
-                            paddingBottom: "0.25rem",
-                          }}
-                        >
-                          Start Date
-                        </Typography>
-                        <DatePicker
-                          date={startDate}
-                          setDate={setStartDate}
-                          h={"h-10"}
-                        />
-                      </Box>
-
-                      <Box className="w-1/2">
-                        <Typography
-                          textAlign="left"
-                          sx={{
-                            fontWeight: "700",
-                            color: "#2C5079",
-                            fontSize: "14px",
-                            paddingBottom: "0.25rem",
-                          }}
-                        >
-                          End Date
-                        </Typography>
-                        <DatePicker
-                          h={"h-10"}
-                          date={finishDate}
-                          setDate={setFinishDate}
-                        />
-                      </Box>
-                    </Box>
-
-                    <Typography
-                      textAlign="left"
-                      sx={{
-                        fontWeight: "700",
-                        color: "#2C5079",
-                        fontSize: "14px",
-                        paddingBottom: "0.25rem",
-                        marginTop: "0.5rem",
-                      }}
-                    >
-                      Attachment
-                    </Typography>
-                    <Grid2
-                      container
-                      sx={{ width: "100%", mb: 1.5 }}
-                      spacing={2}
-                    >
-                      {selectNewFile.map((file, index) => (
-                        <Grid2 size={4} key={index}>
-                          <Box className="justify-between flex p-1 bg-white border-[1px] border-[#4C9BF5] rounded-lg">
-                            <Typography className="py-1 pl-1 text-[#2C5079] w-[90%]">
-                              {file.name.length > 17
-                                ? file.name.substring(0, 17) + "..."
-                                : file.name}
-                            </Typography>
-                            <Trash
-                              onClick={() => handleRemoveNewFile(file.name)}
-                              size={22}
-                              color="#F66262"
-                              style={{ marginTop: 5 }}
-                              className="cursor-pointer"
-                            />
-                          </Box>
-                        </Grid2>
-                      ))}
-                    </Grid2>
-                    <Box className="w-full flex space-x-3 mb-2">
-                      <FormControl>
-                        <Button
-                          onClick={handleAddFileClick}
-                          className="w-[82px] bg-[#1D7A9B] hover:bg-[#D9F0EC] hover:text-[#1D7A9B] pr-4"
-                        >
-                          + Add File
-                        </Button>
-                        <input
-                          type="file"
-                          ref={inputRef}
-                          hidden
-                          onChange={handleFileChange}
-                        />
-                      </FormControl>
-                    </Box>
-                  </Box>
-                )}
-
-                <Box sx={{ width: "100%" }}>
+                    <Box sx={{ width: "100%" }}>
                   <TabContext value={tabValue}>
                     <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
                       <TabList onChange={handleTabChange} aria-label="areaTabs">
@@ -1629,12 +2683,12 @@ const ContractForm = ({
                                           <Box sx={{ width: "42%" }}>
                                             <LabelSelector3
                                               selectorLabel={"ตำแหน่ง"}
-                                              itemSource={data.manpowerRoles}
+                                              itemSource={data.positions}
                                               handleSelectedVal={
                                                 handleFieldManpowerTypeChange
                                               }
-                                              selectedVal={manpower.roleId}
-                                              field={"roleId"}
+                                              selectedVal={manpower.positionId}
+                                              field={"positionId"}
                                               defaultSelected="select"
                                               id={shift.id}
                                               id2={manpower.id}
@@ -1776,8 +2830,8 @@ const ContractForm = ({
                                     <LabelSelector3
                                       selectorLabel={"ชื่อ นามสกุล"}
                                       itemSource={asmAlertNames}
-                                      selectedVal={alertTo.name}
-                                      field={"name"}
+                                      selectedVal={alertTo.empId}
+                                      field={"empId"}
                                       id={alertTo.id}
                                       handleSelectedVal={
                                         handleFieldPatrolAlertListTypeChange
@@ -1807,7 +2861,7 @@ const ContractForm = ({
                                     inputVal={
                                       alertTo.isAsm === 1
                                         ? asmAlertNames.find(
-                                            (a) => a.desc === alertTo.name
+                                            (a) => a.id === alertTo.empId
                                           )?.email || ""
                                         : alertTo.email
                                     }
@@ -1830,29 +2884,31 @@ const ContractForm = ({
                                     itemSource={data.roles}
                                     label={"ตำแหน่งอื่นๆ ที่ต้องการรับ Alert"}
                                     unit={"ตำแหน่ง"}
-                                    selectedVal={alertTo.otherPositionId}
+                                    selectedVal={alertTo.otherRoleId}
                                     id={alertTo.id}
-                                    field={"otherPositionId"}
+                                    field={"otherRoleId"}
                                     handleChangeVal={
                                       handleFieldPatrolAlertListTypeChange
                                     }
                                     desc={"เลือก"}
-                                    maxLength={data.manpowerRoles.length}
+                                    maxLength={data.roles.length}
                                     maxDiaplay={data.roles.length}
                                   />
                                 </Box>
                               </Box>
-                              <Button
-                                className="flex text-[#1D7A9B] bg-transparent hover:bg-transparent underline w-full pt-0 justify-center"
-                                onClick={() => handleAlertToDetail(alertTo)}
-                              >
-                                ดู Area & Round ที่รับ Alert
-                                <GoArrowUpRight
-                                  size={22}
-                                  color="#1D7A9B"
-                                  style={{ marginTop: 3 }}
-                                />
-                              </Button>
+                              <div className="flex w-full justify-center">
+                                <Button
+                                  className="flex text-[#1D7A9B] bg-transparent hover:bg-transparent underline w-fit pt-0 justify-center"
+                                  onClick={() => handleAlertToDetail(alertTo)}
+                                >
+                                  ดู Area & Round ที่รับ Alert
+                                  <GoArrowUpRight
+                                    size={22}
+                                    color="#1D7A9B"
+                                    style={{ marginTop: 3 }}
+                                  />
+                                </Button>
+                              </div>
                             </Box>
                           </div>
                         ))}
@@ -2298,6 +3354,130 @@ const ContractForm = ({
                     </TabPanel>
                   </TabContext>
                 </Box>
+                  </Box>
+                )}
+
+                {/* Add New Contract */}
+                {!isEdit && (
+                  <Box>
+                    <Box className="flex w-full space-x-5 pt-2">
+                      <Box className="w-1/2">
+                        <Selector
+                          selectorLabel={"Customer"}
+                          itemSource={customerList}
+                          handleChange={handleSelectChange}
+                          selectedVal={customerAdd}
+                          name={"addContractCustomer"}
+                        />
+                      </Box>
+
+                      <Box className="w-1/2">
+                        <Textbox
+                          header="Contract Number"
+                          name="contractNumber"
+                          inputType="text"
+                          placeHolder="Type here..."
+                          value={addContractNo}
+                          handleChange={handleChange}
+                        />
+                      </Box>
+                    </Box>
+
+                    <Box className="flex w-full space-x-5 pt-2">
+                      <Box className="w-1/2">
+                        <Typography
+                          textAlign="left"
+                          sx={{
+                            fontWeight: "700",
+                            color: "#2C5079",
+                            fontSize: "14px",
+                            paddingBottom: "0.25rem",
+                          }}
+                        >
+                          Start Date
+                        </Typography>
+                        <DatePicker
+                          date={addContractStartDate}
+                          setDate={setAddContractStartDate}
+                          h={"h-10"}
+                        />
+                      </Box>
+
+                      <Box className="w-1/2">
+                        <Typography
+                          textAlign="left"
+                          sx={{
+                            fontWeight: "700",
+                            color: "#2C5079",
+                            fontSize: "14px",
+                            paddingBottom: "0.25rem",
+                          }}
+                        >
+                          End Date
+                        </Typography>
+                        <DatePicker
+                          h={"h-10"}
+                          date={addContractFinishDate}
+                          setDate={setAddContractFinishDate}
+                        />
+                      </Box>
+                    </Box>
+
+                    <Typography
+                      textAlign="left"
+                      sx={{
+                        fontWeight: "700",
+                        color: "#2C5079",
+                        fontSize: "14px",
+                        paddingBottom: "0.25rem",
+                        marginTop: "0.5rem",
+                      }}
+                    >
+                      Attachment
+                    </Typography>
+                    <Grid2
+                      container
+                      sx={{ width: "100%", mb: 1.5 }}
+                      spacing={2}
+                    >
+                      {selectNewFile.map((file, index) => (
+                        <Grid2 size={4} key={index}>
+                          <Box className="justify-between flex p-1 bg-white border-[1px] border-[#4C9BF5] rounded-lg">
+                            <Typography className="py-1 pl-1 text-[#2C5079] w-[90%]">
+                              {file.name.length > 17
+                                ? file.name.substring(0, 17) + "..."
+                                : file.name}
+                            </Typography>
+                            <Trash
+                              onClick={() => handleRemoveNewFile(file.name)}
+                              size={22}
+                              color="#F66262"
+                              style={{ marginTop: 5 }}
+                              className="cursor-pointer"
+                            />
+                          </Box>
+                        </Grid2>
+                      ))}
+                    </Grid2>
+                    <Box className="w-full flex space-x-3 mb-2">
+                      <FormControl>
+                        <Button
+                          onClick={handleAddFileClick}
+                          className="w-[82px] bg-[#1D7A9B] hover:bg-[#D9F0EC] hover:text-[#1D7A9B] pr-4"
+                        >
+                          + Add File
+                        </Button>
+                        <input
+                          type="file"
+                          ref={inputRef}
+                          hidden
+                          onChange={handleFileChange}
+                        />
+                      </FormControl>
+                    </Box>
+                  </Box>
+                )}
+              
               </Box>
             </div>
 
@@ -2342,6 +3522,17 @@ const ContractForm = ({
           shiftList={shiftList}
           setAreaList={setAreaList}
         />
+      )}
+
+      {/* Confirm dialog */}
+      {ConfirmAlertDialog}
+
+      {isLoading && (
+        <div className="fixed inset-0 bg-white bg-opacity-40 flex flex-col items-center justify-center z-indextop">
+          <Box sx={{ display: "flex" }}>
+            <CircularProgress />
+          </Box>
+        </div>
       )}
     </div>
   );

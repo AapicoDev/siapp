@@ -110,7 +110,7 @@ const PatrolDeatilView = ({
   };
 
   const getRoundDetailData = async () => {
-    const response = await getMasterRoundData(checkpoint.areaId);
+    const response = await getMasterRoundData([{ field: "areaId", value: checkpoint.areaId }]);
     const startTime = formatTime(response?.documents[0].startTime);
     const endTime = formatTime(response?.documents[0].endTime);
     setRoundTime(startTime + " - " + endTime);
@@ -413,7 +413,7 @@ const PatrolDeatilView = ({
                             {row.Image.length > 0
                               ? row.Image.map(
                                   (i: string | undefined, index: any) => (
-                                    <Box key={index} sx={{ height: "100px",display: "flex", justifyContent: "center" }}>
+                                    <Box key={index} sx={{ height: "100px",display: "flex", justifyContent: "center", mb: 1 }}>
                                       <img
                                         src={i}
                                         alt="Checklist Img"

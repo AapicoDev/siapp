@@ -119,7 +119,7 @@ const CustomerForm = ({
 }: any) => {
   const [isEdit, setIsEdit] = useState(false);
   const [areas, setAreas] = useState<AreaData[]>(
-    customeraAeas.map((area: any) => ({
+    customeraAeas?.map((area: any) => ({
       id: area.id,
       custId: area.custId,
       name: area.name,
@@ -249,6 +249,7 @@ const CustomerForm = ({
    );
    if (confirmApprove) {
 
+    //TODO Delete Contract od customer
     //TODO Delete Checkpoints Of area?
     //TODO Delete Rounds of area?
 
@@ -335,7 +336,7 @@ const CustomerForm = ({
     }
 
     const updateDataToSubmit = {
-      area_id: updateNewAreaOfCustomer
+      area_id: updateNewAreaOfCustomer === undefined ? [] : updateNewAreaOfCustomer
     };
     console.log("updateDataToSubmit", updateDataToSubmit);
     const addCustResult = await updateCustomer(updateDataToSubmit, newCustId?.$id);

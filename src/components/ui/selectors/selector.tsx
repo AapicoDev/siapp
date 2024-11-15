@@ -88,15 +88,15 @@ export function Selector({
       >
         {itemSource.map((s) => (
           <MenuItem
-            key={s.id}
-            value={s.id}
+            key={s?.id}
+            value={s?.id}
             sx={{
               fontSize: "0.875rem",
               lineHeight: "1.25rem",
               color: "#2C5079",
             }}
           >
-            {s.desc}
+            {s?.desc}
           </MenuItem>
         ))}
       </Select>

@@ -236,7 +236,7 @@ export default function Patrol() {
   };
 
   const getRound = async (areaId: any) => {
-    const rounds = await getMasterRoundData(areaId);
+    const rounds = await getMasterRoundData([{ field: "areaId", value: areaId }]);
     const filteredRound = rounds?.documents.filter(
       (round) => round.isActive === true
     ).length;

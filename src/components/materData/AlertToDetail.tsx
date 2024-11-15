@@ -54,7 +54,7 @@ type AreaListType = {
 type ManpowerType = {
   id: any;
   nameInReport: string;
-  roleId: any;
+  positionId: any;
   quantity: number;
 };
 

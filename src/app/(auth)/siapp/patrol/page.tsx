@@ -233,14 +233,14 @@ export default function Patrol() {
     tableData();
   }, []);
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string, isUTC7: boolean=false) => {
     const date = new Date(dateString);
 
     const day = String(date.getUTCDate()).padStart(2, "0"); // Get day and pad with 0 if necessary
     const month = String(date.getUTCMonth() + 1).padStart(2, "0"); // Months are 0-indexed
     const year = date.getUTCFullYear();
 
-    const hours = String(date.getUTCHours()).padStart(2, "0");
+    const hours = String(date.getUTCHours() + (isUTC7 ? 7 : 0)).padStart(2, "0");
     const minutes = String(date.getUTCMinutes()).padStart(2, "0");
     const seconds = String(date.getUTCSeconds()).padStart(2, "0");
 
@@ -264,6 +264,10 @@ export default function Patrol() {
     console.log("data = ", allPatrolRoundData);
     const allPatrolCheckpointData = await getAllPatrolCheckpointData();
     console.log("patrolCheckpointData = ", allPatrolCheckpointData);
+    const reOrderData = allPatrolCheckpointData?.documents.sort((a, b) => {
+      return new Date(b.EndTime).getTime() - new Date(a.EndTime).getTime();
+    });
+    console.log("reOrderData =", reOrderData);
     const tableData: RowData[] =
       allPatrolCheckpointData?.documents.map((chkPt) => {
         return {
