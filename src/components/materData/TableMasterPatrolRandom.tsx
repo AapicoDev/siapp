@@ -234,7 +234,7 @@ export function TableMasterPatrolRandom({}: TableMasterPatrolRandomProps) {
   return (
     <>
       <TableContainer
-        className="h-screen bg-white"
+        className="h-[77vh] max-h-[77vh] bg-white"
         sx={{
           display: "flex",
           flexDirection: "column",

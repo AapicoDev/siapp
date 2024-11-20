@@ -1,9 +1,9 @@
 "use client";
-import { Box, FormControl, Table, TableBody, TableCell, TableContainer, TableFooter, TableHead, TableRow, TextField, Typography } from "@mui/material/";
+import { Box, CircularProgress, FormControl, Table, TableBody, TableCell, TableContainer, TableFooter, TableHead, TablePagination, TableRow, TextField, Typography } from "@mui/material/";
 import Navbar from "@/components/Navbar";
 import LabelTextField from "@/components/ui/textboxs/LabelTextField";
 import { Button } from "@/components/ui/buttons/button";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Checkbox as Checkbox2 } from "@/components/ui/checkbox";
 import { Edit2 } from "iconsax-react";
 import { Input } from "@/components/ui/textboxs/input";
@@ -13,13 +13,15 @@ import styles from "../../../styles.module.css"
 import { EditButton } from "@/components/ui/buttons/editButton";
 import { SaveButton } from "@/components/ui/buttons/saveButton";
 import { DeleteButton } from "@/components/ui/buttons/deleteButton";
+import { useConfirmDialog } from "../../../../components/ui/alertDialog/confirmDialog";
+import { addNewGroup, deleteGroup, fetchMasterGroupData, filterMasterGroupData, queryMasterCustomerData, queryMasterDepartmentData, updateGroup } from "@/app/lib/api";
 
 type RowData = {
   id: any;
   group: string;
   description: string;
-  department: number;
-  customer: number;
+  departmentTotal: any;
+  customerTotal: any;
 };
 type selectedDelete = {
   isSelected: boolean;
@@ -28,75 +30,128 @@ type selectedDelete = {
 
 export default function Group() {
 
-  const rows: RowData[] = [
-    {
-      id: "1",
-      group: "General Guard",
-      description: "ฝ่ายรักษาความปลอดภัยและบริการ",
-      department: 6,
-      customer: 5,
-    },
-    {
-      id: "2",
-      group: "Cleaning",
-      description: "ฝ่ายบริการงานรักษาความสะอาด",
-      department: 1,
-      customer: 1,
-    },
-    {
-      id: "3",
-      group: "IPM",
-      description: "ฝ่ายบริการจัดการอาคารสถานที่",
-      department: 4,
-      customer: 3,
-    },
-    {
-      id: "4",
-      group: "Cargo",
-      description: "ฝ่ายปฏิบัติการภาคพื้นคลังสินค้า และไปรษณีย์ภัณฑ์",
-      department: 1,
-      customer: 1,
-    },
-    {
-      id: "5",
-      group: "Airline",
-      description: "กลุ่มการแพทย์",
-      department: 1,
-      customer: 1,
-    },
-  ];
-
-  const totalItems = rows.length;
-
-  const [editMode, setEditMode] = useState(Array(rows.length).fill(false)); // Array to track edit state for each row
-  const [rowData, setRowData] = useState(rows); // Local state for row data
+  const [rowData, setRowData] = useState<RowData[]>([]);
+  const [editMode, setEditMode] = useState(Array(rowData.length).fill(false)); // Array to track edit state for each row
   const [addGroupVal, setAddGroupVal] = useState("");
   const [addGroupDescVal, setAddGroupDescVal] = useState(""); 
   const [isSelectedAll, setIsSelectedAll] = useState(false);
   const [selected, setSelected] = useState<selectedDelete[]>(
-    rows.map((row) => ({
+    rowData.map((row) => ({
       isSelected: false,
       id: row.id,
     }))
   );
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10); 
+  const [totalRows, setTotalRows] = useState(0);
+  const { confirmDialog, ConfirmAlertDialog } = useConfirmDialog();
 
-  // Handle Edit button click
+  useEffect(() => {
+    tableData();
+  }, [page, rowsPerPage]);
+
+  const getDeprtmentTotal = async (groupId: string) => {
+    const queryDept = await queryMasterDepartmentData("group_Id", groupId)
+    return queryDept?.documents?.length;
+  }
+  const getCustomerTotal = async (groupId: string) => {
+    const queryDept = await queryMasterCustomerData("group_Id", groupId)
+    return queryDept?.documents?.length;
+  }
+
+  const tableData = async () => {
+    setIsLoading(true);
+    const offset = page * rowsPerPage;
+    const allGroup = await fetchMasterGroupData(offset, rowsPerPage);
+    console.log("allGroup =", allGroup);
+    const tableData: RowData[] = allGroup?.documents?.map((doc: any) => {
+        return {
+          id: doc.$id,
+          group: doc.group,
+          description: doc.description,
+          departmentTotal: getDeprtmentTotal(doc.$id),
+          customerTotal: getCustomerTotal(doc.$id)
+        };
+      }) || []
+    setRowData(tableData);
+    setTotalRows(allGroup?.total || 0);
+    console.log("tableData =", tableData);
+
+    const mapSelect: selectedDelete[] = tableData.map((row: RowData) => ({
+      isSelected: false,
+      id: row.id,
+    }));
+    setSelected(mapSelect);
+    setIsLoading(false);
+  };
+
   const handleEdit = (index: any) => {
     const newEditMode = [...editMode];
-    newEditMode[index] = true; // Enable edit mode for the clicked row
+    newEditMode[index] = true;
     setEditMode(newEditMode);
   };
 
-  // Handle Save button click
-  const handleSave = (index: any) => {
+  const handleSave = async (index: any) => {
     const newEditMode = [...editMode];
-    newEditMode[index] = false; // Disable edit mode after saving
+    newEditMode[index] = false;
     setEditMode(newEditMode);
-    // Optionally save changes to the server or state
+    
+    console.log("rowData[index] = ", rowData[index]);
+    const dataToSubmit = {
+      group: rowData[index]?.group,
+      description: rowData[index]?.description,
+    }
+    setIsLoading(true);
+    const updateGroupResult = await updateGroup(dataToSubmit, rowData[index]?.id);
+    if(updateGroupResult.result !== null) {
+      const confirmApprove = await confirmDialog(
+        "Save Group Success",
+        "Save Group data successfully.",
+        true, "success"
+      );
+    }
+    else{
+      const confirmApprove = await confirmDialog(
+        "Error to Save Group",
+        `${updateGroupResult.error}`,
+        true, "danger"
+      );
+    }
+    await tableData();
+    setIsLoading(false);
   };
 
-  const handleDelete = () => {
-    
+  const handleDelete = async () => {
+    const confirmApprove = await confirmDialog(
+      "Delete Group",
+      "Do you want to delete these selected Group?", false, "danger"
+    );
+    if (confirmApprove) {
+      if (confirmApprove) {
+        let response: any;
+        const deleteId = selected.filter(s => s.isSelected === true).map(s=>s.id);
+        if (deleteId.length > 0) {
+          response = await deleteGroup(deleteId);
+          console.log("response =", response);
+        }
+        if(response.result !== null){
+          const confirmApprove = await confirmDialog(
+            "Delete Group Success",
+            "Delete Group data successfully.",
+            true
+          );
+        }
+        else{
+          const confirmApprove = await confirmDialog(
+            "Error to Delete Group",
+            `${response.error}`,
+            true, "danger"
+          );
+        }
+        await tableData();
+      }
+    }
   };
 
   // Handle input changes in edit mode
@@ -110,20 +165,65 @@ export default function Group() {
     setRowData(newRowData);
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type } = e.target;
-    setRowData((prevData) => ({ ...prevData, [name]: value }));
-  };
-
-  const handleAdd = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+  const handleAdd = async (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     e.preventDefault();
     console.log("AddSegmentVal = ",addGroupVal);
     console.log("AddSegmentDescVal = ",addGroupDescVal);
+    const dataToSubmit = {
+      group: addGroupVal,
+      description: addGroupDescVal,
+    }
+    setIsLoading(true);
+    const addGroupResult = await addNewGroup(dataToSubmit);
+    if(addGroupResult.result !== null) {
+      const confirmApprove = await confirmDialog(
+        "Add Group Success",
+        "Add Group data successfully.",
+        true, "success"
+      );
+      if(confirmApprove) {
+        setAddGroupVal("");
+        setAddGroupDescVal("");
+      }
+    }
+    else{
+      const confirmApprove = await confirmDialog(
+        "Error to Add Group",
+        `${addGroupResult.error}`,
+        true, "danger"
+      );
+    }
+    await tableData();
+    setIsLoading(false);
   };
 
-  const handleSearch = () => {
-    console.log("AddSegmentVal = ",addGroupVal);
-    console.log("AddSegmentDescVal = ",addGroupDescVal);
+  const handleSearch = async () => {
+    setIsLoading(true);
+    const offset = page * rowsPerPage;
+    const filterSegment = await filterMasterGroupData([
+      {field: "segment", value: addGroupVal},
+      {field: "description", value: addGroupDescVal},
+    ], offset, rowsPerPage);
+    setTotalRows(filterSegment?.total || 0);
+    console.log("filterChecklist =", filterSegment);
+    const tableData: RowData[] = filterSegment?.documents?.map((doc: any) => {
+      return {
+        id: doc.$id,
+        group: doc.group,
+        description: doc.description,
+        departmentTotal: getDeprtmentTotal(doc.$id),
+        customerTotal: getCustomerTotal(doc.$id)
+      };
+    }) || []
+    setRowData(tableData);
+    console.log("tableData =", tableData);
+
+    const mapSelect: selectedDelete[] = tableData.map((row: RowData) => ({
+      isSelected: false,
+      id: row.id,
+    }));
+    setSelected(mapSelect);
+    setIsLoading(false);
   };
 
   const handleSelected = (index: number) => {
@@ -147,15 +247,21 @@ export default function Group() {
     setSelected(selectedAll);
   };
 
+  const handlePageChange = (event: any, newPage: any) => {
+    setPage(newPage);
+  };
+
+  const handleRowsPerPageChange = (event: any) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
   return (
     <div>
       <Navbar menu={'Master Data'} submenu={'Group'} />
       <Box className="px-2">
         {/* Main Content */}
         <Box flex={1} px={2} pb={2}>
-        <Typography sx={{fontWeight: "700", color: "#F66262", border: "1px solid #F66262", width: "fit-content", borderRadius: "10px", mb: 1}} className="py-1 px-2">
-                Mockup data
-            </Typography>
           {/* Sub Header */}
           <Box
             display="flex"
@@ -187,14 +293,14 @@ export default function Group() {
                   setInputVal={setAddGroupDescVal}
                 />
                 </Box>
-                <AddButton onAddBtnClick={handleAdd}/>
-                <Box className="w-[15%]"><SearchButton onSearchBtnClick={handleSearch}/></Box>
+                <AddButton onAddBtnClick={handleAdd} disable={editMode.some(e=>e === true)}/>
+                <Box className="w-[15%]"><SearchButton disable={editMode.some(e=>e === true)} onSearchBtnClick={handleSearch}/></Box>
               </Box>
             </Box>
           </Box>
 
           <TableContainer
-            className="h-screen bg-white"
+            className="h-[74vh] max-h-[74vh] bg-white"
             sx={{
               display: "flex",
               flexDirection: "column",
@@ -202,13 +308,14 @@ export default function Group() {
               boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
             }}
           >
-            <Table>
-              <TableHead>
+          <Table stickyHeader>
+             <TableHead sx={{mt:0}}>
                 <TableRow sx={{ borderBottom: "1px solid #C7D4D7" }}>
                   <TableCell align="left" className="w-[5%]">
                     <Checkbox2 className="mt-1 mb-2"
                     checked={isSelectedAll}
-                    onCheckedChange={handleCheckAll}/>
+                    onCheckedChange={handleCheckAll}
+                    disabled={totalRows === 0}/>
                   </TableCell>
                   <TableCell align="center" className="w-[19%]">Group</TableCell>
                   <TableCell align="center" className="w-[24%]">Description</TableCell>
@@ -259,15 +366,15 @@ export default function Group() {
                         `${row.description}`
                       )}
                     </TableCell>
-                    <TableCell align="center">{row.department}</TableCell>
-                    <TableCell align="center">{row.customer}</TableCell>
+                    <TableCell align="center">{row.departmentTotal}</TableCell>
+                    <TableCell align="center">{row.customerTotal}</TableCell>
                     <TableCell align="center" sx={{justifyItems: "center"}}>
                       {editMode[index] ? (
                         <div className="w-[48px] mr-9">
                         <SaveButton onSaveBtnClick={handleSave} index={index}/>
                       </div>
                       ) : (
-                        <EditButton onEditBtnClick={handleEdit} index={index}/>
+                        <EditButton disable={editMode.some(e=>e === true)} onEditBtnClick={handleEdit} index={index}/>
                       )}
                     </TableCell>
                   </TableRow>
@@ -296,8 +403,16 @@ export default function Group() {
                         width: "100%",
                       }}
                     >
-                      <Typography>Total: {totalItems} items</Typography>
-                      <DeleteButton onDeleteBtnClick={handleDelete} disable={true}/>
+                      <TablePagination
+                        sx={{color: "#2C5079"}}
+                        component="div"
+                        count={totalRows}
+                        page={page}
+                        onPageChange={handlePageChange}
+                        rowsPerPage={rowsPerPage}
+                        onRowsPerPageChange={handleRowsPerPageChange}
+                      />
+                      <DeleteButton onDeleteBtnClick={handleDelete} disable={!selected.some((item) => item.isSelected)}/>
                     </Box>
                   </TableCell>
                 </TableRow>
@@ -306,6 +421,17 @@ export default function Group() {
           </TableContainer>
         </Box>
       </Box>
+
+      {isLoading && (
+        <div className="fixed inset-0 bg-white bg-opacity-40 flex flex-col items-center justify-center z-indextop">
+          <Box sx={{ display: "flex" }}>
+            <CircularProgress />
+          </Box>
+        </div>
+      )}
+
+      {/* Confirm dialog */}
+      {ConfirmAlertDialog}
     </div>
   );
 }

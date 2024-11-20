@@ -19,6 +19,7 @@ import { PatrolStatus } from "./PatrolStatus";
 import { CheckListStatus } from "./CheckListStatus";
 import { getPatrolCheckList, getMasterRoundData } from "../../app/lib/api";
 import { Row } from "react-day-picker";
+import PatrolCheckpointMapComponent from "../PatrolCheckpointMapView";
 
 type RowData = {
   dateTime: string;
@@ -288,12 +289,14 @@ const PatrolDeatilView = ({
                     </div>
                   </Box>
                   {/* Map */}
-                  <Box
-                    className="flex w-[30%] space-x-5 bg-[#F1F4F4] rounded-lg hover:cursor-pointer"
+                  <div
+                    className="flex w-[30%] rounded-lg border-[#2C5079] border-[1px] bg-slate-200 p-1 justify-center hover:cursor-pointer"
                     onClick={(e) => setOpenMapDetailView(true)}
                   >
-                    Map
-                  </Box>
+                    <PatrolCheckpointMapComponent
+                      zoom={16}
+                      longlat={[["100.55826768112321", "13.715759496081468"],["100.55857312480582", "13.715866960484869"]]}/>
+                  </div>
                 </Box>
 
                 <Box className="flex w-full bg-[#EBF4F6] rounded-lg mb-3 p-2">
@@ -567,12 +570,11 @@ const PatrolDeatilView = ({
           <div className="bg-white rounded-b-lg shadow-lg min-h-[394px] max-h-[494px] w-[700px]">
             {/* Body */}
             <div className="max-h-[494px] overflow-auto p-2">
-              <Box
-                className="w-full justify-center p-2 rounded-lg bg-slate-100 h-[329px]"
-                textAlign="center"
-              >
-                Map
-              </Box>
+                <div className="flex w-full h-[329px] rounded-lg border-[#2C5079] border-[1px] bg-slate-200 p-1 justify-center">
+                  <PatrolCheckpointMapComponent
+                    zoom={16}
+                    longlat={[["100.55826768112321", "13.715759496081468"],["100.55857312480582", "13.715866960484869"]]}/>
+                </div>
               <Box className="flex">
               <Typography
                 sx={{

@@ -387,11 +387,11 @@ const PatrolCheckpointFrom = ({
         addNewCheckpointResult = await addNewCheckpoint(dataToSubmit);
         setIsLoading(false);
         //console.log("addNewCheckpointResult", addNewCheckpointResult);
-        if (addNewCheckpointResult) {
+        if (addNewCheckpointResult.result !== null) {
           updateNewCheckpoints = checkPointDatas
             .filter((item) => item.status === "existed" || item.status === "edit")
             .map((item) => item.checkPointId);
-          updateNewCheckpoints = updateNewCheckpoints.concat(addNewCheckpointResult);
+          updateNewCheckpoints = updateNewCheckpoints.concat(addNewCheckpointResult.result);
           console.log("updateNewCheckpoints", updateNewCheckpoints);
           const resultUpdateCheckpoitsOfArea = await updateAreaData(
             prelimData.areaId,
@@ -399,6 +399,13 @@ const PatrolCheckpointFrom = ({
           );
           checkpointsOfArea();
           setIsAddOrUpdateSuccess(true);
+        }
+        else{
+          const confirmApprove = await confirmDialog(
+            "Error to add Checkpoint",
+            `erro to add checkpoint`,
+            true, "danger"
+          );
         }
       }
 
@@ -408,7 +415,7 @@ const PatrolCheckpointFrom = ({
         deleteCheckpointResult = await deleteCheckpoint(checkpointRemoveList);
         setIsLoading(false);
         //console.log("deleteResult", deleteCheckpointResult);
-        if (deleteCheckpointResult) {
+        if (deleteCheckpointResult.result !== null) {
           setCheckpointRemoveList([]);
           console.log("updateNewCheckpoints delete", updateNewCheckpoints);
           setIsLoading(true);
@@ -419,6 +426,13 @@ const PatrolCheckpointFrom = ({
           setIsLoading(false);
           checkpointsOfArea();
           setIsAddOrUpdateSuccess(true);
+        }
+        else{
+          const confirmApprove = await confirmDialog(
+            "Error to delete Checkpoint",
+            `${deleteCheckpointResult.error}`,
+            true, "danger"
+          );
         }
       }
 
@@ -450,6 +464,13 @@ const PatrolCheckpointFrom = ({
         updateCheckpointResult = await updateCheckpoint(dataToSubmit);
         setIsLoading(false);
         //console.log("updateCheckpointResult =", updateCheckpointResult);
+        if(updateCheckpointResult.result === null){
+          const confirmApprove = await confirmDialog(
+            "Error to save Checkpoint data",
+            `${updateCheckpointResult.error}`,
+            true, "danger"
+          );
+        }
         checkpointsOfArea();
       }
 

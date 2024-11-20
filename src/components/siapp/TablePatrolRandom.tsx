@@ -141,7 +141,7 @@ export function TablePatrolRandom({ }: TableContractProps) {
   return (
     <>
       <TableContainer
-        className="h-screen bg-white p-2"
+        className="h-[76vh] max-h-[76vh] bg-white p-2"
         sx={{
           display: "flex",
           flexDirection: "column",

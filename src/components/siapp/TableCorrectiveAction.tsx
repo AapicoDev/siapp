@@ -189,7 +189,7 @@ export function TableCorrectiveAction({
   return (
     <>
       <TableContainer
-        className="h-screen bg-white"
+        className="h-[76vh] max-h-[76vh] bg-white"
         sx={{
           display: "flex",
           flexDirection: "column",

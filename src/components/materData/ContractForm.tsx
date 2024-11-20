@@ -1085,7 +1085,7 @@ const ContractForm = ({
         }
         deleteContractResult = await deleteContract([selectedContract.id]);
         console.log("deleteCustResult =", deleteContractResult);
-     if (deleteContractResult !== null) {
+     if (deleteContractResult.result !== null) {
        const confirmApprove = await confirmDialog(
          "Delete Success",
          "delete customer success.", true
@@ -1096,7 +1096,11 @@ const ContractForm = ({
       }
      }
      else {
-       alert("Error occur to delete.");
+      const confirmApprove = await confirmDialog(
+        "Error to delete contract",
+        `${deleteContractResult.error}`,
+        true, "danger"
+      );
      }
     }
    }
@@ -1903,7 +1907,7 @@ const ContractForm = ({
       selectNewFile
     );
     setIsLoading(false);
-    if(resultAddNewContract !== null){
+    if(resultAddNewContract.result !== null){
       const dialogRresult = await confirmDialog(
         "Submit new Contract data Success",
         "Submit new contract Data successfully.",
@@ -1918,7 +1922,7 @@ const ContractForm = ({
     else {
       const confirmApprove = await confirmDialog(
         "Error to add new contract data.",
-        "Error to add new contract data",
+        `${resultAddNewContract.error}`,
         true,
         "danger"
       );

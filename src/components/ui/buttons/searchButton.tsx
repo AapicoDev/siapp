@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/buttons/button";
 
 interface SearchButtonProps {
     onSearchBtnClick: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void; // Button click handler
+    disable?: boolean;
   }
 
-export function SearchButton({ onSearchBtnClick }: SearchButtonProps) {
+export function SearchButton({ onSearchBtnClick, disable = false}: SearchButtonProps) {
 
   return (
       <Button
@@ -17,6 +18,7 @@ export function SearchButton({ onSearchBtnClick }: SearchButtonProps) {
             onSearchBtnClick(event); // Call the click handler passed as prop
           }}
         className="w-full bg-[#37B7C3] hover:bg-[#D9F0EC] hover:text-[#1D7A9B]"
+        disabled = {disable}
       >
         Search
       </Button>

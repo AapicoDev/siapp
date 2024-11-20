@@ -370,7 +370,7 @@ export default function Patrol() {
           {/* Sub Header */}
           <Box className="w-full">
             <Box justifyContent="space-between" className="flex">
-              <Box className="space-x-4 py-4 flex w-fit">
+              <Box className="space-x-4 pt-2 pb-3 flex w-fit">
                 <Box className="justify-center flex p-1 pb-0 bg-white rounded-lg h-10 ">
                   <Checkbox
                     className="bg-[#EBF4F6] border-none"
@@ -399,7 +399,7 @@ export default function Patrol() {
                 </Box>
               </Box>
 
-              <Box className="space-x-2 py-4 flex">
+              <Box className="space-x-2 pt-2 pb-3 flex">
                 <Box className="justify-center flex p-1 bg-white rounded-lg">
                   <DatePicker />
                   <Typography className="text-[#2C5079] text-sm px-4 pt-1">
@@ -432,7 +432,7 @@ export default function Patrol() {
           {isCheckpointPage && (
             <>
               <TableContainer
-                className="h-screen bg-white p-2"
+                className="h-[76vh] max-h-[76vh] bg-white p-2"
                 sx={{
                   display: "flex",
                   flexDirection: "column",
@@ -446,7 +446,7 @@ export default function Patrol() {
                       sx={{ borderBottom: "1px solid #C7D4D7" }}
                       className={`${styles.table}`}
                     >
-                      <TableCell align="center" className="w-[6%]">
+                      <TableCell align="center" className="w-[8%]">
                         Date & Time
                       </TableCell>
                       <TableCell align="center" className="w-[22%]">
@@ -455,7 +455,7 @@ export default function Patrol() {
                       <TableCell align="center" className="w-[20%]">
                         Area
                       </TableCell>
-                      <TableCell align="center" className="w-[12%]">
+                      <TableCell align="center" className="w-[10%]">
                         Round
                       </TableCell>
                       <TableCell align="center" className="w-[19%]">

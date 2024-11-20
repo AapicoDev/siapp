@@ -288,7 +288,9 @@ export default function Patrol() {
   const handleOpenViewQr = (selecectedRow: RowData) => {
     let sumChkPt = 0;
     allArea?.forEach((area) => {
-      sumChkPt += area.checkPointIDs?.length
+      if(area.CustomerId === selecectedRow.customerId){
+        sumChkPt += area.checkPointIDs?.length
+      }
     });
     console.log("allArea =", allArea)
     console.log("sumChkPt =", sumChkPt)
@@ -407,7 +409,7 @@ export default function Patrol() {
           {isCheckpointPage && (
             <>
               <TableContainer
-                className="h-screen bg-white"
+                className="h-[78vh] max-h-[78vh] bg-white"
                 sx={{
                   display: "flex",
                   flexDirection: "column",

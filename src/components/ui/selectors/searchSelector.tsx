@@ -14,12 +14,14 @@ import {
 import { useState } from "react";
 
 interface SearchSelectorProps {
-  selectorLabel: any;
+  selectorLabel?: any;
   itemSource: any[];
   selectedVal: any;
   name: any;
   handleChange: any;
   disable?: boolean;
+  inlineLabel?: string;
+  borderColor?: string;
 }
 
 export function SearchSelector({
@@ -29,17 +31,20 @@ export function SearchSelector({
   handleChange,
   name,
   disable = false,
+  inlineLabel,
+  borderColor = '#1D7A9B'
 }: SearchSelectorProps) {
   function handleSelectionChange(e: any, newValue: any) {
     if (newValue && newValue.id !== selectedVal) {
-        handleChange(newValue);
-      } else if (!newValue && selectedVal) {
-        handleChange(null);
+      handleChange(newValue, name);
+    } else if (!newValue && selectedVal) {
+        handleChange(null, name);
       }
   }
 
   return (
     <FormControl focused className="w-full">
+      {(selectorLabel !== "" && selectorLabel !== undefined) &&
       <Typography
         textAlign="left"
         sx={{
@@ -50,9 +55,9 @@ export function SearchSelector({
         }}
       >
         {selectorLabel}
-      </Typography>
+      </Typography>}
       <Autocomplete
-      aria-placeholder="Select"
+        aria-placeholder="Select"
         disablePortal
         options={itemSource}
         value={itemSource.find((item) => item.id === selectedVal) || ""}
@@ -61,25 +66,26 @@ export function SearchSelector({
           bgcolor: "white",
           color: `${selectedVal === "" ? `#83A2AD` : "#2C5079"}`,
           width: "100%",
-          height: "38px",
+          height: "40px",
           borderRadius: "10px",
           "& .MuiOutlinedInput-root": {
             padding: "0px 10px",
-            height: "38px",
+            height: "40px",
             borderRadius: "10px",
             "& .MuiAutocomplete-input": {
-              fontSize: "14px",
+              fontSize: "16px",
               padding: "10px 0px",
               color: selectedVal === "" ? "#83A2AD" : "#2C5079",
             },
             "& .MuiOutlinedInput-notchedOutline": {
-              border: "1px solid #1D7A9B", // Set border color always
+              border: `1px solid ${borderColor}`, // Set border color always
+              fontSize: "18px"
             },
             "&:hover .MuiOutlinedInput-notchedOutline": {
-              borderColor: "#1D7A9B", // Optional: same color on hover for consistency
+              borderColor: `${borderColor}`, // Optional: same color on hover for consistency
             },
             "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-              borderColor: "#1D7A9B", // Optional: same color on focus for consistency
+              borderColor: `${borderColor}`, // Optional: same color on focus for consistency
             },
           },
           "& .MuiAutocomplete-endAdornment .MuiSvgIcon-root": {
@@ -98,14 +104,31 @@ export function SearchSelector({
             },
           },
         }}
-        renderInput={(params) => 
-        <TextField {...params} sx={{
-            "& .MuiInputBase-input": {
-              textAlign: "center",  // Center the text
-              ml: 6
-            },
-          }}
-        placeholder="Select"/>}
+        renderInput={(params) => (
+          <TextField
+            {...params}
+            name={name}
+            label={inlineLabel}
+            InputLabelProps={{
+              shrink: true,
+            }}
+            sx={{
+              "& .MuiInputLabel-root": {
+                fontSize: "18px", // Adjust font size if needed
+                fontWeight: 700,
+                color: "#2C5079", // Customize label color
+              },
+              "& .MuiInputBase-input": {
+                textAlign: "center", // Center the text
+                ml: 6,
+              },
+              "& .Mui-focused .MuiInputLabel-root": {
+                color: "#2C5079", // Focused label color
+              },
+            }}
+            placeholder="Select"
+          />
+        )}
       />
     </FormControl>
   );

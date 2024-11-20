@@ -191,17 +191,21 @@ export function TableContract({contractData, custData,}: TableContract) {
 
         deleteContractResult = await deleteContract([dr.id]);
         console.log("deleteCustResult =", deleteContractResult);
-        if (deleteContractResult !== null) {
+        if (deleteContractResult.result !== null) {
           const confirmApprove = await confirmDialog(
             "Delete Success",
-            "delete customer success.", true
+            "delete Conract success.", true
          );
          if(confirmApprove){
           setIsAddOrUpdateSucces(true);
          }
         }
         else {
-          alert("Error occur to delete.");
+          const confirmApprove = await confirmDialog(
+            "Error to delete contract",
+            `${deleteContractResult.error}`,
+            true, "danger"
+          );
         }
       }
       setIsLoading(false);
@@ -266,7 +270,7 @@ export function TableContract({contractData, custData,}: TableContract) {
   return (
       <>
       <TableContainer
-            className="h-screen bg-white"
+            className="h-[77vh] max-h-[77vh] bg-white"
             sx={{
               display: "flex",
               flexDirection: "column",

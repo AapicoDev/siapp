@@ -369,7 +369,7 @@ export default function Sidebar() {
   return (
     <div className="w-[260px] min-w-[260px] min-h-screen border-r bg-white">
       <div style={{ marginLeft: "50px", marginBottom: "-5px", textAlign: "right"}}>
-        <p className="pr-2">V 1.0.0</p>
+        <p className="pr-2">V 1.0.1</p>
         <Logo />
       </div>
       <div>

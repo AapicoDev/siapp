@@ -328,7 +328,6 @@ export default function Customer() {
   };
 
   const tableData = async () => {
-    console.log("enter table data");
     setIsLoading(true);
     const customers = await getAllMasterCustomerData();
     const tableData: RowData[] = await Promise.all(
@@ -388,9 +387,10 @@ export default function Customer() {
           deleteCustResult = await deleteCustomer([dr.id]);
           console.log("deleteCustResult =", deleteCustResult);
 
-          if (deleteCustResult === null) {
+          if (deleteCustResult.result === null) {
             alert(
-              `Error occurred while deleting Customer: ${dr.customerName}.`
+              `Error occurred while deleting Customer: ${dr.customerName}.\n
+              ${deleteCustResult.error}`
             );
             deleteResult = false;
             break; // Exit the loop if an error occurs
@@ -598,7 +598,7 @@ export default function Customer() {
 
           {isCustomerPage && (
             <TableContainer
-              className="h-screen bg-white"
+              className="h-[77vh] max-h-[77vh] bg-white" //h-[calc(100vh - 0px)]
               sx={{
                 display: "flex",
                 flexDirection: "column",

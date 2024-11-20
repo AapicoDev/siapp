@@ -377,7 +377,7 @@ export default function Incident() {
           {isIncidentPage && (
             <>
               <TableContainer
-                className="h-screen bg-white p-2"
+                className="h-[76vh] max-h-[76vh] bg-white px-2"
                 sx={{
                   display: "flex",
                   flexDirection: "column",
@@ -385,10 +385,10 @@ export default function Incident() {
                   boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
                 }}
               >
-                <Table>
-                  <TableHead>
+                <Table stickyHeader>
+                  <TableHead sx={{mt:0}}>
                     <TableRow
-                      sx={{ borderBottom: "1px solid #C7D4D7" }}
+                      sx={{ borderBottom: "1px solid #C7D4D7"}}
                       className={`${styles.table}`}
                     >
                       <TableCell align="left" className="w-[12%]">

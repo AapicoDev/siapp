@@ -99,7 +99,7 @@ const IncidentDeatilView = ({
   const handlePrint = () => {};
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 flex flex-col items-center justify-center z-indextop">
+    <div className="fixed inset-0 bg-black bg-opacity-40 flex flex-col items-center justify-center z-10">
       {/* Header */}
       <Box
         sx={{

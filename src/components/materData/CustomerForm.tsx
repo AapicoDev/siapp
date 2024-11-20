@@ -245,7 +245,7 @@ const CustomerForm = ({
     console.log("areaRemoveList =", areaRemoveList);
     const confirmApprove = await confirmDialog(
       "Delete Customer",
-      "Do you want to delete this customer?"
+      "Do you want to delete this customer?", false, "danger"
    );
    if (confirmApprove) {
 
@@ -269,7 +269,7 @@ const CustomerForm = ({
      const deleteResult = await deleteCustomer([formData.id]);
      setIsLoading(false);
      console.log("deleteResult =", deleteResult);
-     if (deleteResult !== null) {
+     if (deleteResult.result !== null) {
        const confirmApprove = await confirmDialog(
          "Delete Success",
          "delete customer success.", true
@@ -280,7 +280,11 @@ const CustomerForm = ({
       }
      }
      else {
-       alert("Error occur to delete.");
+      const confirmApprove = await confirmDialog(
+        "Error to Customer",
+        `${deleteResult.error}`,
+        true, "danger"
+      );
      }
     }
     else {
@@ -308,15 +312,15 @@ const CustomerForm = ({
     console.log("customerDataToSubmit", customerDataToSubmit);
     const newCustId = await addNewCustomer(customerDataToSubmit);
     console.log("newCustId", newCustId);
-
-    const newAreas = areas.filter((area) => area.status === "new");
+    if(newCustId.result !== null){
+      const newAreas = areas.filter((area) => area.status === "new");
     console.log("newAreas =", newAreas);
     if (newAreas.length > 0) {
       const dataToSubmit =
         newAreas?.map((newarea) => {
           return {
             name: newarea.name,
-            CustomerId: newCustId?.$id,
+            CustomerId: newCustId?.result?.$id,
             checkPointIDs: [],
             roundIDs: [],
             customerName: formData.customerName,
@@ -333,21 +337,35 @@ const CustomerForm = ({
           updateNewAreaOfCustomer = updateNewAreaOfCustomer.concat(addNewAreaResult);
           console.log("updateNewAreaOfCustomer", updateNewAreaOfCustomer);
       }
+      const updateDataToSubmit = {
+        area_id: updateNewAreaOfCustomer === undefined ? [] : updateNewAreaOfCustomer
+      };
+      console.log("updateDataToSubmit", updateDataToSubmit);
+      const updateCustResult = await updateCustomer(updateDataToSubmit, newCustId.result.$id);
+      if (updateCustResult.result !== null) {
+        setIsAddOrUpdateSuccess(true);
+        const confirmApprove = await confirmDialog(
+          "Add Success",
+          "Add New customer data successfully !",
+          true
+        );
+        if (confirmApprove) handleCloseCustomerForm();
+      }
+      else{
+        const confirmApprove = await confirmDialog(
+          "Error to update Customer area list",
+          `${updateCustResult.error}`,
+          true, "danger"
+        );
+      }
     }
-
-    const updateDataToSubmit = {
-      area_id: updateNewAreaOfCustomer === undefined ? [] : updateNewAreaOfCustomer
-    };
-    console.log("updateDataToSubmit", updateDataToSubmit);
-    const addCustResult = await updateCustomer(updateDataToSubmit, newCustId?.$id);
-    if (addCustResult !== null) {
-      setIsAddOrUpdateSuccess(true);
+    }
+    else{
       const confirmApprove = await confirmDialog(
-        "Add Success",
-        "Add New customer data successfully !",
-        true
+        "Error to add New Customer",
+        `${newCustId.error}`,
+        true, "danger"
       );
-      if (confirmApprove) handleCloseCustomerForm();
     }
     //#endregion -- Add New Customer --
   };

@@ -9,6 +9,7 @@ import {
   storage,
   updateDocumentOnServer,
   deleteDocumentOnServer,
+  Users
 } from "../appwrite";
 import { Query, ID } from "appwrite";
 const databaseId = "6707ae1c0030c33b9ab2";
@@ -29,6 +30,7 @@ const masterAssignedManpowerTableId = "6721d91c00335cc2011c";
 const masterRandomPatrolReasonTableId = "6719accc000ca3be7e73";
 const masterContrtactTableId = "672d8495000cf8fb50de";
 const masterPatrolAlertToTableId = "67315d130009a64ab015";
+const masterQrErrorReasonTableId = "673d535e001516c9f69d";
 //#endregion --Master Data--
 
 const patrolRoundsTableId = "670e369a0033e51cd0f7";
@@ -42,33 +44,85 @@ const incidentTypeFilesStorageId = "6712275f002246d2f1c7";
 const contractAttachFilesStorageId = "672dbfec00034b72f0b0";
 
 //#region Master Data
-export async function getAllMasterDepartmentData() {
+
+//#region master_QrErrorReason
+export async function fetchQrErrorReasonData(offset, limit) {
   try {
-    const response = await fetchDataList(databaseId, masterDepartmentTableId);
+    const response = await fetchDataList(
+      databaseId,
+      masterQrErrorReasonTableId,
+      [Query.limit(limit), Query.offset(offset)]
+    );
+    return response;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    return null;
+  }
+}
+export async function filterQRErrorReason(filters, offset, limit) {
+  let conditions = filters.filter((filter) => filter.value !== "").map((filter) => 
+      Query.contains(filter.field, filter.value)
+  );
+  conditions = [...conditions, Query.limit(limit), Query.offset(offset)];
+  try {
+    const response = await fetchDataList(
+      databaseId,
+      masterQrErrorReasonTableId,
+      conditions,
+    );
     console.log(response);
     return response;
   } catch (error) {
     console.error("Error retrieving data:", error);
+    return null;
   }
 }
-export async function getAllMasterSegmentData() {
+export async function addNewQRErrorReason(qrErrorReasonData) {
   try {
-    const response = await fetchDataList(databaseId, masterSegmentTableId);
-    console.log(response);
-    return response;
+    const document = await databases.createDocument(
+      databaseId,
+      masterQrErrorReasonTableId,
+      "unique()",
+      qrErrorReasonData
+    );
+    console.log("Document created:", document.$id);
+    return {result: document};
   } catch (error) {
-    console.error("Error retrieving data:", error);
+    console.error("Error creating document:", error);
+    return {result: null, error: error};
   }
 }
-export async function getAllMasterGroupData() {
+export async function updateQRErrorReason(dataToSubmit, id) {
   try {
-    const response = await fetchDataList(databaseId, masterGroupTableId);
-    console.log(response);
-    return response;
+    const response = await databases.updateDocument(
+      databaseId,
+      masterQrErrorReasonTableId,
+      id,
+      dataToSubmit
+    );
+    return {result: response};
   } catch (error) {
-    console.error("Error retrieving data:", error);
+    console.error("Error update Customer data:", error);
+    return {result: null, error: error};;
   }
 }
+export async function deleteQRErrorReason(idList) {
+  try {
+    console.log("id:", idList);
+    const deletePromises = idList.map((data) => {
+      return databases.deleteDocument(databaseId, masterQrErrorReasonTableId, data);
+    });
+    const results = await Promise.all(deletePromises);
+    console.log("Documents delete successfully:", results);
+    return {result: results};
+  } catch (error) {
+    console.error("Error deleting data:", error);
+    return {result: null, error: error};
+  }
+}
+//#endregion master_QrErrorReason
+
+//#region master_Zone
 export async function getAllMasterZoneData() {
   try {
     const response = await fetchDataList(databaseId, masterZoneTableId);
@@ -78,6 +132,354 @@ export async function getAllMasterZoneData() {
     console.error("Error retrieving data:", error);
   }
 }
+export async function fetchMasterZoneData(offset, limit) {
+  try {
+    const response = await fetchDataList(
+      databaseId,
+      masterZoneTableId,
+      [Query.limit(limit), Query.offset(offset)]
+    );
+    return response;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    return null;
+  }
+}
+export async function filterMasterZoneData(filters, offset, limit) {
+  let conditions = filters.filter((filter) => filter.value !== "").map((filter) => 
+      Query.contains(filter.field, filter.value)
+  );
+  conditions = [...conditions, Query.limit(limit), Query.offset(offset)];
+  try {
+    const response = await fetchDataList(
+      databaseId,
+      masterZoneTableId,
+      conditions,
+    );
+    console.log(response);
+    return response;
+  } catch (error) {
+    console.error("Error retrieving data:", error);
+    return null;
+  }
+}
+export async function addNewZone(zoneData) {
+  try {
+    const document = await databases.createDocument(
+      databaseId,
+      masterZoneTableId,
+      "unique()",
+      zoneData
+    );
+    console.log("Document created:", document.$id);
+    return {result: document};
+  } catch (error) {
+    console.error("Error creating document:", error);
+    return {result: null, error: error};
+  }
+}
+export async function updateZone(dataToSubmit, id) {
+  try {
+    const response = await databases.updateDocument(
+      databaseId,
+      masterZoneTableId,
+      id,
+      dataToSubmit
+    );
+    return {result: response};
+  } catch (error) {
+    console.error("Error update Zone data:", error);
+    return {result: null, error: error};
+  }
+}
+export async function deleteZone(idList) {
+  try {
+    console.log("id:", idList);
+    const deletePromises = idList.map((data) => {
+      return databases.deleteDocument(databaseId, masterZoneTableId, data);
+    });
+    const results = await Promise.all(deletePromises);
+    console.log("Documents delete successfully:", results);
+    return {result: results};
+  } catch (error) {
+    console.error("Error deleting data:", error);
+    return {result: null, error: error};
+  }
+}
+//#endregion master_Zone
+
+//#region master_Group
+export async function getAllMasterGroupData() {
+  try {
+    const response = await fetchDataList(databaseId, masterGroupTableId);
+    console.log(response);
+    return response;
+  } catch (error) {
+    console.error("Error retrieving data:", error);
+  }
+}
+export async function fetchMasterGroupData(offset, limit) {
+  try {
+    const response = await fetchDataList(
+      databaseId,
+      masterGroupTableId,
+      [Query.limit(limit), Query.offset(offset)]
+    );
+    return response;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    return null;
+  }
+}
+export async function addNewGroup(groupData) {
+  try {
+    const document = await databases.createDocument(
+      databaseId,
+      masterGroupTableId,
+      "unique()",
+      groupData
+    );
+    console.log("Document created:", document.$id);
+    return {result: document};
+  } catch (error) {
+    console.error("Error creating document:", error);
+    return {result: null, error: error};
+  }
+}
+export async function filterMasterGroupData(filters, offset, limit) {
+  let conditions = filters.filter((filter) => filter.value !== "").map((filter) => 
+      Query.contains(filter.field, filter.value)
+  );
+  conditions = [...conditions, Query.limit(limit), Query.offset(offset)];
+  try {
+    const response = await fetchDataList(
+      databaseId,
+      masterGroupTableId,
+      conditions,
+    );
+    console.log(response);
+    return response;
+  } catch (error) {
+    console.error("Error retrieving data:", error);
+    return null;
+  }
+}
+export async function updateGroup(dataToSubmit, id) {
+  try {
+    const response = await databases.updateDocument(
+      databaseId,
+      masterGroupTableId,
+      id,
+      dataToSubmit
+    );
+    return {result: response};
+  } catch (error) {
+    console.error("Error update Customer data:", error);
+    return {result: null, error: error};
+  }
+}
+export async function deleteGroup(idList) {
+  try {
+    console.log("id:", idList);
+    const deletePromises = idList.map((data) => {
+      return databases.deleteDocument(databaseId, masterGroupTableId, data);
+    });
+    const results = await Promise.all(deletePromises);
+    console.log("Documents delete successfully:", results);
+    return {result: results};
+  } catch (error) {
+    console.error("Error deleting data:", error);
+    return {result: null, error: error};
+  }
+}
+//#endregion master_Group
+
+//#region master_Segment
+export async function getAllMasterSegmentData() {
+  try {
+    const response = await fetchDataList(databaseId, masterSegmentTableId);
+    console.log(response);
+    return response;
+  } catch (error) {
+    console.error("Error retrieving data:", error);
+  }
+}
+export async function fetchMasterSegmentData(offset, limit) {
+  try {
+    const response = await fetchDataList(
+      databaseId,
+      masterSegmentTableId,
+      [Query.limit(limit), Query.offset(offset)]
+    );
+    return response;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    return null;
+  }
+}
+export async function addNewSegment(segmentData) {
+  try {
+    const document = await databases.createDocument(
+      databaseId,
+      masterSegmentTableId,
+      "unique()",
+      segmentData
+    );
+    console.log("Document created:", document.$id);
+    return {result: document};
+  } catch (error) {
+    console.error("Error creating document:", error);
+    return {result: null, error: error};
+  }
+}
+export async function filterMasterSegmentData(filters, offset, limit) {
+  let conditions = filters.filter((filter) => filter.value !== "").map((filter) => 
+      Query.contains(filter.field, filter.value)
+  );
+  conditions = [...conditions, Query.limit(limit), Query.offset(offset)];
+  try {
+    const response = await fetchDataList(
+      databaseId,
+      masterSegmentTableId,
+      conditions,
+    );
+    console.log(response);
+    return response;
+  } catch (error) {
+    console.error("Error retrieving data:", error);
+    return null;
+  }
+}
+export async function updateSegment(dataToSubmit, id) {
+  try {
+    const response = await databases.updateDocument(
+      databaseId,
+      masterSegmentTableId,
+      id,
+      dataToSubmit
+    );
+    return {result: response};
+  } catch (error) {
+    console.error("Error update Customer data:", error);
+    return {result: null, error: error};
+  }
+}
+export async function deleteSegment(idList) {
+  try {
+    console.log("id:", idList);
+    const deletePromises = idList.map((data) => {
+      return databases.deleteDocument(databaseId, masterSegmentTableId, data);
+    });
+    const results = await Promise.all(deletePromises);
+    console.log("Documents delete successfully:", results);
+    return {result: results};
+  } catch (error) {
+    console.error("Error deleting data:", error);
+    return {result: null, error: error};
+  }
+}
+//#endregion master_Segment
+
+//#region master_Department
+export async function getAllMasterDepartmentData() {
+  try {
+    const response = await fetchDataList(databaseId, masterDepartmentTableId);
+    console.log(response);
+    return response;
+  } catch (error) {
+    console.error("Error retrieving data:", error);
+  }
+}
+export async function queryMasterDepartmentData(field, value) {
+  try {
+    const response = await fetchDataList(databaseId, masterDepartmentTableId, [
+      Query.equal(field, value),
+    ]);
+    console.log(response);
+    return response;
+  } catch (error) {
+    console.error("Error retrieving data:", error);
+  }
+}
+export async function fetchMasterDepartmentData(offset, limit) {
+  try {
+    const response = await fetchDataList(
+      databaseId,
+      masterDepartmentTableId,
+      [Query.limit(limit), Query.offset(offset)]
+    );
+    return response;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    return null;
+  }
+}
+export async function filterMasterDepartmentData(filters, offset, limit) {
+  let conditions = filters.filter((filter) => filter.value !== "").map((filter) => 
+      Query.contains(filter.field, filter.value)
+  );
+  console.log("filters = ", filters);
+  console.log("conditions = ", conditions);
+  conditions = [...conditions, Query.limit(limit), Query.offset(offset)];
+  try {
+    const response = await fetchDataList(
+      databaseId,
+      masterDepartmentTableId,
+      conditions,
+    );
+    console.log(response);
+    return response;
+  } catch (error) {
+    console.error("Error retrieving data:", error);
+    return null;
+  }
+}
+export async function addNewDepartment(departmentData) {
+  try {
+    const document = await databases.createDocument(
+      databaseId,
+      masterDepartmentTableId,
+      "unique()",
+      departmentData
+    );
+    console.log("Document created:", document.$id);
+    return {result: document}
+  } catch (error) {
+    console.error("Error creating document:", error);
+    return {result: null, error: error};
+  }
+}
+export async function updateDepartment(dataToSubmit, id) {
+  try {
+    const response = await databases.updateDocument(
+      databaseId,
+      masterDepartmentTableId,
+      id,
+      dataToSubmit
+    );
+    return {result: response};
+  } catch (error) {
+    console.error("Error update Department data:", error);
+    return {result: null, error: error};
+  }
+}
+export async function deleteDepartment(idList) {
+  try {
+    console.log("id:", idList);
+    const deletePromises = idList.map((data) => {
+      return databases.deleteDocument(databaseId, masterDepartmentTableId, data);
+    });
+    const results = await Promise.all(deletePromises);
+    console.log("Documents delete successfully:", results);
+    return {result: results};
+  } catch (error) {
+    console.error("Error deleting data:", error);
+    return {result: null, error: error};
+  }
+}
+//#endregion master_Department
+
+//#region master_Checklist
 export async function getAllMasterCheckListData() {
   try {
     const response = await fetchDataList(databaseId, masterCheckListTableId);
@@ -87,6 +489,83 @@ export async function getAllMasterCheckListData() {
     console.error("Error retrieving data:", error);
   }
 }
+export async function fetchMasterCheckListData(offset, limit) {
+  try {
+    const response = await fetchDataList(
+      databaseId,
+      masterCheckListTableId,
+      [Query.limit(limit), Query.offset(offset)]
+    );
+    return response;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    return null;
+  }
+}
+export async function filterMasterChecklistData(filters, offset, limit) {
+  let conditions = filters.filter((filter) => filter.value !== "").map((filter) => 
+    (filter.field === "isNeedAttachPhoto"|| filter.field === "attachPhotoAmount") ? 
+      Query.equal(filter.field, filter.value) : 
+      Query.contains(filter.field, filter.value)
+  );
+  conditions = [...conditions, Query.limit(limit), Query.offset(offset)];
+  try {
+    const response = await fetchDataList(
+      databaseId,
+      masterCheckListTableId,
+      conditions,
+    );
+    console.log(response);
+    return response;
+  } catch (error) {
+    console.error("Error retrieving data:", error);
+    return null;
+  }
+}
+export async function addNewChecklist(checkListData) {
+    try {
+      const document = await databases.createDocument(
+        databaseId,
+        masterCheckListTableId,
+        "unique()",
+        checkListData
+      );
+      console.log("Document created:", document.$id);
+      return {result: document};
+    } catch (error) {
+      console.error("Error creating document:", error);
+      return {result: null, error: error};
+    }
+}
+export async function updateCheckList(dataToSubmit, id) {
+  try {
+    const response = await databases.updateDocument(
+      databaseId,
+      masterCheckListTableId,
+      id,
+      dataToSubmit
+    );
+    return {result: response};
+  } catch (error) {
+    console.error("Error update Customer data:", error);
+    return {result: null, error: error};
+  }
+}
+export async function deleteChecklist(idList) {
+  try {
+    console.log("id:", idList);
+    const deletePromises = idList.map((data) => {
+      return databases.deleteDocument(databaseId, masterCheckListTableId, data);
+    });
+    const results = await Promise.all(deletePromises);
+    console.log("Documents delete successfully:", results);
+    return {result: results};
+  } catch (error) {
+    console.error("Error deleting data:", error);
+    return {result: null, error: error};
+  }
+}
+//#endregion master_Checklist
 
 //#region master_Customer
 export async function getAllMasterCustomerData() {
@@ -107,24 +586,24 @@ export async function updateCustomer(dataToSubmit, id) {
       id,
       dataToSubmit
     );
-    return response;
+    return {result: response};
   } catch (error) {
     console.error("Error update Customer data:", error);
-    return null;
+    return {result: null, error: error};
   }
 }
 export async function addNewCustomer(dataToSubmit) {
   console.log("dataToSubmit", dataToSubmit);
   try {
-    const response = createDocumentOnServer(
+    const response = await createDocumentOnServer(
       databaseId,
       masterCustomerTableId,
       dataToSubmit
     );
-    return response;
+    return {result: response};
   } catch (error) {
     console.log("Error add new customer data:", error);
-    return null;
+    return {result: null, error: error};
   }
 }
 export async function deleteCustomer(id) {
@@ -135,10 +614,21 @@ export async function deleteCustomer(id) {
     });
     const results = await Promise.all(deletePromises);
     console.log("Documents delete successfully:", results);
-    return results;
+    return {result: results};
   } catch (error) {
     console.error("Error deleting data:", error);
-    return null;
+    return {result: null, error: error};
+  }
+}
+export async function queryMasterCustomerData(field, value) {
+  try {
+    const response = await fetchDataList(databaseId, masterCustomerTableId, [
+      Query.equal(field, value),
+    ]);
+    console.log(response);
+    return response;
+  } catch (error) {
+    console.error("Error retrieving data:", error);
   }
 }
 //#endregion master_Customer
@@ -364,10 +854,10 @@ export async function addNewContract(contractDetail, newFiles) {
       masterContrtactTableId,
       dataToSubmit
     );
-    return response;
+    return {result: response};
   } catch (error) {
     console.log("Error add new Contract data:", error);
-    return null;
+    return {result: null, error: error};
   }
 }
 export async function deleteContract(id) {
@@ -378,10 +868,10 @@ export async function deleteContract(id) {
     });
     const results = await Promise.all(deletePromises);
     console.log("Documents delete successfully:", results);
-    return results;
+    return {result: results};
   } catch (error) {
     console.error("Error deleting data:", error);
-    return null;
+    return {result: null, error: error};
   }
 }
 //#endregion master_Contrtacts
@@ -770,10 +1260,10 @@ export async function deleteCheckpoint(id) {
     });
     const results = await Promise.all(deletePromises);
     console.log("Documents delete successfully:", results);
-    return results;
+    return {result: results};
   } catch (error) {
     console.error("Error deleting data:", error);
-    return null;
+    return {result: null, error: error};
   }
 }
 export async function addNewCheckpoint(checkpointData) {
@@ -790,13 +1280,13 @@ export async function addNewCheckpoint(checkpointData) {
       documentIds.push(document.$id); // Add the document ID to the list
     } catch (error) {
       console.error("Error creating document:", error);
-      return null;
+      return {result: null, error: error};
     }
   });
 
   // Wait for all promises to resolve
   await Promise.all(promises);
-  return documentIds;
+  return {result: documentIds};
 }
 export async function updateCheckpoint(updatecheckpointData) {
   try {
@@ -810,10 +1300,10 @@ export async function updateCheckpoint(updatecheckpointData) {
     });
     const results = await Promise.all(updatePromises);
     console.log("Documents updated successfully:", results);
-    return results;
+    return {result: results};
   } catch (error) {
     console.error("Error updating documents:", error);
-    return null;
+    return {result :null, error: error};
   }
 }
 //#endregion master_Checkpoints
@@ -906,6 +1396,7 @@ export async function addNewAssignedManpower(assignedManpowerdata) {
 //#endregion master_AssignedManpower
 
 //#endregion Master Data
+
 
 //#region SIAPP
 export async function getPatrolRoundData() {
@@ -1097,3 +1588,23 @@ export async function getAllRandomPatrolCheckpointData() {
   }
 }
 //#endregion SIAPP
+
+//#region -- Users --
+
+//#region user_Roles
+export async function fetchUserRolesData(offset, limit) {
+  try {
+    const response = await fetchDataList(
+      databaseId,
+      masterSegmentTableId,
+      [Query.limit(limit), Query.offset(offset)]
+    );
+    return response;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    return null;
+  }
+}
+//#endregion user_Roles
+
+//#endregion -- Users --
