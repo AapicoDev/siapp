@@ -697,11 +697,13 @@
   "activeStatus": [
     {
       "id": 1,
-      "desc": "Active"
+      "desc": "Active",
+      "label": "Active"
     },
     {
       "id": 2,
-      "desc": "Inactive"
+      "desc": "Inactive",
+      "label": "Inactive"
     }
   ],
   "employees": [

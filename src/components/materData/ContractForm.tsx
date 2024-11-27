@@ -937,7 +937,7 @@ const ContractForm = ({
           //}
           mins = finishTotalMins - startTotalMins;
         }
-        item.totalTimeMin = mins.toString();
+        item.totalTimeMin = mins < 0 ? "0" : mins.toString();
       }
       return item;
     });
@@ -2145,7 +2145,7 @@ const ContractForm = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 flex flex-col items-center justify-center z-indextop">
+    <div className="fixed inset-0 bg-black bg-opacity-40 flex flex-col items-center justify-center z-40">
       {/* Header */}
       {!showAlertToDeatil && (
         <>

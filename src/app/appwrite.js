@@ -14,6 +14,8 @@ export { ID } from 'appwrite';
 const storage = new Storage(client);
 export { storage };
 
+
+
 export const login = async (email, password) => {
     try {
         let accountData = await account.createEmailPasswordSession(email, password);
@@ -32,6 +34,23 @@ export const getLoggedInUser = async () => {
         throw new Error("Failed to get logged-in user: " + error.message);
     }
 };
+
+export const registerUser = async (data) => {
+    try {
+        const response = await account.create(
+          "unique()",
+          data.email,
+          data.password,
+          data.name 
+        );
+        console.log(response);
+        return response;
+      } catch (err) {
+        console.error(err);
+        throw err;
+      }
+}
+
 export async function fetchOneData(databaseId, collectionId, documentId) {
     try {
         const response = await databases.getDocument(

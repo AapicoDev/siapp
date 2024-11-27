@@ -19,6 +19,7 @@ import {
   IconButton,
   Switch as SwitchMUI,
   CircularProgress,
+  TablePagination,
 } from "@mui/material/";
 import CloseIcon from "@mui/icons-material/Close";
 import Navbar from "@/components/Navbar";
@@ -46,6 +47,7 @@ import data from "@/app/mockData.json";
 import {
   deleteArea,
   deleteCustomer,
+  fetchMasterCustomerData,
   getAllMasterCustomerData,
   getAllMasterDepartmentData,
   getAllMasterGroupData,
@@ -221,6 +223,9 @@ export default function Customer() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isAddOrUpdateSucces, setIsAddOrUpdateSucces] = useState(false);
   const totalItems = rowData.length;
+  const [totalRows, setTotalRows] = useState(0);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   async function totalCheckpointsOfAreas(customerId: any) {
     const custArea = await getMasterAreaDataWithCustomerId(customerId);
@@ -264,10 +269,10 @@ export default function Customer() {
 
   useEffect(() => {
     if (isAddOrUpdateSucces) {
-      tableData();
       setIsAddOrUpdateSucces(false);
     }
-  }, [isAddOrUpdateSucces]);
+    tableData();
+  }, [isAddOrUpdateSucces]); //page, rowsPerPage,
 
   const custNameList = (mappedRowData: RowData[]) => {
     const custName = mappedRowData.map((cust) => ({
@@ -329,6 +334,7 @@ export default function Customer() {
 
   const tableData = async () => {
     setIsLoading(true);
+    const offset = page * rowsPerPage;
     const customers = await getAllMasterCustomerData();
     const tableData: RowData[] = await Promise.all(
       customers?.documents?.map(async (doc) => {
@@ -349,6 +355,7 @@ export default function Customer() {
       }) || []
     );
     setRowData(tableData);
+    setTotalRows(customers?.total || 0);
     console.log("tableData =", tableData);
 
     const mapSelect = tableData.map((row: any) => ({
@@ -394,6 +401,9 @@ export default function Customer() {
             );
             deleteResult = false;
             break; // Exit the loop if an error occurs
+          }
+          else{
+            setIsSelectedAll(false);
           }
         } else {
           alert(
@@ -531,12 +541,23 @@ export default function Customer() {
     }
   };
 
+  const handlePageChange = (event: any, newPage: any) => {
+    console.log("newPage", newPage);
+    setPage(newPage);
+  };
+
+  const handleRowsPerPageChange = (event: any) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
   return (
     <div>
       <Navbar menu={"Master Data"} submenu={"Customer"} />
       <Box className="px-2">
         {/* Main Content */}
         <Box px={2} pb={2}>
+          {/* Sub header */}
           <Box className="w-full">
             <Box justifyContent="space-between" className="flex">
               <Box className="space-x-4 py-4 flex">
@@ -589,6 +610,7 @@ export default function Customer() {
                 <Button
                   className="w-40 bg-[#1D7A9B] hover:bg-[#D9F0EC] hover:text-[#1D7A9B]"
                   onClick={setToggleFilter}
+                  disabled={true}
                 >
                   <Filter size={20} style={{ marginRight: "5px" }} /> Filter
                 </Button>
@@ -598,7 +620,7 @@ export default function Customer() {
 
           {isCustomerPage && (
             <TableContainer
-              className="h-[77vh] max-h-[77vh] bg-white" //h-[calc(100vh - 0px)]
+              className="h-[76vh] max-h-[76vh] bg-white" //h-[calc(100vh - 0px)]
               sx={{
                 display: "flex",
                 flexDirection: "column",
@@ -606,8 +628,8 @@ export default function Customer() {
                 boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
               }}
             >
-              <Table>
-                <TableHead>
+              <Table stickyHeader sx={{zIndex: 0}}>
+                <TableHead sx={{ mt: 0}}>
                   <TableRow
                     sx={{ borderBottom: "1px solid #C7D4D7" }}
                     className={`${styles.table}`}
@@ -646,10 +668,11 @@ export default function Customer() {
 
                 {/* Allow the TableBody to grow and fill vertical space */}
                 <TableBody sx={{ flexGrow: 1 }}>
-                  {rowData.map((row, index) => (
+                {rowData.slice(page * rowsPerPage, rowsPerPage + (page * rowsPerPage))
+                  .map((row, index) => (
                     <TableRow
                       onClick={() => handleRowClick(row)} // Row click handler
-                      key={index}
+                      key={index + (page*rowsPerPage)}
                       className={`${
                         index % 2 === 1 ? `bg-inherit` : `bg-[#EBF4F6]`
                       }`}
@@ -665,10 +688,10 @@ export default function Customer() {
                     >
                       <TableCell align="left">
                         <Checkbox
-                          checked={selected[index]?.isSelected}
+                          checked={selected[index + (page*rowsPerPage)]?.isSelected}
                           onClick={(event) => {
                             event.stopPropagation(); // Prevent row click
-                            handleSelected(index);
+                            handleSelected(index + (page*rowsPerPage));
                           }}
                         />
                       </TableCell>
@@ -768,7 +791,15 @@ export default function Customer() {
                           width: "100%",
                         }}
                       >
-                        <Typography>Total: {totalItems} items</Typography>
+                        <TablePagination
+                          sx={{color: "#2C5079"}}
+                          component="div"
+                          count={totalRows}
+                          page={page}
+                          onPageChange={handlePageChange}
+                          rowsPerPage={rowsPerPage}
+                          onRowsPerPageChange={handleRowsPerPageChange}
+                        />
                         <Box>
                           <DeleteButton
                             onDeleteBtnClick={handleDeleteCust}
@@ -1032,7 +1063,7 @@ export default function Customer() {
       {ConfirmAlertDialog}
 
       {isLoading && (
-        <div className="fixed inset-0 bg-white bg-opacity-40 flex flex-col items-center justify-center z-indextop">
+        <div className="fixed inset-0 bg-white bg-opacity-40 flex flex-col items-center justify-center z-50">
           <Box sx={{ display: "flex" }}>
             <CircularProgress />
           </Box>

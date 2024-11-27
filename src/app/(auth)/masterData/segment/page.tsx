@@ -13,8 +13,9 @@ import styles from "../../../styles.module.css"
 import { EditButton } from "@/components/ui/buttons/editButton";
 import { SaveButton } from "@/components/ui/buttons/saveButton";
 import { DeleteButton } from "@/components/ui/buttons/deleteButton";
-import { addNewSegment, deleteSegment, fetchMasterSegmentData, filterMasterSegmentData, queryMasterCustomerData, queryMasterDepartmentData, updateSegment } from "@/app/lib/api";
+import { addNewSegment, deleteSegment, fetchMasterSegmentData, filterMasterSegmentData, getAllMasterSegmentData, queryMasterCustomerData, queryMasterDepartmentData, updateSegment } from "@/app/lib/api";
 import { useConfirmDialog } from "../../../../components/ui/alertDialog/confirmDialog";
+import { ClearButtton } from "@/components/ui/buttons/clearButton";
 
 type RowData = {
   id: number;
@@ -47,10 +48,11 @@ export default function Segment() {
   const [rowsPerPage, setRowsPerPage] = useState(10); 
   const [totalRows, setTotalRows] = useState(0);
   const { confirmDialog, ConfirmAlertDialog } = useConfirmDialog();
+  const [isSearch, setIsSearch] = useState<boolean>(false);
 
   useEffect(() => {
     tableData();
-  }, [page, rowsPerPage]);
+  }, []); //[page, rowsPerPage]
 
   const getDeprtmentTotal = async (segId: string) => {
     const queryDept = await queryMasterDepartmentData("segment_Id", segId)
@@ -63,8 +65,8 @@ export default function Segment() {
 
   const tableData = async () => {
     setIsLoading(true);
-    const offset = page * rowsPerPage;
-    const allSegment = await fetchMasterSegmentData(offset, rowsPerPage);
+    //const offset = page * rowsPerPage;
+    const allSegment = await getAllMasterSegmentData();//fetchMasterSegmentData(offset, rowsPerPage);
     console.log("allSegment =", allSegment);
     const tableData: RowData[] = allSegment?.documents?.map((doc: any) => {
         return {
@@ -87,7 +89,7 @@ export default function Segment() {
     setIsLoading(false);
   };
 
-  const handleSearch = async () => {
+  const search = async () => {
     setIsLoading(true);
     const offset = page * rowsPerPage;
     const filterSegment = await filterMasterSegmentData([
@@ -115,6 +117,26 @@ export default function Segment() {
     setSelected(mapSelect);
     setIsLoading(false);
   };
+
+  const handleSearch = async () => {
+    if(isSearch === false) {
+      setIsSearch(true);
+    }
+    setIsSelectedAll(false);
+    handleCheckAll(false);
+    setPage(0);
+    search();
+  };
+
+  const handleClear = () => {
+    setAddSegmentDescVal("");
+    setAddSegmentVal("");
+    setIsSelectedAll(false);
+    setIsSearch(false);
+    handleCheckAll(false);
+    setPage(0);
+    tableData();
+  }
 
   const handleEdit = (index: any) => {
     const newEditMode = [...editMode];
@@ -148,7 +170,7 @@ export default function Segment() {
         true, "danger"
       );
     }
-    await tableData();
+    isSearch === true ? await search() : await tableData();
     setIsLoading(false);
   };
 
@@ -177,7 +199,7 @@ export default function Segment() {
         true, "danger"
       );
     }
-    await tableData();
+    isSearch === true ? await search() : await tableData();
     setIsLoading(false);
   };
 
@@ -200,6 +222,7 @@ export default function Segment() {
             "Delete Segment data successfully.",
             true
           );
+          setIsSelectedAll(false);
         }
         else{
           const confirmApprove = await confirmDialog(
@@ -208,7 +231,7 @@ export default function Segment() {
             true, "danger"
           );
         }
-        await tableData();
+        isSearch === true ? await search() : await tableData();
       }
     }
   };
@@ -294,6 +317,8 @@ export default function Segment() {
                 </Box>
                 <AddButton disable={editMode.some(e=>e === true)} onAddBtnClick={handleAdd}/>
                 <Box className="w-[15%]"><SearchButton disable={editMode.some(e=>e === true)} onSearchBtnClick={handleSearch}/></Box>
+                <Box className="w-[15%]"><ClearButtton onBtnClick={handleClear}
+                     disable={editMode.some(e=>e === true)} icon={undefined} content={"Clear"} /></Box>
               </Box>
             </Box>
           </Box>
@@ -326,42 +351,43 @@ export default function Segment() {
 
               {/* Allow the TableBody to grow and fill vertical space */}
               <TableBody sx={{ flexGrow: 1 }}>
-                {rowData.map((row, index) => (
+                {rowData.slice(page * rowsPerPage, rowsPerPage + (page * rowsPerPage))
+                  .map((row, index) => (
                   <TableRow
-                    key={index}
+                    key={index + (page*rowsPerPage)}
                     className={
-                      editMode[index]
+                      editMode[index + (page * rowsPerPage)]
                         ? `bg-[#D8EAFF]`
                         : `${index % 2 === 1 ? `bg-inherit` : `bg-[#EBF4F6]`}`
                     }
                   >
                     <TableCell align="left">
                       <Checkbox2 
-                        checked={selected[index].isSelected}
+                        checked={selected[index + (page*rowsPerPage)].isSelected}
                         onClick={(event) => {
                         event.stopPropagation(); // Prevent row click
-                        handleSelected(index);
+                        handleSelected(index + (page*rowsPerPage));
                       }}/>
                     </TableCell>
                     <TableCell align="center" className="max-w-48">
-                      {editMode[index] ? (
+                      {editMode[index  + (page*rowsPerPage)] ? (
                         <Input
                           type="text"
                           className={`${styles.textBoxCell}`}
                           value={row.segment}
-                          onChange={(e) => handleInputChange(index, 'segment', e.target.value)}
+                          onChange={(e) => handleInputChange(index + (page*rowsPerPage), 'segment', e.target.value)}
                         />
                       ) : (
                         `${row.segment}`
                       )}
                     </TableCell>
                     <TableCell align="center">
-                      {editMode[index] ? (
+                      {editMode[index  + (page*rowsPerPage)] ? (
                         <Input
                           type="text"
                           className={`${styles.textBoxCell}`}
                           value={row.description}
-                          onChange={(e) => handleInputChange(index, 'description', e.target.value)}
+                          onChange={(e) => handleInputChange(index + (page*rowsPerPage), 'description', e.target.value)}
                         />
                       ) : (
                         `${row.description}`
@@ -370,12 +396,12 @@ export default function Segment() {
                     <TableCell align="center">{row.departmentTotal}</TableCell>
                     <TableCell align="center">{row.customerTotal}</TableCell>
                     <TableCell align="center" sx={{justifyItems:"center"}}>
-                      {editMode[index] ? (
+                      {editMode[index  + (page*rowsPerPage)] ? (
                         <div className="w-[48px] mr-9">
-                        <SaveButton onSaveBtnClick={handleSave} index={index}/>
+                        <SaveButton onSaveBtnClick={handleSave} index={index + (page*rowsPerPage)}/>
                       </div>
                       ) : (
-                        <EditButton disable={editMode.some(e=>e === true)} onEditBtnClick={handleEdit} index={index}/>
+                        <EditButton disable={editMode.some(e=>e === true)} onEditBtnClick={handleEdit} index={index  + (page*rowsPerPage)}/>
                       )}
                     </TableCell>
                   </TableRow>

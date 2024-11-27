@@ -1,12 +1,14 @@
 "use client";
 
-import { Box, Typography, Button as Button2 } from "@mui/material";
+import { Box, Typography, Button as Button2, CircularProgress } from "@mui/material";
 import { Button } from "@/components/ui/buttons/button";
 import { ChangeEvent, useEffect, useState } from "react";
 import { Textbox } from "../ui/textboxs/textbox";
 import { IoClose } from "react-icons/io5";
 import data from "@/app/mockData.json";
 import { Checkbox } from "../ui/checkbox3";
+import { useConfirmDialog } from "../../components/ui/alertDialog/confirmDialog";
+import { addNewRole } from "@/app/lib/api";
 
 type AreaData = {
   id: number;
@@ -20,7 +22,7 @@ type RoleType = {
 
 type PermissionType = {
   id: any;
-  desc: string;
+  permissionName: string;
 };
 
 type SelectedData = {
@@ -32,62 +34,31 @@ type FormDataType = {
   roleName: string;
 };
 
-type UserRoleData = {
-  id: string;
-  departmentId: any;
-  customerId: any;
-  roleIds: any[];
-};
-
 interface RoleFormProps {
   closeModal: any;
+  permissions: PermissionType[];
+  setIsAddOrUpdateSuccess: (value: any) => void;
 }
 
-const RoleForm = ({closeModal }: RoleFormProps) => {
-  const [userRoles, setUserRoles] = useState<UserRoleData[]>([]);
+const RoleForm = ({closeModal, permissions,setIsAddOrUpdateSuccess }: RoleFormProps) => {
   const [formData, setFormData] = useState<FormDataType>({ roleName: ""});
-  const [displayRoles, setDisplayRoles] = useState<any[]>([]);
-  const [displayPermissions, setDisplayPermissions] = useState<any[]>([]);
-  const [allPermissions, setAllPermissions] = useState<PermissionType[]>([]);
+  const [allPermissions, setAllPermissions] = useState<PermissionType[]>(permissions);
   const [selected, setSelected] = useState<SelectedData[]>([])
   const [isSelectedAll, setIsSelectedAll] = useState(false);
   const formHeader = "+ New Role";
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const { confirmDialog, ConfirmAlertDialog } = useConfirmDialog();
 
   useEffect(() => {
     initialData();
   }, []);
 
-  useEffect(() => {
-    mapAllRolesAndPermissions();
-  }, [userRoles]);
-
   const initialData = () => {
-    const permissions: PermissionType[] = data.permissions.map(p => {
-        return {
-            id: p.id,
-            desc: p.desc
-        };
-    })
-    setAllPermissions(permissions);
     const selected: SelectedData[] = permissions?.map((permission) => ({
         isSelected: false,
         id: permission.id,
     }))
     setSelected(selected);
-  };
-
-  const mapAllRolesAndPermissions = () => {
-    const maproleId = Array.from(
-      new Set(userRoles.map((ur) => ur?.roleIds).flat())
-    );
-    setDisplayRoles(maproleId);
-    const roles = data.roles.filter((d) => maproleId.includes(d.id));
-    const mappermission = Array.from(
-      new Set(roles.map((r) => r?.permissions).flat())
-    );
-    console.log("roles =", roles);
-    console.log("mappermission =", mappermission);
-    setDisplayPermissions(["pm001"]);
   };
 
   const handleSelected = (index: number) => {
@@ -117,12 +88,40 @@ const RoleForm = ({closeModal }: RoleFormProps) => {
     setFormData((prevData: any) => ({ ...prevData, [name]: value }));
   };
 
-  function handleCloseCustomerForm() {
+  function handleCloseRoleForm() {
     closeModal();
   }
 
+  const handleSubmit = async () => {
+    const selectedPermission = selected.filter(s => s.isSelected === true).map(s => s.id);
+    const dataToSubmit = {
+      role_Name: formData.roleName,
+      permission_Ids: selectedPermission,
+    }
+    console.log("dataToSubmit =", dataToSubmit);
+    setIsLoading(true);
+    const addRoleResult = await addNewRole(dataToSubmit);
+    setIsLoading(false);
+    if (addRoleResult.result !== null) {
+      const confirmApprove = await confirmDialog(
+        "Add Role Success",
+        "Add New Role successfully !",
+        true, "success"
+      );
+      setIsAddOrUpdateSuccess(true);
+      if (confirmApprove) handleCloseRoleForm();
+    }
+    else{
+      const confirmApprove = await confirmDialog(
+        "Error to Save Segment",
+        `${addRoleResult.error}`,
+        true, "danger"
+      );
+    }
+  };
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 flex flex-col items-center justify-center z-indextop">
+    <div className="fixed inset-0 bg-black bg-opacity-40 flex flex-col items-center justify-center z-10">
       {/* Header */}
       <Box
         sx={{
@@ -151,7 +150,7 @@ const RoleForm = ({closeModal }: RoleFormProps) => {
         <Button2
           className="bg-transparent float w-fit"
           sx={{ position: "relative", right: 0, top: 0, color: "#83A2AD" }}
-          onClick={handleCloseCustomerForm}
+          onClick={handleCloseRoleForm}
         >
           <IoClose size={26} />
         </Button2>
@@ -250,7 +249,7 @@ const RoleForm = ({closeModal }: RoleFormProps) => {
                       paddingLeft: "0.25rem",
                     }}
                   >
-                    {permission.desc}
+                    {permission.permissionName}
                   </Typography>
                 </Box>
               ))}
@@ -262,18 +261,30 @@ const RoleForm = ({closeModal }: RoleFormProps) => {
         <Box className="flex w-full justify-center px-6 space-x-4 border-t-2 pt-4 pb-4">
           <Button
             className="w-28 h-11 bg-white text-[#83A2AD] border-[1px] border-[#83A2AD] hover:text-white hover:bg-[#83A2AD]"
-            onClick={handleCloseCustomerForm}
+            onClick={handleCloseRoleForm}
           >
             Cancel
           </Button>
           <Button
             className="w-28 h-11 enabled:bg-gradient-to-r from-[#00336C] to-[#37B7C3] hover:from-[#2BA441] hover:to-[#A7E5A6]
-                               disabled:bg-[#83A2AD]"
+                      disabled:bg-[#83A2AD]"
+            onClick={handleSubmit}
           >
             Submit
           </Button>
         </Box>
       </div>
+
+      {isLoading && (
+        <div className="fixed inset-0 bg-white bg-opacity-40 flex flex-col items-center justify-center z-indextop">
+          <Box sx={{ display: "flex" }}>
+            <CircularProgress />
+          </Box>
+        </div>
+      )}
+
+      {/* Confirm dialog */}
+      {ConfirmAlertDialog}
     </div>
   );
 };

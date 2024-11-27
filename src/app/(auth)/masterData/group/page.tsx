@@ -14,7 +14,8 @@ import { EditButton } from "@/components/ui/buttons/editButton";
 import { SaveButton } from "@/components/ui/buttons/saveButton";
 import { DeleteButton } from "@/components/ui/buttons/deleteButton";
 import { useConfirmDialog } from "../../../../components/ui/alertDialog/confirmDialog";
-import { addNewGroup, deleteGroup, fetchMasterGroupData, filterMasterGroupData, queryMasterCustomerData, queryMasterDepartmentData, updateGroup } from "@/app/lib/api";
+import { addNewGroup, deleteGroup, fetchMasterGroupData, filterMasterGroupData, getAllMasterGroupData, queryMasterCustomerData, queryMasterDepartmentData, updateGroup } from "@/app/lib/api";
+import { ClearButtton } from "@/components/ui/buttons/clearButton";
 
 type RowData = {
   id: any;
@@ -46,10 +47,11 @@ export default function Group() {
   const [rowsPerPage, setRowsPerPage] = useState(10); 
   const [totalRows, setTotalRows] = useState(0);
   const { confirmDialog, ConfirmAlertDialog } = useConfirmDialog();
+  const [isSearch, setIsSearch] = useState<boolean>(false);
 
   useEffect(() => {
     tableData();
-  }, [page, rowsPerPage]);
+  }, []); //[page, rowsPerPage]
 
   const getDeprtmentTotal = async (groupId: string) => {
     const queryDept = await queryMasterDepartmentData("group_Id", groupId)
@@ -63,7 +65,7 @@ export default function Group() {
   const tableData = async () => {
     setIsLoading(true);
     const offset = page * rowsPerPage;
-    const allGroup = await fetchMasterGroupData(offset, rowsPerPage);
+    const allGroup = await getAllMasterGroupData();
     console.log("allGroup =", allGroup);
     const tableData: RowData[] = allGroup?.documents?.map((doc: any) => {
         return {
@@ -118,7 +120,7 @@ export default function Group() {
         true, "danger"
       );
     }
-    await tableData();
+    isSearch === true ? await search() : await tableData();
     setIsLoading(false);
   };
 
@@ -141,6 +143,7 @@ export default function Group() {
             "Delete Group data successfully.",
             true
           );
+          setIsSelectedAll(false);
         }
         else{
           const confirmApprove = await confirmDialog(
@@ -149,7 +152,7 @@ export default function Group() {
             true, "danger"
           );
         }
-        await tableData();
+        isSearch === true ? await search() : await tableData();
       }
     }
   };
@@ -193,15 +196,15 @@ export default function Group() {
         true, "danger"
       );
     }
-    await tableData();
+    isSearch === true ? await search() : await tableData();
     setIsLoading(false);
   };
 
-  const handleSearch = async () => {
+  const search = async () => {
     setIsLoading(true);
     const offset = page * rowsPerPage;
     const filterSegment = await filterMasterGroupData([
-      {field: "segment", value: addGroupVal},
+      {field: "group", value: addGroupVal},
       {field: "description", value: addGroupDescVal},
     ], offset, rowsPerPage);
     setTotalRows(filterSegment?.total || 0);
@@ -225,6 +228,26 @@ export default function Group() {
     setSelected(mapSelect);
     setIsLoading(false);
   };
+
+  const handleSearch = async () => {
+    if(isSearch === false) {
+      setIsSearch(true);
+    }
+    setIsSelectedAll(false);
+    handleCheckAll(false);
+    setPage(0);
+    search();
+  };
+
+  const handleClear = () => {
+    setAddGroupVal("");
+    setAddGroupDescVal("");
+    setIsSelectedAll(false);
+    setIsSearch(false);
+    handleCheckAll(false);
+    setPage(0);
+    tableData();
+  }
 
   const handleSelected = (index: number) => {
     const newSelected = [...selected];
@@ -295,6 +318,8 @@ export default function Group() {
                 </Box>
                 <AddButton onAddBtnClick={handleAdd} disable={editMode.some(e=>e === true)}/>
                 <Box className="w-[15%]"><SearchButton disable={editMode.some(e=>e === true)} onSearchBtnClick={handleSearch}/></Box>
+                <Box className="w-[15%]"><ClearButtton onBtnClick={handleClear}
+                     disable={editMode.some(e=>e === true)} icon={undefined} content={"Clear"} /></Box>
               </Box>
             </Box>
           </Box>
@@ -327,40 +352,41 @@ export default function Group() {
 
               {/* Allow the TableBody to grow and fill vertical space */}
               <TableBody sx={{ flexGrow: 1 }}>
-                {rowData.map((row, index) => (
+                {rowData.slice(page * rowsPerPage, rowsPerPage + (page * rowsPerPage))
+                  .map((row, index) => (
                   <TableRow
-                    key={index}
+                    key={index + (page*rowsPerPage)}
                     className={
-                      editMode[index]
+                      editMode[index + (page*rowsPerPage)]
                         ? `bg-[#D8EAFF]`
                         : `${index % 2 === 1 ? `bg-inherit` : `bg-[#EBF4F6]`}`
                     }
                   >
                     <TableCell align="left">
-                      <Checkbox2 checked={selected[index].isSelected}
+                      <Checkbox2 checked={selected[index + (page*rowsPerPage)].isSelected}
                           onCheckedChange={() => {
-                            handleSelected(index);
+                            handleSelected(index + (page*rowsPerPage));
                           }}/>
                     </TableCell>
                     <TableCell align="center" className="max-w-48">
-                      {editMode[index] ? (
+                      {editMode[index + (page*rowsPerPage)] ? (
                         <Input
                           type="text"
                           className={`${styles.textBoxCell}`}
                           value={row.group}
-                          onChange={(e) => handleInputChange(index, 'group', e.target.value)}
+                          onChange={(e) => handleInputChange(index + (page*rowsPerPage), 'group', e.target.value)}
                         />
                       ) : (
                         `${row.group}`
                       )}
                     </TableCell>
                     <TableCell align="center">
-                      {editMode[index] ? (
+                      {editMode[index + (page*rowsPerPage)] ? (
                         <Input
                           type="text"
                           className={`${styles.textBoxCell}`}
                           value={row.description}
-                          onChange={(e) => handleInputChange(index, 'description', e.target.value)}
+                          onChange={(e) => handleInputChange(index + (page*rowsPerPage), 'description', e.target.value)}
                         />
                       ) : (
                         `${row.description}`
@@ -369,12 +395,12 @@ export default function Group() {
                     <TableCell align="center">{row.departmentTotal}</TableCell>
                     <TableCell align="center">{row.customerTotal}</TableCell>
                     <TableCell align="center" sx={{justifyItems: "center"}}>
-                      {editMode[index] ? (
+                      {editMode[index + (page*rowsPerPage)] ? (
                         <div className="w-[48px] mr-9">
-                        <SaveButton onSaveBtnClick={handleSave} index={index}/>
+                        <SaveButton onSaveBtnClick={handleSave} index={index + (page*rowsPerPage)}/>
                       </div>
                       ) : (
-                        <EditButton disable={editMode.some(e=>e === true)} onEditBtnClick={handleEdit} index={index}/>
+                        <EditButton disable={editMode.some(e=>e === true)} onEditBtnClick={handleEdit} index={index + (page*rowsPerPage)}/>
                       )}
                     </TableCell>
                   </TableRow>

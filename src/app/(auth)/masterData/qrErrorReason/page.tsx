@@ -16,9 +16,10 @@ import { DeleteButton } from "@/components/ui/buttons/deleteButton";
 import { Checkbox as Checkbox3 } from "@/components/ui/checkbox3"
 import { LabelSelector } from "@/components/ui/selectors/labelSelector";
 import { useConfirmDialog } from "../../../../components/ui/alertDialog/confirmDialog";
-import { addNewQRErrorReason, deleteQRErrorReason, fetchQrErrorReasonData, filterQRErrorReason, updateQRErrorReason } from "@/app/lib/api";
+import { addNewQRErrorReason, deleteQRErrorReason, fetchQrErrorReasonData, filterQRErrorReason, getAllQrErrorReasonData, updateQRErrorReason } from "@/app/lib/api";
 import { SearchSelector } from "@/components/ui/selectors/searchSelector";
 import { getLoggedInUser } from "@/app/appwrite";
+import { ClearButtton } from "@/components/ui/buttons/clearButton";
 
 type RowData = {
   id: string;
@@ -54,16 +55,16 @@ export default function QrErrorReason() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10); 
   const [totalRows, setTotalRows] = useState(0);
-  const [createdBy, setCreatedBy] = useState<CreatorType[]>([]);
+  const [isSearch, setIsSearch] = useState<boolean>(false);
 
   useEffect(() => {
     tableData();
-  }, [page, rowsPerPage]);
+  }, []); //[page, rowsPerPage]
 
   const tableData = async () => {
     setIsLoading(true);
     const offset = page * rowsPerPage;
-    const allQRErrorReason = await fetchQrErrorReasonData(offset, rowsPerPage);
+    const allQRErrorReason = await getAllQrErrorReasonData();
     console.log("allQRErrorReason =", allQRErrorReason);
     const tableData: RowData[] = allQRErrorReason?.documents?.map((doc: any) => {
         return {
@@ -75,14 +76,6 @@ export default function QrErrorReason() {
     setRowData(tableData);
     setTotalRows(allQRErrorReason?.total || 0);
     console.log("tableData =", tableData);
-
-    const creators: CreatorType[] = Array.from(
-      new Map(
-        allQRErrorReason?.documents.map((item: any) => [item.createdBy_Id, { id: item.createdBy_Id, label: item.createdBy }])
-      ).values()
-    );
-    console.log("creators =", creators);
-    setCreatedBy(creators);
 
     const mapSelect = tableData.map((row: RowData) => ({
       isSelected: false,
@@ -116,7 +109,7 @@ export default function QrErrorReason() {
         true, "success"
       );
       if(confirmApprove) {
-        await tableData();
+        isSearch === true ? await search() : await tableData();
       }
     }
     else{
@@ -126,7 +119,7 @@ export default function QrErrorReason() {
         true, "danger"
       );
       if(confirmApprove) {
-        await tableData();
+        isSearch === true ? await search() : await tableData();
       }
     }
   };
@@ -160,10 +153,10 @@ export default function QrErrorReason() {
         true, "danger"
       );
     }
-    await tableData();
+    isSearch === true ? await search() : await tableData();
   };
 
-  const handleSearch = async () => {
+  const search = async () => {
     setIsLoading(true);
     const offset = page * rowsPerPage;
     const filterQRError = await filterQRErrorReason([
@@ -190,6 +183,26 @@ export default function QrErrorReason() {
     setIsLoading(false);
   };
 
+  const handleSearch = async () => {
+    if(isSearch === false) {
+      setIsSearch(true);
+    }
+    setIsSelectedAll(false);
+    handleCheckAll(false);
+    setPage(0);
+    search();
+  };
+
+  const handleClear = () => {
+    setAddCode("");
+    setAddQRErrorReason("");
+    setIsSelectedAll(false);
+    setIsSearch(false);
+    handleCheckAll(false);
+    setPage(0);
+    tableData();
+  }
+
   const handleDelete = async () => {
     const confirmApprove = await confirmDialog(
       "Delete QR Error Reason",
@@ -209,6 +222,7 @@ export default function QrErrorReason() {
             "Delete QR Error Reason data successfully.",
             true
           );
+          setIsSelectedAll(false);
         }
         else{
           const confirmApprove = await confirmDialog(
@@ -217,7 +231,7 @@ export default function QrErrorReason() {
             true, "danger"
           );
         }
-        await tableData();
+        isSearch === true ? await search() : await tableData();
       }
     }
   };
@@ -320,6 +334,8 @@ export default function QrErrorReason() {
                 }}>
                   <AddButton disable={editMode.some(e=>e === true)} onAddBtnClick={handleAdd}/>
                   <SearchButton disable={editMode.some(e=>e === true)} onSearchBtnClick={handleSearch}/>
+                  <ClearButtton onBtnClick={handleClear}
+                     disable={editMode.some(e=>e === true)} icon={undefined} content={"Clear"} />
                 </Box>
               </Box>
           </Box>
@@ -339,7 +355,8 @@ export default function QrErrorReason() {
                 <TableCell align="left" className="w-[6%]">
                     <Checkbox2 className="mt-1 mb-2"
                     checked={isSelectedAll}
-                    onCheckedChange={handleCheckAll}/>
+                    onCheckedChange={handleCheckAll}
+                    disabled={totalRows === 0}/>
                   </TableCell>
                   <TableCell align="center" className="w-[33%]">Code</TableCell>
                   <TableCell align="center" className="w-[37%]">QR Error Reason</TableCell>
@@ -350,40 +367,41 @@ export default function QrErrorReason() {
 
               {/* Allow the TableBody to grow and fill vertical space */}
               <TableBody sx={{ flexGrow: 1 }}>
-                {rowData.map((row, index) => (
+              {rowData.slice(page * rowsPerPage, rowsPerPage + (page * rowsPerPage))
+                .map((row, index) => (
                   <TableRow
-                    key={index}
+                    key={index + (page*rowsPerPage)}
                     className={
-                      editMode[index]
+                      editMode[index + (page*rowsPerPage)]
                         ? `bg-[#D8EAFF]`
                         : `${index % 2 === 1 ? `bg-inherit` : `bg-[#EBF4F6]`}`
                     }
                   >
                     <TableCell align="left">
-                      <Checkbox2 checked={selected[index].isSelected}
+                      <Checkbox2 checked={selected[index + (page*rowsPerPage)].isSelected}
                           onCheckedChange={() => {
-                            handleSelected(index);
+                            handleSelected(index + (page*rowsPerPage));
                           }}/>
                     </TableCell>
                     <TableCell align="center" className="max-w-48">
-                      {editMode[index] ? (
+                      {editMode[index + (page*rowsPerPage)] ? (
                         <Input
                           type="text"
                           className={`${styles.textBoxCell}`}
                           value={row.code}
-                          onChange={(e) => handleInputChange(index, 'code', e.target.value)}
+                          onChange={(e) => handleInputChange(index + (page*rowsPerPage), 'code', e.target.value)}
                         />
                       ) : (
                         `${row.code}`
                       )}
                     </TableCell>
                     <TableCell align="center">
-                      {editMode[index] ? (
+                      {editMode[index + (page*rowsPerPage)] ? (
                         <Input
                           type="text"
                           className={`${styles.textBoxCell}`}
                           value={row.reason}
-                          onChange={(e) => handleInputChange(index, 'reason', e.target.value)}
+                          onChange={(e) => handleInputChange(index + (page*rowsPerPage), 'reason', e.target.value)}
                         />
                       ) : (
                         `${row.reason}`
@@ -396,12 +414,12 @@ export default function QrErrorReason() {
                       }
                     </TableCell> */}
                     <TableCell align="center" sx={{justifyItems: "center"}}>
-                      {editMode[index] ? (
+                      {editMode[index + (page*rowsPerPage)] ? (
                         <div className="w-[48px] mr-9">
-                          <SaveButton onSaveBtnClick={handleSave} index={index}/>
+                          <SaveButton onSaveBtnClick={handleSave} index={index + (page*rowsPerPage)}/>
                         </div>
                       ) : (
-                        <EditButton disable={editMode.some(e=>e === true)} onEditBtnClick={handleEdit} index={index}/>
+                        <EditButton disable={editMode.some(e=>e === true)} onEditBtnClick={handleEdit} index={index + (page*rowsPerPage)}/>
                       )}
                     </TableCell>
                   </TableRow>

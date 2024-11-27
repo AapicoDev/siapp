@@ -22,6 +22,7 @@ interface SearchSelectorProps {
   disable?: boolean;
   inlineLabel?: string;
   borderColor?: string;
+  textColor?: string;
 }
 
 export function SearchSelector({
@@ -32,7 +33,8 @@ export function SearchSelector({
   name,
   disable = false,
   inlineLabel,
-  borderColor = '#1D7A9B'
+  borderColor = '#1D7A9B',
+  textColor = "#2C5079"
 }: SearchSelectorProps) {
   function handleSelectionChange(e: any, newValue: any) {
     if (newValue && newValue.id !== selectedVal) {
@@ -75,7 +77,7 @@ export function SearchSelector({
             "& .MuiAutocomplete-input": {
               fontSize: "16px",
               padding: "10px 0px",
-              color: selectedVal === "" ? "#83A2AD" : "#2C5079",
+              color: selectedVal === "" ? "#83A2AD" : `${textColor}`,
             },
             "& .MuiOutlinedInput-notchedOutline": {
               border: `1px solid ${borderColor}`, // Set border color always
@@ -119,8 +121,8 @@ export function SearchSelector({
                 color: "#2C5079", // Customize label color
               },
               "& .MuiInputBase-input": {
-                textAlign: "center", // Center the text
-                ml: 6,
+                textAlign: "left", // Center the text
+                ml: "0.25rem"
               },
               "& .Mui-focused .MuiInputLabel-root": {
                 color: "#2C5079", // Focused label color

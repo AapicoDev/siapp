@@ -29,7 +29,15 @@ import data from "@/app/mockData.json";
 import { SearchButton } from "../ui/buttons/searchButton";
 import { LabelTextDisplayBox } from "../ui/labelTextDisplayBox";
 import { SearchSelector } from "../ui/selectors/searchSelector";
-import { addNewArea, addNewCustomer, deleteArea, deleteCustomer, getMasterAreaDataWithCustomerId, updateArea, updateCustomer } from "@/app/lib/api";
+import {
+  addNewArea,
+  addNewCustomer,
+  deleteArea,
+  deleteCustomer,
+  getMasterAreaDataWithCustomerId,
+  updateArea,
+  updateCustomer,
+} from "@/app/lib/api";
 import { useConfirmDialog } from "../ui/alertDialog/confirmDialog";
 
 type RowData = {
@@ -144,7 +152,9 @@ const CustomerForm = ({
     }
   );
   const [areaRemoveList, setAreaRemoveList] = useState<any[]>([]);
-  const [departmantItems, setDepartmantItems] = useState<any[]>(departmantItemSource || []);
+  const [departmantItems, setDepartmantItems] = useState<any[]>(
+    departmantItemSource || []
+  );
   const { confirmDialog, ConfirmAlertDialog } = useConfirmDialog();
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -211,7 +221,7 @@ const CustomerForm = ({
       department_Id: newValue?.id,
       segment_Id: newValue?.segment_Id,
       group_Id: newValue?.group_Id,
-      zone_Id: newValue?.zone_Id
+      zone_Id: newValue?.zone_Id,
     }));
   };
 
@@ -225,16 +235,17 @@ const CustomerForm = ({
     setAreas(customeraAeas);
   };
 
-  const getAreasOfCustomer = async (custId : any) => {
+  const getAreasOfCustomer = async (custId: any) => {
     const getAreas = await getMasterAreaDataWithCustomerId(custId);
-    const mapArea: AreaData[] = getAreas?.documents.map(doc => {
-      return{
-        id: doc.$id,
-        custId: doc.CustomerId,
-        name: doc.name,
-        status: "existed"
-      }
-    }) || []
+    const mapArea: AreaData[] =
+      getAreas?.documents.map((doc) => {
+        return {
+          id: doc.$id,
+          custId: doc.CustomerId,
+          name: doc.name,
+          status: "existed",
+        };
+      }) || [];
     setAreas(mapArea);
     console.log("mapArea =", mapArea);
   };
@@ -245,52 +256,53 @@ const CustomerForm = ({
     console.log("areaRemoveList =", areaRemoveList);
     const confirmApprove = await confirmDialog(
       "Delete Customer",
-      "Do you want to delete this customer?", false, "danger"
-   );
-   if (confirmApprove) {
+      "Do you want to delete this customer?",
+      false,
+      "danger"
+    );
+    if (confirmApprove) {
+      //TODO Delete Contract od customer
+      //TODO Delete Checkpoints Of area?
+      //TODO Delete Rounds of area?
 
-    //TODO Delete Contract od customer
-    //TODO Delete Checkpoints Of area?
-    //TODO Delete Rounds of area?
-
-    //Delete areas of customer
-    let deleteAreaResult;
-    console.log("delete areas = ", areas);
-    if(areas?.length > 0){
-      setIsLoading(true);
-      deleteAreaResult = await deleteArea(areas.map((item) => item.id));
-      setIsLoading(false);
-      console.log("deleteAreaResult", deleteAreaResult);
-    }
-
-    if (deleteAreaResult !== null) {
-     setIsLoading(true);
-     console.log("formData.id =", formData.id);
-     const deleteResult = await deleteCustomer([formData.id]);
-     setIsLoading(false);
-     console.log("deleteResult =", deleteResult);
-     if (deleteResult.result !== null) {
-       const confirmApprove = await confirmDialog(
-         "Delete Success",
-         "delete customer success.", true
-      );
-      if(confirmApprove){
-       setIsAddOrUpdateSuccess(true);
-       handleCloseCustomerForm();
+      //Delete areas of customer
+      let deleteAreaResult;
+      console.log("delete areas = ", areas);
+      if (areas?.length > 0) {
+        setIsLoading(true);
+        deleteAreaResult = await deleteArea(areas.map((item) => item.id));
+        setIsLoading(false);
+        console.log("deleteAreaResult", deleteAreaResult);
       }
-     }
-     else {
-      const confirmApprove = await confirmDialog(
-        "Error to Customer",
-        `${deleteResult.error}`,
-        true, "danger"
-      );
-     }
+
+      if (deleteAreaResult !== null) {
+        setIsLoading(true);
+        console.log("formData.id =", formData.id);
+        const deleteResult = await deleteCustomer([formData.id]);
+        setIsLoading(false);
+        console.log("deleteResult =", deleteResult);
+        if (deleteResult.result !== null) {
+          const confirmApprove = await confirmDialog(
+            "Delete Success",
+            "delete customer success.",
+            true
+          );
+          if (confirmApprove) {
+            setIsAddOrUpdateSuccess(true);
+            handleCloseCustomerForm();
+          }
+        } else {
+          const confirmApprove = await confirmDialog(
+            "Error to Customer",
+            `${deleteResult.error}`,
+            true,
+            "danger"
+          );
+        }
+      } else {
+        alert("Error occur to delete areas of customer.");
+      }
     }
-    else {
-      alert("Error occur to delete areas of customer.");
-    }
-   }
   };
 
   const handleSubmit = async () => {
@@ -307,64 +319,82 @@ const CustomerForm = ({
       hr_code: formData.hr_code,
       isActive: formData.isActive,
       code: formData.code,
-      area_id: []
+      area_id: [],
     };
     console.log("customerDataToSubmit", customerDataToSubmit);
     const newCustId = await addNewCustomer(customerDataToSubmit);
     console.log("newCustId", newCustId);
-    if(newCustId.result !== null){
+    if (newCustId.result !== null) {
       const newAreas = areas.filter((area) => area.status === "new");
-    console.log("newAreas =", newAreas);
-    if (newAreas.length > 0) {
-      const dataToSubmit =
-        newAreas?.map((newarea) => {
-          return {
-            name: newarea.name,
-            CustomerId: newCustId?.result?.$id,
-            checkPointIDs: [],
-            roundIDs: [],
-            customerName: formData.customerName,
-          };
-        }) || [];
-      setIsLoading(true);
-      console.log("ืnew area dataToSubmit =", dataToSubmit);
-      addNewAreaResult = await addNewArea(dataToSubmit);
-      setIsLoading(false);
-      if (addNewAreaResult !== null) {
-        updateNewAreaOfCustomer = areas
-          .filter((item) => item.status === "existed" || item.status === "edit")
-          .map((item) => item.id);
-          updateNewAreaOfCustomer = updateNewAreaOfCustomer.concat(addNewAreaResult);
+      console.log("newAreas =", newAreas);
+      if (newAreas.length > 0) {
+        const dataToSubmit =
+          newAreas?.map((newarea) => {
+            return {
+              name: newarea.name,
+              CustomerId: newCustId?.result?.$id,
+              checkPointIDs: [],
+              roundIDs: [],
+              customerName: formData.customerName,
+            };
+          }) || [];
+        setIsLoading(true);
+        console.log("ืnew area dataToSubmit =", dataToSubmit);
+        addNewAreaResult = await addNewArea(dataToSubmit);
+        setIsLoading(false);
+        if (addNewAreaResult !== null) {
+          updateNewAreaOfCustomer = areas
+            .filter(
+              (item) => item.status === "existed" || item.status === "edit"
+            )
+            .map((item) => item.id);
+          updateNewAreaOfCustomer =
+            updateNewAreaOfCustomer.concat(addNewAreaResult);
           console.log("updateNewAreaOfCustomer", updateNewAreaOfCustomer);
+        }
+        const updateDataToSubmit = {
+          area_id:
+            updateNewAreaOfCustomer === undefined
+              ? []
+              : updateNewAreaOfCustomer,
+        };
+        console.log("updateDataToSubmit", updateDataToSubmit);
+        const updateCustResult = await updateCustomer(
+          updateDataToSubmit,
+          newCustId.result.$id
+        );
+        if (updateCustResult.result !== null) {
+          setIsAddOrUpdateSuccess(true);
+          const confirmApprove = await confirmDialog(
+            "Add Success",
+            "Add New customer data successfully !",
+            true
+          );
+          if (confirmApprove) handleCloseCustomerForm();
+        } else {
+          const confirmApprove = await confirmDialog(
+            "Error to update Customer area list",
+            `${updateCustResult.error}`,
+            true,
+            "danger"
+          );
+        }
       }
-      const updateDataToSubmit = {
-        area_id: updateNewAreaOfCustomer === undefined ? [] : updateNewAreaOfCustomer
-      };
-      console.log("updateDataToSubmit", updateDataToSubmit);
-      const updateCustResult = await updateCustomer(updateDataToSubmit, newCustId.result.$id);
-      if (updateCustResult.result !== null) {
+      else {
         setIsAddOrUpdateSuccess(true);
-        const confirmApprove = await confirmDialog(
-          "Add Success",
-          "Add New customer data successfully !",
-          true
-        );
-        if (confirmApprove) handleCloseCustomerForm();
+          const confirmApprove = await confirmDialog(
+            "Add Success",
+            "Add New customer data successfully !",
+            true
+          );
+          if (confirmApprove) handleCloseCustomerForm();
       }
-      else{
-        const confirmApprove = await confirmDialog(
-          "Error to update Customer area list",
-          `${updateCustResult.error}`,
-          true, "danger"
-        );
-      }
-    }
-    }
-    else{
+    } else {
       const confirmApprove = await confirmDialog(
         "Error to add New Customer",
         `${newCustId.error}`,
-        true, "danger"
+        true,
+        "danger"
       );
     }
     //#endregion -- Add New Customer --
@@ -397,17 +427,20 @@ const CustomerForm = ({
         setIsLoading(false);
         if (addNewAreaResult !== null) {
           updateNewAreaOfCustomer = areas
-            .filter((item) => item.status === "existed" || item.status === "edit")
+            .filter(
+              (item) => item.status === "existed" || item.status === "edit"
+            )
             .map((item) => item.id);
-            updateNewAreaOfCustomer = updateNewAreaOfCustomer.concat(addNewAreaResult);
-            console.log("updateNewAreaOfCustomer", updateNewAreaOfCustomer);
+          updateNewAreaOfCustomer =
+            updateNewAreaOfCustomer.concat(addNewAreaResult);
+          console.log("updateNewAreaOfCustomer", updateNewAreaOfCustomer);
         }
       }
       //#endregion -- save new area --
 
       //#region -- delete area --
       console.log("areaRemoveList = ", areaRemoveList);
-      if(areaRemoveList?.length > 0){
+      if (areaRemoveList?.length > 0) {
         setIsLoading(true);
         deleteAreaResult = await deleteArea(areaRemoveList);
         setIsLoading(false);
@@ -424,13 +457,13 @@ const CustomerForm = ({
       console.log("editAreas = ", editAreas);
       if (editAreas.length > 0) {
         const dataToSubmit =
-        editAreas?.map((area) => {
+          editAreas?.map((area) => {
             return {
               documentId: area.id,
               updateFields: {
                 name: area.name,
                 CustomerId: area.custId,
-                customerName: formData.customerName
+                customerName: formData.customerName,
               },
             };
           }) || [];
@@ -454,10 +487,13 @@ const CustomerForm = ({
         hr_code: formData.hr_code,
         isActive: formData.isActive,
         code: formData.code,
-        area_id: updateNewAreaOfCustomer
+        area_id: updateNewAreaOfCustomer,
       };
       console.log("customerDataToSubmit", customerDataToSubmit);
-      const updateResult = await updateCustomer(customerDataToSubmit, formData.id);
+      const updateResult = await updateCustomer(
+        customerDataToSubmit,
+        formData.id
+      );
       if (updateResult !== null) {
         const confirmApprove = await confirmDialog(
           "Updated Success",
@@ -481,14 +517,21 @@ const CustomerForm = ({
   const handleSearch = () => {
     console.log("formData =", formData);
     console.log("departmantItemSource =", departmantItemSource);
-    const filteredDepartmentItemSource = departmantItemSource.filter((department: any) => {
-      const segmentMatch = formData.searchSegment ? department.segment_Id === formData.searchSegment : true;
-      const groupMatch = formData.searchGroup ? department.group_Id === formData.searchGroup : true;
-      const zoneMatch = formData.searchZone ? department.zone_Id === formData.searchZone : true;
-    
-      return segmentMatch && groupMatch && zoneMatch;
+    const filteredDepartmentItemSource = departmantItemSource.filter(
+      (department: any) => {
+        const segmentMatch = formData.searchSegment
+          ? department.segment_Id === formData.searchSegment
+          : true;
+        const groupMatch = formData.searchGroup
+          ? department.group_Id === formData.searchGroup
+          : true;
+        const zoneMatch = formData.searchZone
+          ? department.zone_Id === formData.searchZone
+          : true;
+
+        return segmentMatch && groupMatch && zoneMatch;
       }
-    )
+    );
     console.log("filteredDepartmentItemSource =", filteredDepartmentItemSource);
     setDepartmantItems(filteredDepartmentItemSource);
   };
@@ -598,6 +641,7 @@ const CustomerForm = ({
                 <Box className="w-1/2">
                   <LabelTextDisplayBox
                     label={"Segment"}
+                    textAlign="left"
                     text={
                       allSegment.find((s: any) => s.id === formData.segment_Id)
                         ?.desc
@@ -611,6 +655,7 @@ const CustomerForm = ({
                 <Box className="w-1/2">
                   <LabelTextDisplayBox
                     label={"Group"}
+                    textAlign="left"
                     text={
                       allGroup.find((g: any) => g.id === formData.group_Id)
                         ?.desc
@@ -621,6 +666,7 @@ const CustomerForm = ({
                 <Box className="w-1/2">
                   <LabelTextDisplayBox
                     label={"Zone"}
+                    textAlign="left"
                     text={
                       allZone.find((z: any) => z.id === formData.zone_Id)?.desc
                     }
@@ -780,7 +826,8 @@ const CustomerForm = ({
             <Button
               className="w-28 h-11 enabled:bg-gradient-to-r from-[#00336C] to-[#37B7C3] hover:from-[#2BA441] hover:to-[#A7E5A6]
                                disabled:bg-[#83A2AD]"
-              onClick={handleSubmit}>
+              onClick={handleSubmit}
+            >
               Submit
             </Button>
           </Box>
@@ -812,12 +859,12 @@ const CustomerForm = ({
         {ConfirmAlertDialog}
 
         {isLoading && (
-        <div className="fixed inset-0 bg-white bg-opacity-40 flex flex-col items-center justify-center z-indextop">
-          <Box sx={{ display: "flex" }}>
-            <CircularProgress />
-          </Box>
-        </div>
-      )}
+          <div className="fixed inset-0 bg-white bg-opacity-40 flex flex-col items-center justify-center z-indextop">
+            <Box sx={{ display: "flex" }}>
+              <CircularProgress />
+            </Box>
+          </div>
+        )}
       </div>
     </div>
   );

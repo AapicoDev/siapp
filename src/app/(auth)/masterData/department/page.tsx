@@ -33,10 +33,11 @@ import { EditButton } from "@/components/ui/buttons/editButton";
 import { SaveButton } from "@/components/ui/buttons/saveButton";
 import { DeleteButton } from "@/components/ui/buttons/deleteButton";
 import { LabelSelector2 } from "@/components/ui/selectors/labelSelector2";
-import { addNewDepartment, deleteDepartment, fetchMasterDepartmentData, filterMasterDepartmentData, getAllMasterGroupData, getAllMasterSegmentData, getAllMasterZoneData, updateDepartment } from "@/app/lib/api";
+import { addNewDepartment, deleteDepartment, fetchMasterDepartmentData, filterMasterDepartmentData, getAllMasterDepartmentData, getAllMasterGroupData, getAllMasterSegmentData, getAllMasterZoneData, updateDepartment } from "@/app/lib/api";
 import { getgroups } from "process";
 import { SearchSelector } from "@/components/ui/selectors/searchSelector";
 import { useConfirmDialog } from "../../../../components/ui/alertDialog/confirmDialog";
+import { ClearButtton } from "@/components/ui/buttons/clearButton";
 
 type RowData = {
   id: any;
@@ -81,15 +82,17 @@ export default function Department() {
   const [groupItemSource, setGroupItemSource] = useState<ItemSource[]>([]);
   const [zoneItemSource, setZoneItemSource] = useState<ItemSource[]>([]);
   const { confirmDialog, ConfirmAlertDialog } = useConfirmDialog();
+  const [isSearch, setIsSearch] = useState<boolean>(false);
 
   useEffect( () => {
     initialData();
   }, []);
   useEffect(() => {
     tableData();
-  }, [page, rowsPerPage]);
+  }, []); //[page, rowsPerPage]
 
   const initialData = async () => {
+    setIsLoading(true);
     const getSegments = await getAllMasterSegmentData();
     const getGroups = await getAllMasterGroupData();
     const getZones = await getAllMasterZoneData();
@@ -120,12 +123,13 @@ export default function Department() {
         name: z.description
     }}) || [];
     setZoneItemSource(mapZone);
+    setIsLoading(false);
   };
 
   const tableData = async () => {
     setIsLoading(true);
     const offset = page * rowsPerPage;
-    const allDept = await fetchMasterDepartmentData(offset, rowsPerPage);
+    const allDept = await getAllMasterDepartmentData();
     console.log("allDept =", allDept);
     const tableData: RowData[] = allDept?.documents?.map((doc: any) => {
         return {
@@ -177,7 +181,7 @@ export default function Department() {
         true, "success"
       );
       if(confirmApprove) {
-        await tableData();
+        isSearch === true ? await search() : await tableData();
       }
     }
     else{
@@ -187,7 +191,7 @@ export default function Department() {
         true, "danger"
       );
       if(confirmApprove) {
-        await tableData();
+        isSearch === true ? await search() : await tableData();
       }
     }
   };
@@ -227,10 +231,10 @@ export default function Department() {
         true, "danger"
       );
     }
-    await tableData();
+    isSearch === true ? await search() : await tableData();
   };
 
-  const handleSearch = async () => {
+  const search = async () => {
     setIsLoading(true);
     const offset = page * rowsPerPage;
     const filterDepartment = await filterMasterDepartmentData([
@@ -263,6 +267,29 @@ export default function Department() {
     setIsLoading(false);
   };
 
+  const handleSearch = async () => {
+    if(isSearch === false) {
+      setIsSearch(true);
+    }
+    setIsSelectedAll(false);
+    handleCheckAll(false);
+    setPage(0);
+    search();
+  };
+
+  const handleClear = () => {
+    setAddDeptVal("");
+    setAddDeptCodeVal("");
+    setSelectedAddSegment("");
+    setSelectedAddGroup("");
+    setsSelectedAddZone("");
+    setIsSelectedAll(false);
+    setIsSearch(false);
+    handleCheckAll(false);
+    setPage(0);
+    tableData();
+  }
+
   const handleDelete = async () => {
     const confirmApprove = await confirmDialog(
       "Delete Department",
@@ -282,6 +309,7 @@ export default function Department() {
             "Delete Department data successfully.",
             true
           );
+          setIsSelectedAll(false);
         }
         else{
           const confirmApprove = await confirmDialog(
@@ -290,7 +318,7 @@ export default function Department() {
             true, "danger"
           );
         }
-        await tableData();
+        isSearch === true ? await search() : await tableData();
       }
     }
   };
@@ -424,6 +452,8 @@ export default function Department() {
               <Box className="space-x-4 w-fit flex">
                 <AddButton disable={editMode.some(e=>e === true)} onAddBtnClick={handleAdd}/>
                 <SearchButton disable={editMode.some(e=>e === true)} onSearchBtnClick={handleSearch}/>
+                <ClearButtton onBtnClick={handleClear}
+                     disable={editMode.some(e=>e === true)} icon={undefined} content={"Clear"} />
               </Box>
             </Box>
           </Box>
@@ -471,11 +501,12 @@ export default function Department() {
 
               {/* Allow the TableBody to grow and fill vertical space */}
               <TableBody sx={{ flexGrow: 1 }}>
-                {rowData.map((row, index) => (
+              {rowData.slice(page * rowsPerPage, rowsPerPage + (page * rowsPerPage))
+                .map((row, index) => (
                   <TableRow
-                    key={index}
+                    key={index + (page*rowsPerPage)}
                     className={
-                      editMode[index]
+                      editMode[index + (page*rowsPerPage)]
                         ? `bg-[#D8EAFF]`
                         : `${index % 2 === 1 ? `bg-inherit` : `bg-[#EBF4F6]`}`
                     }
@@ -486,22 +517,22 @@ export default function Department() {
                     }}
                   >
                     <TableCell align="left">
-                      <Checkbox2 checked={selected[index].isSelected}
+                      <Checkbox2 checked={selected[index + (page*rowsPerPage)].isSelected}
                           onCheckedChange={() => {
-                            handleSelected(index);
+                            handleSelected(index + (page*rowsPerPage));
                           }}/>
                     </TableCell>
 
                     {/* DepartmentCode */}
                     <TableCell align="center">
-                      {editMode[index] ? (
+                      {editMode[index + (page*rowsPerPage)] ? (
                         <Input
                           type="text"
                           className={`${styles.textBoxCell}`}
                           value={row.departmentCode}
                           onChange={(e) =>
                             handleInputChange(
-                              index,
+                              index + (page*rowsPerPage),
                               "departmentCode",
                               e.target.value
                             )
@@ -514,14 +545,14 @@ export default function Department() {
 
                     {/* Department */}
                     <TableCell align="center">
-                      {editMode[index] ? (
+                      {editMode[index + (page*rowsPerPage)] ? (
                         <Input
                           type="text"
                           className={`${styles.textBoxCell}`}
                           value={row.department}
                           onChange={(e) =>
                             handleInputChange(
-                              index,
+                              index + (page*rowsPerPage),
                               "department",
                               e.target.value
                             )
@@ -534,7 +565,7 @@ export default function Department() {
 
                     {/* Segment */}
                     <TableCell align="center">
-                      {editMode[index] ? (
+                      {editMode[index + (page*rowsPerPage)] ? (
                       <SearchSelector
                         itemSource={segmentItemSource}
                         handleChange={(newVal: any, name: any) => handleSearchSelectorInRowChange(newVal, name, row.id)}
@@ -553,7 +584,7 @@ export default function Department() {
 
                     {/* Group */}
                     <TableCell align="center">
-                      {editMode[index] ? (
+                      {editMode[index + (page*rowsPerPage)] ? (
                       <SearchSelector
                         itemSource={groupItemSource}
                         handleChange={(newVal: any, name: any) => handleSearchSelectorInRowChange(newVal, name, row.id)}
@@ -572,7 +603,7 @@ export default function Department() {
 
                     {/* Zone */}
                     <TableCell align="center">
-                      {editMode[index] ? (
+                      {editMode[index + (page*rowsPerPage)] ? (
                       <SearchSelector
                         itemSource={zoneItemSource}
                         handleChange={(newVal: any, name: any) => handleSearchSelectorInRowChange(newVal, name, row.id)}
@@ -589,12 +620,12 @@ export default function Department() {
                       )}
                     </TableCell>
                     <TableCell align="center" sx={{justifyItems: "center"}}>
-                      {editMode[index] ? (
+                      {editMode[index + (page*rowsPerPage)] ? (
                         <div className="w-[48px] mr-9">
-                        <SaveButton onSaveBtnClick={handleSave} index={index}/>
+                        <SaveButton onSaveBtnClick={handleSave} index={index + (page*rowsPerPage)}/>
                       </div>
                       ) : (
-                        <EditButton disable={editMode.some(e=>e === true)} onEditBtnClick={handleEdit} index={index}/>
+                        <EditButton disable={editMode.some(e=>e === true)} onEditBtnClick={handleEdit} index={index + (page*rowsPerPage)}/>
                       )}
                     </TableCell>
                   </TableRow>

@@ -10,6 +10,7 @@ import {
   TableContainer,
   TableFooter,
   TableHead,
+  TablePagination,
   TableRow,
   Typography,
 } from "@mui/material";
@@ -60,7 +61,6 @@ export function TableCorrectiveAction({
   const [isSelectedAll, setIsSelectedAll] = useState(false);
   const [isAddOrUpdateSucces, setIsAddOrUpdateSucces] = useState(false);
   const [openIncidentForm, setOpenIncidentForm] = useState(false);
-  const totalItems = rowData.length;
   const [selected, setSelected] = useState<selectedDelete[]>(
     incidentTypes.map((row) => ({
       isSelected: false,
@@ -69,13 +69,16 @@ export function TableCorrectiveAction({
   );
   const { confirmDialog, ConfirmAlertDialog } = useConfirmDialog();
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(2); 
+  const [totalRows, setTotalRows] = useState(0);
 
   useEffect(() => {
+    incidentTypeData();
     if (isAddOrUpdateSucces) {
-      incidentTypeData();
       setIsAddOrUpdateSucces(false);
     }
-  }, [isAddOrUpdateSucces]);
+  }, [isAddOrUpdateSucces]); //, page, rowsPerPage
 
   const incidentTypeData = async () => {
     setIsLoading(true);
@@ -95,6 +98,8 @@ export function TableCorrectiveAction({
       }) || incidentTypes;
     console.log("mapincidentTypes = ", mapincidentTypes);
     setRowData(mapincidentTypes);
+    console.log("response = ", response);
+    setTotalRows(response?.total || 0);
     console.log("isAddOrUpdateSucces= ", isAddOrUpdateSucces);
     const mapSelect = mapincidentTypes.map((row) => ({
       isSelected: false,
@@ -129,29 +134,6 @@ export function TableCorrectiveAction({
     console.log("selectedAll =", selectedAll);
   };
 
-  const handleInputChange = <T extends keyof IncidentType>(
-    index: number,
-    field: T,
-    value: IncidentType[T]
-  ) => {
-    const newRowData = [...incidentTypes];
-    newRowData[index][field] = value;
-    setRowData(newRowData);
-  };
-
-  const handleEdit = (index: any) => {
-    const newEditMode = [...editMode];
-    newEditMode[index] = true; // Enable edit mode for the clicked row
-    setEditMode(newEditMode);
-  };
-
-  const handleSave = (index: any) => {
-    const newEditMode = [...editMode];
-    newEditMode[index] = false; // Disable edit mode after saving
-    setEditMode(newEditMode);
-    // Optionally save changes to the server or state
-  };
-
   const handleRowClick = (row: any) => {
     console.log("selectedRow =", row);
     setSelectedRow(row);
@@ -164,6 +146,7 @@ export function TableCorrectiveAction({
   }
 
   const handleDelete = async () => {
+    console.log("selected =",selected);
     const confirmApprove = await confirmDialog(
       "Delete Incident Type !",
       "Do you want to delete these incident types?"
@@ -182,8 +165,19 @@ export function TableCorrectiveAction({
   };
 
   const handleAddNewIncident = () => {
+    console.log("totalRows =", totalRows)
     setSelectedRow(undefined);
     setOpenIncidentForm(true);
+  };
+
+  const handlePageChange = (event: any, newPage: any) => {
+    console.log("newPage", newPage);
+    setPage(newPage);
+  };
+
+  const handleRowsPerPageChange = (event: any) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
   };
 
   return (
@@ -224,10 +218,11 @@ export function TableCorrectiveAction({
 
           {/* Allow the TableBody to grow and fill vertical space */}
           <TableBody sx={{ flexGrow: 1 }}>
-            {rowData.map((row, index) => (
+            {rowData.slice(page * rowsPerPage, rowsPerPage + (page * rowsPerPage))
+              .map((row, index) => (
               <TableRow
                 onClick={() => handleRowClick(row)}
-                key={index}
+                key={index + (page * rowsPerPage)}
                 className={`${index % 2 === 1 ? `bg-inherit` : `bg-[#EBF4F6]`}`}
                 sx={{
                   cursor: "pointer",
@@ -242,10 +237,10 @@ export function TableCorrectiveAction({
                 <TableCell align="left">
                   <Checkbox2
                     className="mt-1 mb-2"
-                    checked={selected[index].isSelected}
+                    checked={selected[index + (page * rowsPerPage)].isSelected}
                     onClick={(event) => {
                       event.stopPropagation(); // Prevent row click
-                      handleSelected(index, row);
+                      handleSelected(index + (page * rowsPerPage), row);
                     }}
                   />
                 </TableCell>
@@ -309,7 +304,16 @@ export function TableCorrectiveAction({
                     width: "100%",
                   }}
                 >
-                  <Typography>Total: {totalItems} items</Typography>
+                  <TablePagination
+                        sx={{color: "#2C5079"}}
+                        component="div"
+                        count={totalRows}
+                        page={page}
+                        onPageChange={handlePageChange}
+                        rowsPerPage={rowsPerPage}
+                        onRowsPerPageChange={handleRowsPerPageChange}
+                        rowsPerPageOptions={[2,4]}
+                      />
                   <Box className="w-fit flex">
                     <Box className="w-fit py-2">
                       <DeleteButton

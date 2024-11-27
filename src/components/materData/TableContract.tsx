@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Box, CircularProgress, Table, TableBody, TableCell, TableContainer, TableFooter, TableHead, TableRow, Typography } from "@mui/material";
+import { Box, CircularProgress, Table, TableBody, TableCell, TableContainer, TableFooter, TableHead, TablePagination, TableRow, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
 import { GoArrowUpRight } from "react-icons/go";
 import styles from "../../app/styles.module.css";
@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/buttons/button";
 import ContractForm from "./ContractForm";
 import data from "@/app/mockData.json";
 import { Item } from "@radix-ui/react-dropdown-menu";
-import { deleteContract, deleteManpowerPosition, deletePatrolAlertTo, deleteRoundData, deleteShift, getAllMasterContractData, getMasterAreaDataWithCustomerId, getMasterManpowerPositionData, getMasterPatrolAlertToData, getMasterRoundData, getMasterShiftData, queryMasterContract } from "@/app/lib/api";
+import { deleteContract, deleteManpowerPosition, deletePatrolAlertTo, deleteRoundData, deleteShift, fetchMasterContractData, getAllMasterContractData, getMasterAreaDataWithCustomerId, getMasterManpowerPositionData, getMasterPatrolAlertToData, getMasterRoundData, getMasterShiftData, queryMasterContract } from "@/app/lib/api";
 import { useConfirmDialog } from "../../components/ui/alertDialog/confirmDialog";
 
 type RowData = {
@@ -69,23 +69,27 @@ export function TableContract({contractData, custData,}: TableContract) {
       contractId: row.customerId, // Convert customerId to string for custId
     }))
   );
+  const [totalRows, setTotalRows] = useState(0);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(4); 
 
   useEffect(() => {
     tableData();
   }, []);
   useEffect(() => {
     if (isAddOrUpdateSucces) {
-      tableData();
       setIsAddOrUpdateSucces(false);
     }
-  }, [isAddOrUpdateSucces]);
+    tableData();
+  }, [isAddOrUpdateSucces]); // page, rowsPerPage
 
   const tableData = async () => {
     console.log("enter table data");
     setIsLoading(true);
-    const customers = await getAllMasterContractData();
+    const offset = page * rowsPerPage;
+    const contracts = await getAllMasterContractData();
     const tableData: RowData[] = await Promise.all(
-      customers?.documents?.map(async (doc) => {
+      contracts?.documents?.map(async (doc) => {
         return {
           id: doc.$id,
           customerName: doc.customerName,
@@ -101,6 +105,7 @@ export function TableContract({contractData, custData,}: TableContract) {
       }) || []
     );
     setRowData(tableData);
+    setTotalRows(contracts?.total || 0);
     console.log("tableData =", tableData);
     console.log("custData =", custData);
 
@@ -198,6 +203,7 @@ export function TableContract({contractData, custData,}: TableContract) {
          );
          if(confirmApprove){
           setIsAddOrUpdateSucces(true);
+          setIsSelectedAll(false);
          }
         }
         else {
@@ -267,10 +273,19 @@ export function TableContract({contractData, custData,}: TableContract) {
     setSelected(selectedAll);
   };
 
+  const handlePageChange = (event: any, newPage: any) => {
+    console.log("newPage", newPage);
+    setPage(newPage);
+  };
+  const handleRowsPerPageChange = (event: any) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
   return (
       <>
       <TableContainer
-            className="h-[77vh] max-h-[77vh] bg-white"
+            className="h-[76vh] max-h-[76vh] bg-white"
             sx={{
               display: "flex",
               flexDirection: "column",
@@ -278,8 +293,8 @@ export function TableContract({contractData, custData,}: TableContract) {
               boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
             }}
           >
-            <Table>
-              <TableHead>
+            <Table stickyHeader sx={{zIndex: 0}}>
+              <TableHead sx={{ mt: 0}}>
                 <TableRow
                   sx={{ borderBottom: "1px solid #C7D4D7" }}
                   className={`${styles.table}`}
@@ -313,10 +328,11 @@ export function TableContract({contractData, custData,}: TableContract) {
 
               {/* Allow the TableBody to grow and fill vertical space */}
               <TableBody sx={{ flexGrow: 1 }}>
-                {rowData.map((row, index) => (
+              {rowData.slice(page * rowsPerPage, rowsPerPage + (page * rowsPerPage))
+                .map((row, index) => (
                   <TableRow
                     onClick={() => handleRowClick(row)} // Row click handler
-                    key={index}
+                    key={index + (page*rowsPerPage)}
                     className={`${index % 2 === 1 ? `bg-inherit` : `bg-[#EBF4F6]`}`}
                     sx={{
                       cursor: "pointer",
@@ -330,10 +346,10 @@ export function TableContract({contractData, custData,}: TableContract) {
                   >
                     <TableCell align="left">
                       <Checkbox
-                        checked={selected[index]?.isSelected}
+                        checked={selected[index + (page*rowsPerPage)]?.isSelected}
                         onClick={(event) => {
                           event.stopPropagation(); // Prevent row click
-                          handleSelected(index);
+                          handleSelected(index + (page*rowsPerPage));
                         }}
                       />
                     </TableCell>
@@ -414,7 +430,17 @@ export function TableContract({contractData, custData,}: TableContract) {
                         width: "100%",
                       }}
                     >
-                      <Typography>Total: {rowData.length} item{rowData.length > 1 ? "s" : ""}</Typography>
+                      {/* <Typography>Total: {rowData.length} item{rowData.length > 1 ? "s" : ""}</Typography> */}
+                      <TablePagination
+                          sx={{color: "#2C5079"}}
+                          component="div"
+                          count={totalRows}
+                          page={page}
+                          onPageChange={handlePageChange}
+                          rowsPerPage={rowsPerPage}
+                          onRowsPerPageChange={handleRowsPerPageChange}
+                          rowsPerPageOptions={[4,8]}
+                        />
                       <Box>
                         <DeleteButton
                           onDeleteBtnClick={handleDeleteContract}

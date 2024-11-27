@@ -17,7 +17,7 @@ import { Checkbox as Checkbox3 } from "@/components/ui/checkbox3"
 import { Textbox } from "@/components/ui/textboxs/textbox";
 import { addNewChecklist, deleteChecklist, fetchMasterCheckListData, filterMasterChecklistData, getAllMasterCheckListData, updateCheckList } from "@/app/lib/api";
 import { useConfirmDialog } from "../../../../components/ui/alertDialog/confirmDialog";
-import { Models } from "appwrite";
+import { ClearButtton } from "@/components/ui/buttons/clearButton";
 
 type CheckListData = {
   id: string;
@@ -55,15 +55,15 @@ export default function CheckList() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10); 
   const [totalRows, setTotalRows] = useState(0);
+  const [isSearch, setIsSearch] = useState<boolean>(false);
 
   useEffect(() => {
     tableData();
-  }, [page, rowsPerPage]);
+  }, []);
 
   const tableData = async () => {
     setIsLoading(true);
-    const offset = page * rowsPerPage;
-    const allChecklist = await fetchMasterCheckListData(offset, rowsPerPage);
+    const allChecklist = await getAllMasterCheckListData();
     console.log("allChecklist =", allChecklist);
     const tableData: CheckListData[] = allChecklist?.documents?.map((doc: any) => {
         return {
@@ -105,7 +105,7 @@ export default function CheckList() {
       normalStatus: rowData[index]?.normalStatus,
       abnormalStatus: rowData[index]?.abnormalStatus,
       attachPhotoAmount: parseInt(rowData[index]?.attachPhoto),
-      isNeedAttachPhoto: rowData[index]?.isNeedAttachPhoto
+      isNeedAttachPhoto: parseInt(rowData[index]?.attachPhoto) > 0 ? true : false
     }
     const updateChecklistResult = await updateCheckList(dataToSubmit, rowData[index]?.id);
     if(updateChecklistResult.result !== null) {
@@ -115,7 +115,8 @@ export default function CheckList() {
         true, "success"
       );
       if(confirmApprove) {
-        await tableData();
+        isSearch === true ?
+        await search() : await tableData()
       }
     }
     else{
@@ -125,7 +126,8 @@ export default function CheckList() {
         true, "danger"
       );
       if(confirmApprove) {
-        await tableData();
+        isSearch === true ?
+        await search() : await tableData()
       }
     }
   };
@@ -160,10 +162,34 @@ export default function CheckList() {
         true, "danger"
       );
     }
-    await tableData();
+    isSearch === true ?
+    await search() : await tableData()
   };
 
   const handleSearch = async () => {
+    if(isSearch === false) {
+      setIsSearch(true);
+    }
+    setIsSelectedAll(false);
+    handleCheckAll(false);
+    setPage(0);
+    search();
+  };
+
+  const handleClear = () => {
+    setAddCheckListName("");
+    setAddNormalStatus("");
+    setAddAbnormalStatus("");
+    setPhotoAmt("");
+    setIsNeedAttachPhoto(false);
+    setIsSelectedAll(false);
+    setIsSearch(false);
+    handleCheckAll(false);
+    setPage(0);
+    tableData();
+  }
+
+  const search = async () => {
     setIsLoading(true);
     const offset = page * rowsPerPage;
     const filterChecklist = await filterMasterChecklistData([
@@ -198,6 +224,7 @@ export default function CheckList() {
   };
 
   const handleDelete = async () => {
+    console.log("selected =", selected);
     const confirmApprove = await confirmDialog(
       "Delete Checklist",
       "Do you want to delete these selected checklist?", false, "danger"
@@ -216,6 +243,7 @@ export default function CheckList() {
             "Delete Checklist data successfully.",
             true
           );
+          setIsSelectedAll(false);
         }
         else{
           const confirmApprove = await confirmDialog(
@@ -224,7 +252,8 @@ export default function CheckList() {
             true, "danger"
           );
         }
-        await tableData();
+        isSearch === true ?
+        await search() : await tableData()
       }
     }
   };
@@ -276,7 +305,6 @@ export default function CheckList() {
   };
 
   const handlePageChange = (event: any, newPage: any) => {
-    console.log("newPage", newPage);
     setPage(newPage);
   };
 
@@ -302,7 +330,7 @@ export default function CheckList() {
                 justifyContent="space-between"
                 className="p-4 flex w-[90%] flex-nowrap space-x-4 sm:space-y-0"
               >
-                <div className="w-[28%] flex justify-center items-center">
+                <div className="w-[26%] flex justify-center items-center">
                 <LabelTextField
                   label={"Check List"}
                   placeholder={"Type here..."}
@@ -330,7 +358,7 @@ export default function CheckList() {
                 <Checkbox3 checked={isNeedAttachPhoto} className="w-9 h-9 mt-1 mr-2" onCheckedChange={(e) => handleChange(e, "isNeedAttachPhoto")} />
                 <Typography sx={{color: "#2C5079", width: "full", mt: 0.5}}>Attach photos</Typography>
                 </div>
-                <div className="w-[13%] flex justify-center items-center">
+                <div className="w-[10%] flex justify-center items-center">
                 <Textbox name="attachPhotoAmt" inputType="number" placeHolder="Amount.." value={photoAmt} handleChange={handleChange}/>
                 </div>
                 <Box className="w-full sm:w-auto flex flex-nowrap sm:flex-nowrap space-x-4"
@@ -340,6 +368,8 @@ export default function CheckList() {
                 }}>
                   <AddButton disable={editMode.some(e=>e === true)} onAddBtnClick={handleAdd}/>
                   <SearchButton disable={editMode.some(e=>e === true)} onSearchBtnClick={handleSearch}/>
+                  <ClearButtton onBtnClick={handleClear}
+                                disable={editMode.some(e=>e === true)} icon={undefined} content={"Clear"} />
                 </Box>
             </Box>
           </Box>
@@ -372,78 +402,79 @@ export default function CheckList() {
 
               {/* Allow the TableBody to grow and fill vertical space */}
               <TableBody sx={{ flexGrow: 1 }}>
-                {rowData.map((row, index) => (
+                {rowData.slice(page * rowsPerPage, rowsPerPage + (page * rowsPerPage))
+                .map((row, index) => (
                   <TableRow
-                    key={index}
+                    key={index + (page*rowsPerPage)}
                     className={
-                      editMode[index]
+                      editMode[index + (page * rowsPerPage)]
                         ? `bg-[#D8EAFF]`
                         : `${index % 2 === 1 ? `bg-inherit` : `bg-[#EBF4F6]`}`
                     }
                   >
                     <TableCell align="left">
                       <Checkbox2
-                          checked={selected[index]?.isSelected}
+                          checked={selected[index + (page*rowsPerPage)].isSelected}
                           onCheckedChange={() => {
-                            handleSelected(index);
+                            handleSelected(index + (page*rowsPerPage));
                           }}/>
                     </TableCell>
                     <TableCell align="center" className="max-w-48">
-                      {editMode[index] ? (
+                      {editMode[index + (page*rowsPerPage)] ? (
                         <Input
                           type="text"
                           className={`${styles.textBoxCell}`}
                           value={row.name}
-                          onChange={(e) => handleRowInputChange(index, 'name', e.target.value)}
+                          onChange={(e) => handleRowInputChange(index + (page*rowsPerPage), 'name', e.target.value)}
                         />
                       ) : (
                         `${row.name}`
                       )}
                     </TableCell>
                     <TableCell align="center">
-                      {editMode[index] ? (
+                      {editMode[index + (page*rowsPerPage)] ? (
                         <Input
                           type="text"
                           className={`${styles.textBoxCell}`}
                           value={row.normalStatus}
-                          onChange={(e) => handleRowInputChange(index, 'normalStatus', e.target.value)}
+                          onChange={(e) => handleRowInputChange(index + (page*rowsPerPage), 'normalStatus', e.target.value)}
                         />
                       ) : (
                         `${row.normalStatus}`
                       )}
                     </TableCell>
                     <TableCell align="center">
-                      {editMode[index] ? (
+                      {editMode[index + (page*rowsPerPage)] ? (
                         <Input
                           type="text"
                           className={`${styles.textBoxCell}`}
                           value={row.abnormalStatus}
-                          onChange={(e) => handleRowInputChange(index, 'abnormalStatus', e.target.value)}
+                          onChange={(e) => handleRowInputChange(index + (page*rowsPerPage), 'abnormalStatus', e.target.value)}
                         />
                       ) : (
                         `${row.abnormalStatus}`
                       )}
                     </TableCell>
                     <TableCell align="center">
-                      {editMode[index] ? (
+                      {editMode[index + (page*rowsPerPage)] ? (
                         <Input
                           type="number"
                           min={0}
                           className={`${styles.textBoxCell}`}
                           value={row.attachPhoto}
-                          onChange={(e) => handleRowInputChange(index, 'attachPhoto', e.target.value)}
+                          onChange={(e) => handleRowInputChange(index + (page*rowsPerPage), 'attachPhoto', e.target.value)}
                         />
                       ) : (
                         `${row.attachPhoto}`
                       )}
                     </TableCell>
                     <TableCell align="center" sx={{justifyItems: "center"}}>
-                      {editMode[index] ? (
+                      {editMode[index + (page*rowsPerPage)] ? (
                         <div className="w-[48px] mr-8">
-                          <SaveButton onSaveBtnClick={handleSave} index={index}/>
+                          <SaveButton onSaveBtnClick={handleSave} index={index + (page*rowsPerPage)}/>
                         </div>
                       ) : (
-                        <EditButton disable={editMode.some(e=>e === true)} onEditBtnClick={handleEdit} index={index}/>
+                        <EditButton disable={editMode.some(e=>e === true)} onEditBtnClick={handleEdit} index={index + (page*rowsPerPage)}/>
                       )}
                     </TableCell>
                   </TableRow>

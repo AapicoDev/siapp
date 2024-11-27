@@ -10,9 +10,10 @@ interface GradientButtonProps {
   onBtnClick: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void; // Button click handler
   content: any;
   disable?:boolean;
+  minWidth? : any;
 }
 
-export function GradientButton({ onBtnClick,content, disable=false }: GradientButtonProps) {
+export function GradientButton({ onBtnClick,content, disable=false, minWidth="min-w-48" }: GradientButtonProps) {
   return (
     <Button
     disabled={disable}
@@ -21,8 +22,8 @@ export function GradientButton({ onBtnClick,content, disable=false }: GradientBu
         onBtnClick(event);
       }}
       style={{ marginLeft: "auto", fontWeight: "bold" }}
-      className="min-w-48 w-full enabled:bg-gradient-to-r from-[#00336C] to-[#37B7C3] hover:from-[#4C9BF5] hover:to-[#D8EAFF] 
-                 hover:text-[#00336C] disabled:bg-[#83A2AD]"
+      className={`${minWidth} w-full enabled:bg-gradient-to-r from-[#00336C] to-[#37B7C3] hover:from-[#4C9BF5] hover:to-[#D8EAFF] 
+                 hover:text-[#00336C] disabled:bg-[#83A2AD]`}
     >
       {content}
     </Button>
