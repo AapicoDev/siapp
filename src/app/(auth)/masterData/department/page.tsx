@@ -15,10 +15,12 @@ import {
   MenuItem,
   InputLabel,
   FormControl,
+  TablePagination,
+  CircularProgress,
 } from "@mui/material/";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/buttons/button";
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import { Checkbox as Checkbox2 } from "@/components/ui/checkbox";
 import { Edit2 } from "iconsax-react";
 import { Input } from "@/components/ui/textboxs/input";
@@ -31,6 +33,11 @@ import { EditButton } from "@/components/ui/buttons/editButton";
 import { SaveButton } from "@/components/ui/buttons/saveButton";
 import { DeleteButton } from "@/components/ui/buttons/deleteButton";
 import { LabelSelector2 } from "@/components/ui/selectors/labelSelector2";
+import { addNewDepartment, deleteDepartment, fetchMasterDepartmentData, filterMasterDepartmentData, getAllMasterDepartmentData, getAllMasterGroupData, getAllMasterSegmentData, getAllMasterZoneData, updateDepartment } from "@/app/lib/api";
+import { getgroups } from "process";
+import { SearchSelector } from "@/components/ui/selectors/searchSelector";
+import { useConfirmDialog } from "../../../../components/ui/alertDialog/confirmDialog";
+import { ClearButtton } from "@/components/ui/buttons/clearButton";
 
 type RowData = {
   id: any;
@@ -46,91 +53,15 @@ type selectedDelete = {
   id: any;
 };
 
-const segments = [
-  {
-    id: 1,
-    desc: "Building",
-  },
-  {
-    id: 2,
-    desc: "Energy",
-  },
-  {
-    id: 3,
-    desc: "Education",
-  },
-];
-
-const groups = [
-  {
-    id: 1,
-    desc: "General Guard",
-  },
-  {
-    id: 2,
-    desc: "Cargo",
-  },
-  {
-    id: 3,
-    desc: "Cleaning",
-  },
-];
-
-const zones = [
-  {
-    id: 1,
-    desc: "BMR",
-  },
-  {
-    id: 2,
-    desc: "RONE",
-  },
-  {
-    id: 3,
-    desc: "SVN",
-  },
-];
-
-const rows: RowData[] = [
-  {
-    id: "1",
-    departmentCode: "401-10-036-00",
-    department: "สิตาเพชร ฟู้ดแพคเจ๊ดี้",
-    segmentId: 1,
-    groupId: 1,
-    zoneId: 1,
-  },
-  {
-    id: "2",
-    departmentCode: "401-10-240-00",
-    department: "ศูนย์บอเนอร์ซี่สองแพค",
-    segmentId: 2,
-    groupId: 1,
-    zoneId: 1,
-  },
-  {
-    id: "3",
-    departmentCode: "721-10-036-00",
-    department: "ครัวการบินกรุงเทพ",
-    segmentId: null,
-    groupId: 2,
-    zoneId: null,
-  },
-  {
-    id: "4",
-    departmentCode: "411-10-041-00",
-    department: "บริษัท เคนซิล งานรักษาความสะอาด",
-    segmentId: 3,
-    groupId: 3,
-    zoneId: 1,
-  },
-];
-
-const totalItems = rows.length;
+type ItemSource = {
+  id: any;
+  desc: string;
+  name: string;
+};
 
 export default function Department() {
-  const [editMode, setEditMode] = useState(Array(rows.length).fill(false)); // Array to track edit state for each row
-  const [rowData, setRowData] = useState(rows); // Local state for row data
+  const [rowData, setRowData] = useState<RowData[]>([]);
+  const [editMode, setEditMode] = useState(Array(rowData.length).fill(false)); // Array to track edit state for each row
   const [selectedAddSegment, setSelectedAddSegment] = useState<any>("");
   const [selectedAddGroup, setSelectedAddGroup] = useState<string>("");
   const [selectedAddZone, setsSelectedAddZone] = useState<string>("");
@@ -138,43 +69,259 @@ export default function Department() {
   const [addDeptVal, setAddDeptVal] = useState("");
   const [isSelectedAll, setIsSelectedAll] = useState(false);
   const [selected, setSelected] = useState<selectedDelete[]>(
-    rows.map((row) => ({
+    rowData.map((row) => ({
       isSelected: false,
       id: row.id,
     }))
   );
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10); 
+  const [totalRows, setTotalRows] = useState(0);
+  const [segmentItemSource, setSegmentItemSource] = useState<ItemSource[]>([]);
+  const [groupItemSource, setGroupItemSource] = useState<ItemSource[]>([]);
+  const [zoneItemSource, setZoneItemSource] = useState<ItemSource[]>([]);
+  const { confirmDialog, ConfirmAlertDialog } = useConfirmDialog();
+  const [isSearch, setIsSearch] = useState<boolean>(false);
 
-  // Handle Edit button click
+  useEffect( () => {
+    initialData();
+  }, []);
+  useEffect(() => {
+    tableData();
+  }, []); //[page, rowsPerPage]
+
+  const initialData = async () => {
+    setIsLoading(true);
+    const getSegments = await getAllMasterSegmentData();
+    const getGroups = await getAllMasterGroupData();
+    const getZones = await getAllMasterZoneData();
+
+    const mapSegment: ItemSource[] = getSegments?.documents.map(s => {
+      return{
+        id: s.$id,
+        label: s.segment,
+        desc: s.segment,
+        name: s.description
+    }}) || [];
+    setSegmentItemSource(mapSegment);
+
+    const mapGroup: ItemSource[] = getGroups?.documents.map(g => {
+      return{
+        id: g.$id,
+        label: g.group,
+        desc: g.group,
+        name: g.description
+    }}) || [];
+    setGroupItemSource(mapGroup);
+
+    const mapZone: ItemSource[] = getZones?.documents.map(z => {
+      return{
+        id: z.$id,
+        label: z.zone,
+        desc: z.zone,
+        name: z.description
+    }}) || [];
+    setZoneItemSource(mapZone);
+    setIsLoading(false);
+  };
+
+  const tableData = async () => {
+    setIsLoading(true);
+    const offset = page * rowsPerPage;
+    const allDept = await getAllMasterDepartmentData();
+    console.log("allDept =", allDept);
+    const tableData: RowData[] = allDept?.documents?.map((doc: any) => {
+        return {
+          id: doc.$id,
+          department: doc.departmentName,
+          departmentCode: doc.department_Code,
+          groupId: doc.group_Id,
+          segmentId: doc.segment_Id,
+          zoneId: doc.zone_Id,
+        };
+      }) || []
+    setRowData(tableData);
+    setTotalRows(allDept?.total || 0);
+    console.log("tableData =", tableData);
+
+    const mapSelect = tableData.map((row: RowData) => ({
+      isSelected: false,
+      id: row.id,
+    }));
+    setSelected(mapSelect);
+    setIsLoading(false);
+  };
+
   const handleEdit = (index: any) => {
     const newEditMode = [...editMode];
     newEditMode[index] = true; // Enable edit mode for the clicked row
     setEditMode(newEditMode);
   };
 
-  // Handle Save button click
-  const handleSave = (index: any) => {
+  const handleSave = async (index: any) => {
     const newEditMode = [...editMode];
-    newEditMode[index] = false; // Disable edit mode after saving
+    newEditMode[index] = false;
     setEditMode(newEditMode);
     console.log("rowData =", rowData);
-    // Optionally save changes to the server or state
+    
+    console.log("rowData[index] = ", rowData[index]);
+    const dataToSubmit = {
+      departmentName: rowData[index]?.department,
+      department_Code: rowData[index]?.departmentCode,
+      group_Id: rowData[index]?.groupId,
+      segment_Id: rowData[index]?.segmentId,
+      zone_Id: rowData[index]?.zoneId
+    }
+    const updateDepartmentResult = await updateDepartment(dataToSubmit, rowData[index]?.id);
+    if(updateDepartmentResult.result !== null) {
+      const confirmApprove = await confirmDialog(
+        "Save Department Success",
+        "Save Department data successfully.",
+        true, "success"
+      );
+      if(confirmApprove) {
+        isSearch === true ? await search() : await tableData();
+      }
+    }
+    else{
+      const confirmApprove = await confirmDialog(
+        "Error to Save Department",
+        `${updateDepartmentResult.error}`,
+        true, "danger"
+      );
+      if(confirmApprove) {
+        isSearch === true ? await search() : await tableData();
+      }
+    }
   };
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     console.log("AddDeptVal = ", addDeptVal);
     console.log("AddDeptCodeVal = ", addDeptCodeVal);
     console.log("addsegmentVal = ", selectedAddSegment);
     console.log("addGroupVal = ", selectedAddGroup);
     console.log("addZoneVal = ", selectedAddZone);
+    const dataToSubmit = {
+      department_Code: addDeptCodeVal,
+      departmentName: addDeptVal,
+      segment_Id: selectedAddSegment,
+      group_Id: selectedAddGroup,
+      zone_Id: selectedAddZone
+    }
+    const addDeptResult = await addNewDepartment(dataToSubmit);
+    if(addDeptResult.result !== null) {
+      const confirmApprove = await confirmDialog(
+        "Add Department Success",
+        "Add Department data successfully.",
+        true, "success"
+      );
+      if(confirmApprove) {
+        setAddDeptVal("");
+        setAddDeptCodeVal("");
+        setSelectedAddSegment("");
+        setSelectedAddGroup("");
+        setsSelectedAddZone("");
+      }
+    }
+    else{
+      const confirmApprove = await confirmDialog(
+        "Error to Add Department",
+        `${addDeptResult.error}`,
+        true, "danger"
+      );
+    }
+    isSearch === true ? await search() : await tableData();
   };
 
-  const handleSearch = () => {
-    console.log("AddDeptVal = ", addDeptVal);
-    console.log("AddDeptCodeVal = ", addDeptCodeVal);
-    console.log("addsegmentVal = ", selectedAddSegment);
+  const search = async () => {
+    setIsLoading(true);
+    const offset = page * rowsPerPage;
+    const filterDepartment = await filterMasterDepartmentData([
+      {field: "department_Code", value: addDeptCodeVal},
+      {field: "departmentName", value: addDeptVal},
+      {field: "segment_Id", value: selectedAddSegment},
+      {field: "group_Id", value: selectedAddGroup},
+      {field: "zone_Id", value: selectedAddZone},
+    ], offset, rowsPerPage);
+    setTotalRows(filterDepartment?.total || 0);
+    console.log("filterDepartment =", filterDepartment);
+    const tableData: RowData[] = filterDepartment?.documents?.map((doc) => {
+      return {
+        id: doc.$id,
+        department: doc.departmentName,
+        departmentCode: doc.department_Code,
+        groupId: doc.group_Id,
+        segmentId: doc.segment_Id,
+        zoneId: doc.zone_Id,
+      };
+    }) || []
+    setRowData(tableData);
+    console.log("tableData =", tableData);
+
+    const mapSelect = tableData.map((row: RowData) => ({
+      isSelected: false,
+      id: row.id,
+    }));
+    setSelected(mapSelect);
+    setIsLoading(false);
   };
 
-  const handleDelete = () => {};
+  const handleSearch = async () => {
+    if(isSearch === false) {
+      setIsSearch(true);
+    }
+    setIsSelectedAll(false);
+    handleCheckAll(false);
+    setPage(0);
+    search();
+  };
+
+  const handleClear = () => {
+    setAddDeptVal("");
+    setAddDeptCodeVal("");
+    setSelectedAddSegment("");
+    setSelectedAddGroup("");
+    setsSelectedAddZone("");
+    setIsSelectedAll(false);
+    setIsSearch(false);
+    handleCheckAll(false);
+    setPage(0);
+    tableData();
+  }
+
+  const handleDelete = async () => {
+    const confirmApprove = await confirmDialog(
+      "Delete Department",
+      "Do you want to delete these selected Department?", false, "danger"
+    );
+    if (confirmApprove) {
+      if (confirmApprove) {
+        let response: any;
+        const deleteId = selected.filter(s => s.isSelected === true).map(s=>s.id);
+        if (deleteId.length > 0) {
+          response = await deleteDepartment(deleteId);
+          console.log("response =", response);
+        }
+        if(response.result !== null){
+          const confirmApprove = await confirmDialog(
+            "Delete Department Success",
+            "Delete Department data successfully.",
+            true
+          );
+          setIsSelectedAll(false);
+        }
+        else{
+          const confirmApprove = await confirmDialog(
+            "Error to delete Department",
+            `${response.error}`,
+            true, "danger"
+          );
+        }
+        isSearch === true ? await search() : await tableData();
+      }
+    }
+  };
 
   const handleInputChange = <T extends keyof RowData>(
     index: number,
@@ -186,55 +333,31 @@ export default function Department() {
     setRowData(newRowData);
   };
 
-  const handleEditSegmentChange = (
-    dataDepartmentCode: string,
-    selectedSegmentId: any
-  ) => {
-    const updatedSegmentData = rowData.map((item) =>
-      item.departmentCode === dataDepartmentCode
-        ? { ...item, segmentId: selectedSegmentId }
+  const handleSearchSelectorChange = (newValue: any, name: any) => {
+    console.log("newValue =", newValue);
+    console.log("name =", name);
+    if(name === "segmentId"){
+      newValue === null ? setSelectedAddSegment("") : setSelectedAddSegment(newValue?.id);
+    }
+    else if(name === "groupId"){
+      newValue === null ? setSelectedAddGroup("") : setSelectedAddGroup(newValue?.id);
+    }
+    else if(name === "zoneId"){
+      newValue === null ? setsSelectedAddZone("") : setsSelectedAddZone(newValue?.id);
+    }
+  };
+  
+  const handleSearchSelectorInRowChange = (newValue: any, name: any, id: string) => {
+    console.log("newValue =", newValue);
+    console.log("name =", name);
+    console.log("dept id =", id);
+    const updatedData = rowData.map((item) =>
+      item.id === id
+        ? { ...item, [name]: newValue === null ? "" : newValue?.id }
         : item
     );
-    setRowData(updatedSegmentData);
+    setRowData(updatedData);
   };
-
-  const handleEditGroupChange = (
-    dataDepartmentCode: string,
-    selectedGroupId: any
-  ) => {
-    const updatedGroupData = rowData.map((item) =>
-      item.departmentCode === dataDepartmentCode
-        ? { ...item, groupId: selectedGroupId }
-        : item
-    );
-    setRowData(updatedGroupData);
-  };
-
-  const handleEditZoneChange = (
-    dataDepartmentCode: string,
-    selectedZoneId: any
-  ) => {
-    const updatedZoneData = rowData.map((item) =>
-      item.departmentCode === dataDepartmentCode
-        ? { ...item, zoneId: selectedZoneId }
-        : item
-    );
-    setRowData(updatedZoneData);
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type } = e.target;
-    setRowData((prevData) => ({ ...prevData, [name]: value }));
-  };
-
-  // const handleSelectChange = (e: SelectChangeEvent,selectorName: any ) => {
-  //   const { name, value } = e.target;
-  //   if(selectorName.includes("Segment")){
-  //     setSelectedAddSegment(value);
-  //   }
-
-  //   console.log("selectedAddSegment = ", selectedAddSegment)
-  // };
 
   const handleSelected = (index: number) => {
     const newSelected = [...selected];
@@ -257,15 +380,22 @@ export default function Department() {
     setSelected(selectedAll);
   };
 
+  const handlePageChange = (event: any, newPage: any) => {
+    console.log("newPage", newPage);
+    setPage(newPage);
+  };
+
+  const handleRowsPerPageChange = (event: any) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
   return (
     <div>
       <Navbar menu={"Master Data"} submenu={"Department"} />
       <Box className="px-2">
         {/* Main Content */}
         <Box px={2} pb={2}>
-        <Typography sx={{fontWeight: "700", color: "#F66262", border: "1px solid #F66262", width: "fit-content", borderRadius: "10px", mb: 1}} className="py-1 px-2">
-                Mockup data
-            </Typography>
           {/* Sub Header */}
           <Box mb={2} className="w-full flex justify-center">
             <Box
@@ -292,42 +422,44 @@ export default function Department() {
                 />
 
                 {/* Selector Add Segment */}
-                <LabelSelector
-                  selectorLabel={"Segment"}
-                  itemSource={segments}
-                  setSelectedVal={setSelectedAddSegment}
-                  selectedVal={selectedAddSegment}
-                  name={"segment"}
-                />
+                <SearchSelector
+                    itemSource={segmentItemSource}
+                    handleChange={(newVal: any, name: any) => handleSearchSelectorChange(newVal, name)}
+                    selectedVal={selectedAddSegment}
+                    name={"segmentId"}
+                    inlineLabel="Segment"
+                  />
 
-                {/* Selector Add Segment */}
-                <LabelSelector
-                  selectorLabel={"Group"}
-                  itemSource={groups}
-                  setSelectedVal={setSelectedAddGroup}
-                  selectedVal={selectedAddGroup}
-                  name={"group"}
-                />
+                {/* Selector Add Group */}
+                <SearchSelector
+                    itemSource={groupItemSource}
+                    handleChange={(newVal: any, name: any) => handleSearchSelectorChange(newVal, name)}
+                    selectedVal={selectedAddGroup}
+                    name={"groupId"}
+                    inlineLabel="Group"
+                  />
 
-                {/* Selector Add Segment */}
-                <LabelSelector
-                  selectorLabel={"Zone"}
-                  itemSource={zones}
-                  setSelectedVal={setsSelectedAddZone}
-                  selectedVal={selectedAddZone}
-                  name={"zone"}
-                />
+                {/* Selector Add Zone */}
+                <SearchSelector
+                    itemSource={zoneItemSource}
+                    handleChange={(newVal: any, name: any) => handleSearchSelectorChange(newVal, name)}
+                    selectedVal={selectedAddZone}
+                    name={"zoneId"}
+                    inlineLabel="Zone"
+                  />
               </Box>
 
               <Box className="space-x-4 w-fit flex">
-                <AddButton onAddBtnClick={handleAdd} />
-                <SearchButton onSearchBtnClick={handleSearch} />
+                <AddButton disable={editMode.some(e=>e === true)} onAddBtnClick={handleAdd}/>
+                <SearchButton disable={editMode.some(e=>e === true)} onSearchBtnClick={handleSearch}/>
+                <ClearButtton onBtnClick={handleClear}
+                     disable={editMode.some(e=>e === true)} icon={undefined} content={"Clear"} />
               </Box>
             </Box>
           </Box>
 
           <TableContainer
-            className="h-screen bg-white"
+            className="h-[74vh] max-h-[74vh] bg-white"
             sx={{
               display: "flex",
               flexDirection: "column",
@@ -335,8 +467,8 @@ export default function Department() {
               boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
             }}
           >
-            <Table>
-              <TableHead>
+            <Table stickyHeader>
+              <TableHead sx={{mt:0}}>
                 <TableRow
                   sx={{ borderBottom: "1px solid #C7D4D7" }}
                   className={`${styles.table}`}
@@ -344,7 +476,8 @@ export default function Department() {
                   <TableCell align="left" className="w-[4%]">
                     <Checkbox2 className="mt-1 mb-2" 
                                checked={isSelectedAll}
-                               onCheckedChange={handleCheckAll}/>
+                               onCheckedChange={handleCheckAll}
+                               disabled={totalRows === 0}/>
                   </TableCell>
                   <TableCell align="center" className="w-[12%]">
                     Department Code
@@ -368,11 +501,12 @@ export default function Department() {
 
               {/* Allow the TableBody to grow and fill vertical space */}
               <TableBody sx={{ flexGrow: 1 }}>
-                {rowData.map((row, index) => (
+              {rowData.slice(page * rowsPerPage, rowsPerPage + (page * rowsPerPage))
+                .map((row, index) => (
                   <TableRow
-                    key={index}
+                    key={index + (page*rowsPerPage)}
                     className={
-                      editMode[index]
+                      editMode[index + (page*rowsPerPage)]
                         ? `bg-[#D8EAFF]`
                         : `${index % 2 === 1 ? `bg-inherit` : `bg-[#EBF4F6]`}`
                     }
@@ -383,22 +517,22 @@ export default function Department() {
                     }}
                   >
                     <TableCell align="left">
-                      <Checkbox2 checked={selected[index].isSelected}
+                      <Checkbox2 checked={selected[index + (page*rowsPerPage)].isSelected}
                           onCheckedChange={() => {
-                            handleSelected(index);
+                            handleSelected(index + (page*rowsPerPage));
                           }}/>
                     </TableCell>
 
                     {/* DepartmentCode */}
                     <TableCell align="center">
-                      {editMode[index] ? (
+                      {editMode[index + (page*rowsPerPage)] ? (
                         <Input
                           type="text"
                           className={`${styles.textBoxCell}`}
                           value={row.departmentCode}
                           onChange={(e) =>
                             handleInputChange(
-                              index,
+                              index + (page*rowsPerPage),
                               "departmentCode",
                               e.target.value
                             )
@@ -411,14 +545,14 @@ export default function Department() {
 
                     {/* Department */}
                     <TableCell align="center">
-                      {editMode[index] ? (
+                      {editMode[index + (page*rowsPerPage)] ? (
                         <Input
                           type="text"
                           className={`${styles.textBoxCell}`}
                           value={row.department}
                           onChange={(e) =>
                             handleInputChange(
-                              index,
+                              index + (page*rowsPerPage),
                               "department",
                               e.target.value
                             )
@@ -431,64 +565,67 @@ export default function Department() {
 
                     {/* Segment */}
                     <TableCell align="center">
-                      {editMode[index] ? (
-                        <LabelSelector2
-                          itemSource={segments}
-                          selectedVal={row.segmentId}
-                          id={row.departmentCode}
-                          handleSelectedVal={handleEditSegmentChange}
-                        />
+                      {editMode[index + (page*rowsPerPage)] ? (
+                      <SearchSelector
+                        itemSource={segmentItemSource}
+                        handleChange={(newVal: any, name: any) => handleSearchSelectorInRowChange(newVal, name, row.id)}
+                        selectedVal={row.segmentId}
+                        name={"segmentId"}
+                        borderColor="#4C9BF5"
+                      />
                       ) : (
                         `${
                           row.segmentId === null
                             ? "-"
-                            : segments.find((s) => s.id === row.segmentId)?.desc
+                            : segmentItemSource.find((s) => s.id === row.segmentId)?.desc
                         }`
                       )}
                     </TableCell>
 
                     {/* Group */}
                     <TableCell align="center">
-                      {editMode[index] ? (
-                        <LabelSelector2
-                          itemSource={groups}
-                          selectedVal={row.groupId}
-                          id={row.departmentCode}
-                          handleSelectedVal={handleEditGroupChange}
-                        />
+                      {editMode[index + (page*rowsPerPage)] ? (
+                      <SearchSelector
+                        itemSource={groupItemSource}
+                        handleChange={(newVal: any, name: any) => handleSearchSelectorInRowChange(newVal, name, row.id)}
+                        selectedVal={row.groupId}
+                        name={"groupId"}
+                        borderColor="#4C9BF5"
+                      />
                       ) : (
                         `${
                           row.groupId === null
                             ? "-"
-                            : groups.find((s) => s.id === row.groupId)?.desc
+                            : groupItemSource.find((s) => s.id === row.groupId)?.desc
                         }`
                       )}
                     </TableCell>
 
                     {/* Zone */}
                     <TableCell align="center">
-                      {editMode[index] ? (
-                        <LabelSelector2
-                          itemSource={zones}
-                          selectedVal={row.zoneId}
-                          id={row.departmentCode}
-                          handleSelectedVal={handleEditZoneChange}
-                        />
+                      {editMode[index + (page*rowsPerPage)] ? (
+                      <SearchSelector
+                        itemSource={zoneItemSource}
+                        handleChange={(newVal: any, name: any) => handleSearchSelectorInRowChange(newVal, name, row.id)}
+                        selectedVal={row.zoneId}
+                        name={"zoneId"}
+                        borderColor="#4C9BF5"
+                      />
                       ) : (
                         `${
                           row.zoneId === null
                             ? "-"
-                            : zones.find((s) => s.id === row.zoneId)?.desc
+                            : zoneItemSource.find((s) => s.id === row.zoneId)?.desc
                         }`
                       )}
                     </TableCell>
                     <TableCell align="center" sx={{justifyItems: "center"}}>
-                      {editMode[index] ? (
+                      {editMode[index + (page*rowsPerPage)] ? (
                         <div className="w-[48px] mr-9">
-                        <SaveButton onSaveBtnClick={handleSave} index={index}/>
+                        <SaveButton onSaveBtnClick={handleSave} index={index + (page*rowsPerPage)}/>
                       </div>
                       ) : (
-                        <EditButton onEditBtnClick={handleEdit} index={index} />
+                        <EditButton disable={editMode.some(e=>e === true)} onEditBtnClick={handleEdit} index={index + (page*rowsPerPage)}/>
                       )}
                     </TableCell>
                   </TableRow>
@@ -517,10 +654,18 @@ export default function Department() {
                         width: "100%",
                       }}
                     >
-                      <Typography>Total: {totalItems} items</Typography>
+                      <TablePagination
+                        sx={{color: "#2C5079"}}
+                        component="div"
+                        count={totalRows}
+                        page={page}
+                        onPageChange={handlePageChange}
+                        rowsPerPage={rowsPerPage}
+                        onRowsPerPageChange={handleRowsPerPageChange}
+                      />
                       <DeleteButton
                         onDeleteBtnClick={handleDelete}
-                        disable={true}
+                        disable={!selected.some((item) => item.isSelected)}
                       />
                     </Box>
                   </TableCell>
@@ -530,6 +675,17 @@ export default function Department() {
           </TableContainer>
         </Box>
       </Box>
+
+      {isLoading && (
+        <div className="fixed inset-0 bg-white bg-opacity-40 flex flex-col items-center justify-center z-indextop">
+          <Box sx={{ display: "flex" }}>
+            <CircularProgress />
+          </Box>
+        </div>
+      )}
+
+      {/* Confirm dialog */}
+      {ConfirmAlertDialog}
     </div>
   );
 }

@@ -28,20 +28,6 @@ import QRCode from "../../components/QRCode";
 import { IoClose } from "react-icons/io5";
 import { getMasterCheckpointData } from "@/app/lib/api";
 
-type RowData = {
-  hrCode: string;
-  customerId: any;
-  departmentId: any;
-  segmentId: any;
-  groupId: any;
-  zoneId: any;
-  qrCode: any;
-  contractId: any;
-  code: string;
-  isActive: boolean;
-  customerName: string;
-};
-
 type AreaData = {
   id: number;
   custId: number;
@@ -58,130 +44,21 @@ type CheckpointData = {
   ut: string;
 };
 
-const segments = [
-  {
-    smid: 1,
-    desc: "Building",
-  },
-  {
-    smid: 2,
-    desc: "Education",
-  },
-  {
-    smid: 3,
-    desc: "Industrial",
-  },
-  {
-    smid: 4,
-    desc: "Resident",
-  },
-];
-
-const groups = [
-  {
-    gid: 1,
-    desc: "General Guard",
-  },
-  {
-    gid: 2,
-    desc: "Cargo",
-  },
-  {
-    gid: 3,
-    desc: "Cleaning",
-  },
-];
-
-const zones = [
-  {
-    zid: 1,
-    desc: "BMR",
-  },
-  {
-    zid: 2,
-    desc: "RO1",
-  },
-  {
-    zid: 3,
-    desc: "SVN",
-  },
-  {
-    zid: 4,
-    desc: "RO2",
-  },
-];
-
-const mockArea: AreaData[] = [
-  {
-    id: 1,
-    custId: 1,
-    name: "อาคาร1",
-  },
-  {
-    id: 2,
-    custId: 1,
-    name: "อาคารใหญ่",
-  },
-  {
-    id: 3,
-    custId: 2,
-    name: "อาคาร2",
-  },
-];
-
-const mockCheckpoints: CheckpointData[] = [
-  {
-    id: 1,
-    areaId: 1,
-    name: "หน้าห้องพักอาจารย์ 3051 ชั้น 5",
-    qr: "https://www.google.com/",
-    lt: "000.000000",
-    lg: "000.000000",
-    ut: "000.000000",
-  },
-  {
-    id: 2,
-    areaId: 1,
-    name: "หน้าห้องเรียน 1515 ชั้น 5",
-    qr: "https://www.google.com/",
-    lt: "000.000000",
-    lg: "000.000000",
-    ut: "000.000000",
-  },
-  {
-    id: 3,
-    areaId: 2,
-    name: "หน้าประตูใหญ่",
-    qr: "https://www.google.com/",
-    lt: "000.000000",
-    lg: "000.000000",
-    ut: "000.000000",
-  },
-  {
-    id: 4,
-    areaId: 3,
-    name: "หน้าตึก",
-    qr: "https://www.google.com/",
-    lt: "000.000000",
-    lg: "000.000000",
-    ut: "000.000000",
-  },
-];
-
 interface ViewQrCodeProp {
   selectedCustomer: any;
   closeModal: any;
   customerAreas : any;
+  selectArea? : string;
 }
 
-const ViewQrCode = ({ selectedCustomer, closeModal, customerAreas }: ViewQrCodeProp) => {
+const ViewQrCode = ({ selectedCustomer, closeModal, customerAreas, selectArea=undefined }: ViewQrCodeProp) => {
   const [isEdit, setIsEdit] = useState(false);
   const [customer, setCustomer] = useState(selectedCustomer);
   const [areas, setAreas] = useState<AreaData[]>(customerAreas);
   const [checkpoints, setCheckpoints] =
-    useState<CheckpointData[]>(mockCheckpoints);
+    useState<CheckpointData[]>([]);
   const formHeader = "View QR Code";
-  const [selectedArea, setSelectedArea] = useState<any>(areas !== undefined ? areas[0].id : undefined);
+  const [selectedArea, setSelectedArea] = useState<any>(selectArea !== undefined ? selectArea : areas !== undefined ? areas[0]?.id : undefined);
   const [isPrintCardType, setIsPrintCardType] = useState(true);
   const [selectedChkPtArr, setSelectedChkPtArr] = useState(
     Array(checkpoints.length).fill(false)
@@ -199,9 +76,14 @@ const ViewQrCode = ({ selectedCustomer, closeModal, customerAreas }: ViewQrCodeP
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const initialData = async () => {
+    console.log("selectedCustomer.areaId =", selectedCustomer.areaId);
+    getCheckpoints(selectedArea);
+  };
+
+  const getCheckpoints = async (areaId: string) => {
     setIsLoading(true);
-    console.log("customeraAreas =", customerAreas);
-    const getCheckpoints = await getMasterCheckpointData(selectedCustomer.areaId);
+    console.log("selectedArea =", selectedArea);
+    const getCheckpoints = await getMasterCheckpointData(areaId);
     const mappedCheckpoints:CheckpointData[] = getCheckpoints?.documents.map((checkpoint) => {
       return {
         id: checkpoint.$id,
@@ -213,7 +95,6 @@ const ViewQrCode = ({ selectedCustomer, closeModal, customerAreas }: ViewQrCodeP
         ut: checkpoint.altitude
       };
     }) || checkpoints
-    //const areaChkPt = mockCheckpoints.filter((c) => c.areaId === areas !== undefined ? areas[0].id : undefined);
     setCheckpoints(mappedCheckpoints);
     setSelectedChkPtArr(Array(mappedCheckpoints.length).fill(false));
     setIsLoading(false);
@@ -221,6 +102,7 @@ const ViewQrCode = ({ selectedCustomer, closeModal, customerAreas }: ViewQrCodeP
 
   useEffect(() => {
     initialData();
+    console.log("selectedCustomer = ",selectedCustomer);
   }, []);
 
   const handleSelectChkPt = (index: any) => {
@@ -249,11 +131,7 @@ const ViewQrCode = ({ selectedCustomer, closeModal, customerAreas }: ViewQrCodeP
 
   const handleSelectAreaChange = (e: SelectChangeEvent) => {
     setSelectedArea(e.target.value);
-    const areaChkPt = mockCheckpoints.filter(
-      (c) => c.areaId === e.target.value
-    );
-    setCheckpoints(areaChkPt);
-    setSelectedChkPtArr(Array(areaChkPt.length).fill(false));
+    getCheckpoints(e.target.value);
     setIsSelectedChkPtAll(false);
     setSelectedChkPtTotal(0);
   };

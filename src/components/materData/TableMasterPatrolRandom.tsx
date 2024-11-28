@@ -10,6 +10,7 @@ import {
   TableContainer,
   TableFooter,
   TableHead,
+  TablePagination,
   TableRow,
   Typography,
 } from "@mui/material";
@@ -30,6 +31,7 @@ import {
   getAllMasterCheckListData,
   getAllMasterRandomPatrolReason,
   deleteRandomPatrol,
+  fetchMasterRandomPatrolReason,
 } from "../../../src/app/lib/api";
 import PatrolRandomCheckpointForm from "./PatrolRandomCheckpointForm";
 import { useConfirmDialog } from "../ui/alertDialog/confirmDialog";
@@ -115,6 +117,9 @@ export function TableMasterPatrolRandom({}: TableMasterPatrolRandomProps) {
   const [isAddOrUpdateSucces, setIsAddOrUpdateSucces] = useState(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { confirmDialog, ConfirmAlertDialog } = useConfirmDialog();
+  const [totalRows, setTotalRows] = useState(0);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(1); 
 
   const checkListsOfCheckpoint = async () => {
     setIsLoading(true);
@@ -145,7 +150,7 @@ export function TableMasterPatrolRandom({}: TableMasterPatrolRandomProps) {
       setIsAddOrUpdateSucces(false);
     }
     tableData();
-  }, [isAddOrUpdateSucces]);
+  }, [isAddOrUpdateSucces]); //page, rowsPerPage
 
   useEffect(() => {
     checkListsOfCheckpoint();
@@ -153,8 +158,8 @@ export function TableMasterPatrolRandom({}: TableMasterPatrolRandomProps) {
 
   const tableData = async () => {
     setIsLoading(true);
+    const offset = page * rowsPerPage;
     const fetchRandomPatrol = await getAllMasterRandomPatrolReason();
-    setIsLoading(false);
     const mappedToRowData: RowData[] =
       fetchRandomPatrol?.documents.map((r) => {
         return {
@@ -165,12 +170,14 @@ export function TableMasterPatrolRandom({}: TableMasterPatrolRandomProps) {
         };
       }) || rowData;
     setRowData(mappedToRowData);
+    setTotalRows(fetchRandomPatrol?.total || 0);
     setSelected(
       mappedToRowData?.map((row) => ({
         isSelected: false,
         randomPatrolId: row.id,
       }))
     );
+    setIsLoading(false);
   };
 
   const handleSelected = (index: number) => {
@@ -231,10 +238,19 @@ export function TableMasterPatrolRandom({}: TableMasterPatrolRandomProps) {
     setOpenAddRandomPatrol(true);
   };
 
+  const handlePageChange = (event: any, newPage: any) => {
+    console.log("newPage", newPage);
+    setPage(newPage);
+  };
+  const handleRowsPerPageChange = (event: any) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
   return (
     <>
       <TableContainer
-        className="h-screen bg-white"
+        className="h-[76vh] max-h-[76vh] bg-white"
         sx={{
           display: "flex",
           flexDirection: "column",
@@ -242,8 +258,8 @@ export function TableMasterPatrolRandom({}: TableMasterPatrolRandomProps) {
           boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
         }}
       >
-        <Table>
-          <TableHead>
+        <Table stickyHeader sx={{ zIndex: 0 }}>
+          <TableHead sx={{ mt: 0 }}>
             <TableRow
               sx={{ borderBottom: "1px solid #C7D4D7" }}
               className={`${styles.table}`}
@@ -266,10 +282,11 @@ export function TableMasterPatrolRandom({}: TableMasterPatrolRandomProps) {
 
           {/* Allow the TableBody to grow and fill vertical space */}
           <TableBody sx={{ flexGrow: 1 }}>
-            {rowData.map((row, index) => (
+            {rowData.slice(page * rowsPerPage, rowsPerPage + (page * rowsPerPage))
+              .map((row, index) => (
               <TableRow
                 onClick={() => handleRowClick(row)} // Row click handler
-                key={index}
+                key={index + (page*rowsPerPage)}
                 className={`${index % 2 === 1 ? `bg-inherit` : `bg-[#EBF4F6]`}`}
                 sx={{
                   cursor: "pointer",
@@ -284,10 +301,10 @@ export function TableMasterPatrolRandom({}: TableMasterPatrolRandomProps) {
                 <TableCell align="left">
                   <Checkbox
                     className="mt-1 mb-2"
-                    checked={selected[index]?.isSelected}
+                    checked={selected[index + (page*rowsPerPage)]?.isSelected}
                     onClick={(event) => {
                       event.stopPropagation(); // Prevent row click
-                      handleSelected(index);
+                      handleSelected(index + (page*rowsPerPage));
                     }}
                   />
                 </TableCell>
@@ -322,7 +339,17 @@ export function TableMasterPatrolRandom({}: TableMasterPatrolRandomProps) {
                     width: "100%",
                   }}
                 >
-                  <Typography>Total: {rowData.length} items</Typography>
+                  {/* <Typography>Total: {rowData.length} items</Typography> */}
+                  <TablePagination
+                    sx={{ color: "#2C5079" }}
+                    component="div"
+                    count={totalRows}
+                    page={page}
+                    onPageChange={handlePageChange}
+                    rowsPerPage={rowsPerPage}
+                    onRowsPerPageChange={handleRowsPerPageChange}
+                    rowsPerPageOptions={[1,2]}
+                  />
                   <Box>
                     <DeleteButton
                       onDeleteBtnClick={handleDeleteRandomPatrol}

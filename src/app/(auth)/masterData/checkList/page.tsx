@@ -1,9 +1,9 @@
 "use client";
-import { Box, Table, TableBody, TableCell, TableContainer, TableFooter, TableHead, TableRow, TextField, Typography } from "@mui/material/";
+import { Box, CircularProgress, Table, TableBody, TableCell, TableContainer, TableFooter, TableHead, TablePagination, TableRow, TextField, Typography } from "@mui/material/";
 import Navbar from "@/components/Navbar";
 import LabelTextField from "@/components/ui/textboxs/LabelTextField";
 import { Button } from "@/components/ui/buttons/button";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Checkbox as Checkbox2 } from "@/components/ui/checkbox";
 import { Edit2 } from "iconsax-react";
 import { Input } from "@/components/ui/textboxs/input";
@@ -15,13 +15,18 @@ import { SaveButton } from "@/components/ui/buttons/saveButton";
 import { DeleteButton } from "@/components/ui/buttons/deleteButton";
 import { Checkbox as Checkbox3 } from "@/components/ui/checkbox3"
 import { Textbox } from "@/components/ui/textboxs/textbox";
+import { addNewChecklist, deleteChecklist, fetchMasterCheckListData, filterMasterChecklistData, getAllMasterCheckListData, updateCheckList } from "@/app/lib/api";
+import { useConfirmDialog } from "../../../../components/ui/alertDialog/confirmDialog";
+import { ClearButtton } from "@/components/ui/buttons/clearButton";
 
-type ChkListData = {
-  id: number;
+type CheckListData = {
+  id: string;
   name: string;
   abnormalStatus: string;
   normalStatus: string;
   attachPhoto: any;
+  isDefault: boolean;
+  isNeedAttachPhoto: boolean;
 };
 
 type selectedDelete = {
@@ -31,94 +36,251 @@ type selectedDelete = {
 
 export default function CheckList() {
 
-  const rows: ChkListData[] = [
-    {
-      id: 1,
-      name: "แสงสว่าง",
-      abnormalStatus: "เพียงพอ",
-      normalStatus: "ไม่เพียงพอ",
-      attachPhoto: 1
-    },
-    {
-      id: 2,
-      name: "สิ่งกีดขวาง",
-      abnormalStatus: "ไม่พบ",
-      normalStatus: "พบ",
-      attachPhoto: 1
-    },
-    {
-      id: 3,
-      name: "วัตถุอันตราย",
-      abnormalStatus: "ไม่พบ",
-      normalStatus: "พบ",
-      attachPhoto: 2
-    },
-    {
-      id: 4,
-      name: "อุปกรณ์ชำรุด",
-      abnormalStatus: "ไม่พบ",
-      normalStatus: "พบ",
-      attachPhoto: 2
-    },
-  ];
-
-  const totalItems = rows.length;
-
-  const [editMode, setEditMode] = useState(Array(rows.length).fill(false)); // Array to track edit state for each row
-  const [rowData, setRowData] = useState(rows); // Local state for row data
-  const [addCheckList, setAddCheckList] = useState("");
+  const [rowData, setRowData] = useState<CheckListData[]>([]); // Local state for row data
+  const [editMode, setEditMode] = useState(Array(rowData.length).fill(false)); // Array to track edit state for each row
+  const [addCheckListName, setAddCheckListName] = useState("");
   const [addNormmalStatus, setAddNormalStatus] = useState("");
   const [addAbnormmalStatus, setAddAbnormalStatus] = useState("");
-  const [photoAmt, setPhotoAmt] = useState<number>();
+  const [photoAmt, setPhotoAmt] = useState<any>("");
+  const [isNeedAttachPhoto, setIsNeedAttachPhoto] = useState<boolean>(false);
   const [isSelectedAll, setIsSelectedAll] = useState(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const { confirmDialog, ConfirmAlertDialog } = useConfirmDialog();
   const [selected, setSelected] = useState<selectedDelete[]>(
-    rows.map((row) => ({
+    rowData.map((row) => ({
       isSelected: false,
       id: row.id,
     }))
   );
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10); 
+  const [totalRows, setTotalRows] = useState(0);
+  const [isSearch, setIsSearch] = useState<boolean>(false);
 
-  // Handle Edit button click
+  useEffect(() => {
+    tableData();
+  }, []);
+
+  const tableData = async () => {
+    setIsLoading(true);
+    const allChecklist = await getAllMasterCheckListData();
+    console.log("allChecklist =", allChecklist);
+    const tableData: CheckListData[] = allChecklist?.documents?.map((doc: any) => {
+        return {
+          id: doc.$id,
+          name: doc.name,
+          abnormalStatus: doc.abnormalStatus,
+          normalStatus: doc.normalStatus,
+          attachPhoto: doc.attachPhotoAmount,
+          isDefault: doc.isDefault,
+          isNeedAttachPhoto: doc.isNeedAttachPhoto,
+        };
+      }) || []
+    setRowData(tableData);
+    setTotalRows(allChecklist?.total || 0);
+    console.log("tableData =", tableData);
+
+    const mapSelect = tableData.map((row: CheckListData) => ({
+      isSelected: false,
+      id: row.id,
+    }));
+    setSelected(mapSelect);
+    setIsLoading(false);
+  };
+
   const handleEdit = (index: any) => {
     const newEditMode = [...editMode];
     newEditMode[index] = true; // Enable edit mode for the clicked row
     setEditMode(newEditMode);
   };
 
-  // Handle Save button click
-  const handleSave = (index: any) => {
+  const handleSave = async (index: any) => {
     const newEditMode = [...editMode];
     newEditMode[index] = false; // Disable edit mode after saving
     setEditMode(newEditMode);
-    // Optionally save changes to the server or state
-  };
-
-  const handleAdd = () => {
-  };
-
-  const handleSearch = () => {
-
-  };
-
-  const handleDelete = () => {
     
+    console.log("rowData[index] = ", rowData[index]);
+    const dataToSubmit = {
+      name: rowData[index]?.name,
+      normalStatus: rowData[index]?.normalStatus,
+      abnormalStatus: rowData[index]?.abnormalStatus,
+      attachPhotoAmount: parseInt(rowData[index]?.attachPhoto),
+      isNeedAttachPhoto: parseInt(rowData[index]?.attachPhoto) > 0 ? true : false
+    }
+    const updateChecklistResult = await updateCheckList(dataToSubmit, rowData[index]?.id);
+    if(updateChecklistResult.result !== null) {
+      const confirmApprove = await confirmDialog(
+        "Save Checklist Success",
+        "Save Checklist data successfully.",
+        true, "success"
+      );
+      if(confirmApprove) {
+        isSearch === true ?
+        await search() : await tableData()
+      }
+    }
+    else{
+      const confirmApprove = await confirmDialog(
+        "Error to Save Checklist",
+        `${updateChecklistResult.error}`,
+        true, "danger"
+      );
+      if(confirmApprove) {
+        isSearch === true ?
+        await search() : await tableData()
+      }
+    }
+  };
+
+  const handleAdd = async () => {
+    const dataToSubmit = {
+      name: addCheckListName,
+      normalStatus: addNormmalStatus,
+      abnormalStatus: addAbnormmalStatus,
+      attachPhotoAmount: parseInt(photoAmt),
+      isNeedAttachPhoto: isNeedAttachPhoto
+    }
+    const addChecklistResult = await addNewChecklist(dataToSubmit);
+    if(addChecklistResult.result !== null) {
+      const confirmApprove = await confirmDialog(
+        "Add Checklist Success",
+        "Add Checklist data successfully.",
+        true, "success"
+      );
+      if(confirmApprove) {
+        setAddCheckListName("");
+        setAddNormalStatus("");
+        setAddAbnormalStatus("");
+        setPhotoAmt("");
+        setIsNeedAttachPhoto(false);
+      }
+    }
+    else{
+      const confirmApprove = await confirmDialog(
+        "Error to Add Checklist",
+        `${addChecklistResult.error}`,
+        true, "danger"
+      );
+    }
+    isSearch === true ?
+    await search() : await tableData()
+  };
+
+  const handleSearch = async () => {
+    if(isSearch === false) {
+      setIsSearch(true);
+    }
+    setIsSelectedAll(false);
+    handleCheckAll(false);
+    setPage(0);
+    search();
+  };
+
+  const handleClear = () => {
+    setAddCheckListName("");
+    setAddNormalStatus("");
+    setAddAbnormalStatus("");
+    setPhotoAmt("");
+    setIsNeedAttachPhoto(false);
+    setIsSelectedAll(false);
+    setIsSearch(false);
+    handleCheckAll(false);
+    setPage(0);
+    tableData();
+  }
+
+  const search = async () => {
+    setIsLoading(true);
+    const offset = page * rowsPerPage;
+    const filterChecklist = await filterMasterChecklistData([
+      {field: "name", value: addCheckListName},
+      {field: "normalStatus", value: addNormmalStatus},
+      {field: "abnormalStatus", value: addAbnormmalStatus},
+      {field: "attachPhotoAmount", value: photoAmt === "" ? "" : parseInt(photoAmt)},
+      {field: "isNeedAttachPhoto", value: isNeedAttachPhoto},
+    ], offset, rowsPerPage);
+    setTotalRows(filterChecklist?.total || 0);
+    console.log("filterChecklist =", filterChecklist);
+    const tableData: CheckListData[] = filterChecklist?.documents?.map((doc) => {
+      return {
+        id: doc.$id,
+        name: doc.name,
+        abnormalStatus: doc.abnormalStatus,
+        normalStatus: doc.normalStatus,
+        attachPhoto: doc.attachPhotoAmount,
+        isDefault: doc.isDefault,
+        isNeedAttachPhoto: doc.isNeedAttachPhoto,
+      };
+    }) || []
+    setRowData(tableData);
+    console.log("tableData =", tableData);
+
+    const mapSelect = tableData.map((row: CheckListData) => ({
+      isSelected: false,
+      id: row.id,
+    }));
+    setSelected(mapSelect);
+    setIsLoading(false);
+  };
+
+  const handleDelete = async () => {
+    console.log("selected =", selected);
+    const confirmApprove = await confirmDialog(
+      "Delete Checklist",
+      "Do you want to delete these selected checklist?", false, "danger"
+    );
+    if (confirmApprove) {
+      if (confirmApprove) {
+        let response: any;
+        const deleteId = selected.filter(s => s.isSelected === true).map(s=>s.id);
+        if (deleteId.length > 0) {
+          response = await deleteChecklist(deleteId);
+          console.log("response =", response);
+        }
+        if(response.result !== null){
+          const confirmApprove = await confirmDialog(
+            "Delete Checklist Success",
+            "Delete Checklist data successfully.",
+            true
+          );
+          setIsSelectedAll(false);
+        }
+        else{
+          const confirmApprove = await confirmDialog(
+            "Error to delete Checklist",
+            `${response.error}`,
+            true, "danger"
+          );
+        }
+        isSearch === true ?
+        await search() : await tableData()
+      }
+    }
   };
 
   // Handle input changes in edit mode
-  const handleInputChange = <T extends keyof ChkListData>(
+  const handleRowInputChange = <T extends keyof CheckListData>(
     index: number,
     field: T,
-    value: ChkListData[T]
+    value: CheckListData[T]
   ) => {
     const newRowData = [...rowData];
     newRowData[index][field] = value;
     setRowData(newRowData);
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    //setRowData((prevData) => ({ ...prevData, [name]: value }));
-    setPhotoAmt(value as unknown as number);
+  const handleChange = (e: any, fieldName?: string) => {// React.ChangeEvent<HTMLInputElement>/
+    const value = e.target?.value;
+    const name = e.target?.name;
+    if(fieldName === "isNeedAttachPhoto"){
+      setIsNeedAttachPhoto(e);
+      if(e === false){
+        setPhotoAmt("");
+      }
+    }
+    else if(name === "attachPhotoAmt"){
+      setPhotoAmt(value);
+    }
   };
 
   const handleSelected = (index: number) => {
@@ -142,15 +304,21 @@ export default function CheckList() {
     setSelected(selectedAll);
   };
 
+  const handlePageChange = (event: any, newPage: any) => {
+    setPage(newPage);
+  };
+
+  const handleRowsPerPageChange = (event: any) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
   return (
     <div>
       <Navbar menu={'Master Data'} submenu={'Check List'} />
       <Box className="px-2">
         {/* Main Content */}
         <Box flex={1} px={2} pb={2}>
-        <Typography sx={{fontWeight: "700", color: "#F66262", border: "1px solid #F66262", width: "fit-content", borderRadius: "10px", mb: 1}} className="py-1 px-2">
-                Mockup data
-            </Typography>
           {/* Sub Header */}
           <Box mb={2} className="w-full flex justify-center">
             <Box
@@ -160,18 +328,17 @@ export default function CheckList() {
                   boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
                 }}
                 justifyContent="space-between"
-                className="space-x-4 p-4 flex w-[90%]"
+                className="p-4 flex w-[90%] flex-nowrap space-x-4 sm:space-y-0"
               >
-                <div className="w-[28%]">
+                <div className="w-[26%] flex justify-center items-center">
                 <LabelTextField
                   label={"Check List"}
                   placeholder={"Type here..."}
-                  inputVal={addCheckList}
-                  setInputVal={setAddCheckList}
+                  inputVal={addCheckListName}
+                  setInputVal={setAddCheckListName}
                 />
                 </div>
-                
-                <div className="w-[16%]">
+                <div className="w-[16%] flex justify-center items-center">
                 <LabelTextField
                   label={"Status: Normal"}
                   placeholder={"Type here..."}
@@ -179,7 +346,7 @@ export default function CheckList() {
                   setInputVal={setAddNormalStatus}
                 />
                 </div>
-                <div className="w-[16%]">
+                <div className="w-[16%] flex justify-center items-center">
                 <LabelTextField
                   label={"Status: Abnormal"}
                   placeholder={"Type here..."}
@@ -187,23 +354,28 @@ export default function CheckList() {
                   setInputVal={setAddAbnormalStatus}
                 />
                 </div>
-                <div className="w-[12%] flex space-x-4">
-                <Checkbox3 className="w-9 h-9 mt-1"/>
-                <Typography sx={{color: "#2C5079", width: "full", mt: 1}}>Attach photos</Typography>
+                <div className="w-[12%] flex justify-center items-center">
+                <Checkbox3 checked={isNeedAttachPhoto} className="w-9 h-9 mt-1 mr-2" onCheckedChange={(e) => handleChange(e, "isNeedAttachPhoto")} />
+                <Typography sx={{color: "#2C5079", width: "full", mt: 0.5}}>Attach photos</Typography>
                 </div>
-                <div className="w-[13%]">
+                <div className="w-[10%] flex justify-center items-center">
                 <Textbox name="attachPhotoAmt" inputType="number" placeHolder="Amount.." value={photoAmt} handleChange={handleChange}/>
                 </div>
-
-                <Box className="space-x-4 w-[15%] flex">
-                  <AddButton onAddBtnClick={handleAdd}/>
-                  <SearchButton onSearchBtnClick={handleSearch}/>
+                <Box className="w-full sm:w-auto flex flex-nowrap sm:flex-nowrap space-x-4"
+                sx={{
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}>
+                  <AddButton disable={editMode.some(e=>e === true)} onAddBtnClick={handleAdd}/>
+                  <SearchButton disable={editMode.some(e=>e === true)} onSearchBtnClick={handleSearch}/>
+                  <ClearButtton onBtnClick={handleClear}
+                                disable={editMode.some(e=>e === true)} icon={undefined} content={"Clear"} />
                 </Box>
             </Box>
           </Box>
 
           <TableContainer
-            className="h-screen bg-white"
+            className="h-[74vh] max-h-[74vh] bg-white"
             sx={{
               display: "flex",
               flexDirection: "column",
@@ -211,13 +383,14 @@ export default function CheckList() {
               boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
             }}
           >
-            <Table>
-              <TableHead>
+            <Table stickyHeader>
+            <TableHead sx={{mt:0}}>
                 <TableRow sx={{ borderBottom: "1px solid #C7D4D7" }}>
                 <TableCell align="left" className="w-[5%]">
                     <Checkbox2 className="mt-1 mb-2"
                         checked={isSelectedAll}
-                        onCheckedChange={handleCheckAll}/>
+                        onCheckedChange={handleCheckAll}
+                        disabled={totalRows === 0}/>
                   </TableCell>
                   <TableCell align="center" className="w-[19%]">Check List</TableCell>
                   <TableCell align="center" className="w-[24%]">Status: Normal</TableCell>
@@ -229,77 +402,79 @@ export default function CheckList() {
 
               {/* Allow the TableBody to grow and fill vertical space */}
               <TableBody sx={{ flexGrow: 1 }}>
-                {rowData.map((row, index) => (
+                {rowData.slice(page * rowsPerPage, rowsPerPage + (page * rowsPerPage))
+                .map((row, index) => (
                   <TableRow
-                    key={index}
+                    key={index + (page*rowsPerPage)}
                     className={
-                      editMode[index]
+                      editMode[index + (page * rowsPerPage)]
                         ? `bg-[#D8EAFF]`
                         : `${index % 2 === 1 ? `bg-inherit` : `bg-[#EBF4F6]`}`
                     }
                   >
                     <TableCell align="left">
                       <Checkbox2
-                          checked={selected[index].isSelected}
+                          checked={selected[index + (page*rowsPerPage)].isSelected}
                           onCheckedChange={() => {
-                            handleSelected(index);
+                            handleSelected(index + (page*rowsPerPage));
                           }}/>
                     </TableCell>
                     <TableCell align="center" className="max-w-48">
-                      {editMode[index] ? (
+                      {editMode[index + (page*rowsPerPage)] ? (
                         <Input
                           type="text"
                           className={`${styles.textBoxCell}`}
                           value={row.name}
-                          onChange={(e) => handleInputChange(index, 'name', e.target.value)}
+                          onChange={(e) => handleRowInputChange(index + (page*rowsPerPage), 'name', e.target.value)}
                         />
                       ) : (
                         `${row.name}`
                       )}
                     </TableCell>
                     <TableCell align="center">
-                      {editMode[index] ? (
+                      {editMode[index + (page*rowsPerPage)] ? (
                         <Input
                           type="text"
                           className={`${styles.textBoxCell}`}
                           value={row.normalStatus}
-                          onChange={(e) => handleInputChange(index, 'normalStatus', e.target.value)}
+                          onChange={(e) => handleRowInputChange(index + (page*rowsPerPage), 'normalStatus', e.target.value)}
                         />
                       ) : (
                         `${row.normalStatus}`
                       )}
                     </TableCell>
                     <TableCell align="center">
-                      {editMode[index] ? (
+                      {editMode[index + (page*rowsPerPage)] ? (
                         <Input
                           type="text"
                           className={`${styles.textBoxCell}`}
                           value={row.abnormalStatus}
-                          onChange={(e) => handleInputChange(index, 'abnormalStatus', e.target.value)}
+                          onChange={(e) => handleRowInputChange(index + (page*rowsPerPage), 'abnormalStatus', e.target.value)}
                         />
                       ) : (
                         `${row.abnormalStatus}`
                       )}
                     </TableCell>
                     <TableCell align="center">
-                      {editMode[index] ? (
+                      {editMode[index + (page*rowsPerPage)] ? (
                         <Input
-                          type="text"
+                          type="number"
+                          min={0}
                           className={`${styles.textBoxCell}`}
                           value={row.attachPhoto}
-                          onChange={(e) => handleInputChange(index, 'attachPhoto', e.target.value)}
+                          onChange={(e) => handleRowInputChange(index + (page*rowsPerPage), 'attachPhoto', e.target.value)}
                         />
                       ) : (
                         `${row.attachPhoto}`
                       )}
                     </TableCell>
                     <TableCell align="center" sx={{justifyItems: "center"}}>
-                      {editMode[index] ? (
+                      {editMode[index + (page*rowsPerPage)] ? (
                         <div className="w-[48px] mr-8">
-                          <SaveButton onSaveBtnClick={handleSave} index={index}/>
+                          <SaveButton onSaveBtnClick={handleSave} index={index + (page*rowsPerPage)}/>
                         </div>
                       ) : (
-                        <EditButton onEditBtnClick={handleEdit} index={index}/>
+                        <EditButton disable={editMode.some(e=>e === true)} onEditBtnClick={handleEdit} index={index + (page*rowsPerPage)}/>
                       )}
                     </TableCell>
                   </TableRow>
@@ -328,8 +503,16 @@ export default function CheckList() {
                         width: "100%",
                       }}
                     >
-                      <Typography>Total: {totalItems} items</Typography>
-                      <DeleteButton onDeleteBtnClick={handleDelete} disable={true}/>
+                      <TablePagination
+                        sx={{color: "#2C5079"}}
+                        component="div"
+                        count={totalRows}
+                        page={page}
+                        onPageChange={handlePageChange}
+                        rowsPerPage={rowsPerPage}
+                        onRowsPerPageChange={handleRowsPerPageChange}
+                      />
+                      <DeleteButton onDeleteBtnClick={handleDelete} disable={!selected.some((item) => item.isSelected)}/>
                     </Box>
                   </TableCell>
                 </TableRow>
@@ -338,6 +521,17 @@ export default function CheckList() {
           </TableContainer>
         </Box>
       </Box>
+      
+      {isLoading && (
+        <div className="fixed inset-0 bg-white bg-opacity-40 flex flex-col items-center justify-center z-indextop">
+          <Box sx={{ display: "flex" }}>
+            <CircularProgress />
+          </Box>
+        </div>
+      )}
+
+      {/* Confirm dialog */}
+      {ConfirmAlertDialog}
     </div>
   );
 }

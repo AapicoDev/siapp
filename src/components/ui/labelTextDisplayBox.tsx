@@ -6,9 +6,10 @@ import { Box, Typography } from "@mui/material";
 interface LabelTextDisplayBoxProp {
   label?: any;
   text: any;
+  textAlign? : string;
 }
 
-export function LabelTextDisplayBox({ text, label="" }: LabelTextDisplayBoxProp) {
+export function LabelTextDisplayBox({ text, label="", textAlign="center" }: LabelTextDisplayBoxProp) {
 
   return (
     <>
@@ -30,9 +31,11 @@ export function LabelTextDisplayBox({ text, label="" }: LabelTextDisplayBoxProp)
           paddingY: "0.4rem",
           bgcolor: "white",
           color: "#2C5079",
-          textAlign: "center",
+          textAlign: {textAlign},
+          pl: `${textAlign === "left" ? "1rem" : 0}`,
           border: "1px solid #1D7A9B",
           borderRadius: "10px",
+          cursor: "not-allowed"
         }}
       >
         {text === undefined || "" ? "-" : text}

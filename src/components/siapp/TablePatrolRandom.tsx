@@ -1,13 +1,14 @@
 "use client";
 
 import * as React from "react";
-import { Box, CircularProgress, Table, TableBody, TableCell, TableContainer, TableFooter, TableHead, TableRow, Typography } from "@mui/material";
+import { Box, CircularProgress, Table, TableBody, TableCell, TableContainer, TableFooter, TableHead, TablePagination, TableRow, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
 import { GoArrowUpRight } from "react-icons/go";
 import styles from "../../app/styles.module.css";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  getAllRandomPatrolCheckpointData
+  getAllRandomPatrolCheckpointData,
+  getRandomPatrolCheckpointData
 } from "../../app/lib/api";
 import PatrolDeatilView from "./PatrolDetailView";
 import RandomPatrolDeatilView from "./RandomPatrolDetailView";
@@ -47,10 +48,13 @@ export function TablePatrolRandom({ }: TableContractProps) {
   const [isSelectedAll, setIsSelectedAll] = useState(false);
   const [selected, setSelected] = useState<selectedCheckBox[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [totalRows, setTotalRows] = useState(0);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10); 
 
   useEffect(() => {
     getRandomData();
-  }, []);
+  }, []); //page, rowsPerPage
 
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
@@ -82,12 +86,22 @@ export function TablePatrolRandom({ }: TableContractProps) {
     setOpenRandomPatrolDetailModal(false);
   }
 
+  const handlePageChange = (event: any, newPage: any) => {
+    console.log("newPage", newPage);
+    setPage(newPage);
+  };
+  const handleRowsPerPageChange = (event: any) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
   const getRandomData = async () => {
     setIsLoading(true);
+    const offset = page * rowsPerPage;
     const randomPatrols = await getAllRandomPatrolCheckpointData();
     console.log("randomPatrols =", randomPatrols);
     const reOrder = randomPatrols?.documents.sort((a, b) => {
-      return new Date(b.DateTime).getTime() - new Date(a.DateTime).getTime();
+      return new Date(b.endTime).getTime() - new Date(a.endTime).getTime();
     });
     const tableData: RandomRowData[] =
       randomPatrols?.documents.map((random, index) => {
@@ -108,6 +122,7 @@ export function TablePatrolRandom({ }: TableContractProps) {
       }) || patrolRandomCheckpoints;
     console.log("random patrol tableData = ", tableData);
     setPatrolRandomCheckpoints(tableData);
+    setTotalRows(randomPatrols?.total || 0);
     const mapSelect: selectedCheckBox[] = tableData.map((row) => ({
       isSelected: false,
       id: row.checkpointId,
@@ -141,7 +156,7 @@ export function TablePatrolRandom({ }: TableContractProps) {
   return (
     <>
       <TableContainer
-        className="h-screen bg-white p-2"
+        className="h-[76vh] max-h-[76vh] bg-white p-2"
         sx={{
           display: "flex",
           flexDirection: "column",
@@ -149,8 +164,8 @@ export function TablePatrolRandom({ }: TableContractProps) {
           boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
         }}
       >
-        <Table>
-          <TableHead>
+        <Table stickyHeader>
+          <TableHead sx={{ mt: 0}}>
             <TableRow
               sx={{ borderBottom: "1px solid #C7D4D7" }}
               className={`${styles.table}`}
@@ -187,10 +202,11 @@ export function TablePatrolRandom({ }: TableContractProps) {
 
           {/* Allow the TableBody to grow and fill vertical space */}
           <TableBody sx={{ flexGrow: 1 }}>
-            {patrolRandomCheckpoints.map((row, index) => (
+          {patrolRandomCheckpoints.slice(page * rowsPerPage, rowsPerPage + (page * rowsPerPage)).
+            map((row, index) => (
               <TableRow
                 onClick={() => handleRowClick(row)} // Row click handler
-                key={index}
+                key={index + (page * rowsPerPage)}
                 className={`${index % 2 === 1 ? `bg-inherit` : `bg-[#EBF4F6]`}`}
                 sx={{
                   cursor: "pointer",
@@ -205,10 +221,10 @@ export function TablePatrolRandom({ }: TableContractProps) {
                 <TableCell align="left">
                   <Checkbox
                     className="mt-1 mb-2"
-                    checked={selected[index].isSelected}
+                    checked={selected[index + (page * rowsPerPage)].isSelected}
                     onClick={(event) => {
                       event.stopPropagation(); // Prevent row click
-                      handleSelected(index);
+                      handleSelected(index + (page * rowsPerPage));
                     }}
                   />
                 </TableCell>
@@ -264,7 +280,16 @@ export function TablePatrolRandom({ }: TableContractProps) {
                     width: "100%",
                   }}
                 >
-                  <Typography>Total: {patrolRandomCheckpoints.length} items</Typography>
+                  {/* <Typography>Total: {patrolRandomCheckpoints.length} items</Typography> */}
+                    <TablePagination
+                      sx={{color: "#2C5079"}}
+                      component="div"
+                      count={totalRows}
+                      page={page}
+                      onPageChange={handlePageChange}
+                      rowsPerPage={rowsPerPage}
+                       onRowsPerPageChange={handleRowsPerPageChange}
+                    />
                   <Box className="w-fit flex">
                     <Box className="w-fit p-2">
                       <Button disabled={true} className="flex items-center justify-center w-32 h-11 border-[1px] border-[#1D7A9B] bg-white font-bold text-[#1D7A9B] hover:bg-[#1D7A9B] hover:text-white disabled:bg-[#83A2AD]">
@@ -293,7 +318,7 @@ export function TablePatrolRandom({ }: TableContractProps) {
         />
       )}
 
-      {isLoading && <div className="fixed inset-0 bg-white bg-opacity-40 flex flex-col items-center justify-center z-indextop">
+      {isLoading && <div className="fixed inset-0 bg-white bg-opacity-40 flex flex-col items-center justify-center z-50">
         <Box sx={{ display: "flex" }}>
           <CircularProgress />
         </Box>

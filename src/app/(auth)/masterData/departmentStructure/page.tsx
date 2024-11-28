@@ -448,12 +448,15 @@ export default function DepartmentStructure() {
                       }}
                     >
                       <Typography>Total: {totalItems} items</Typography>
-                      <div className="flex space-x-3">
+                      <div className="flex">
                       <DeleteButton
                         onDeleteBtnClick={handleDelete}
                         disable={!selected.some(s => s.isSelected === true)}
                       />
+                      <Box className="flex w-[12rem]">
                       <GradientButton onBtnClick={handleDelete} content={"+New Structure"} />
+                      </Box>
+                      
                       </div>
                     </Box>
                   </TableCell>

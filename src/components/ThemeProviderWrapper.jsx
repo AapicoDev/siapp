@@ -67,7 +67,33 @@ const theme = createTheme({
           backgroundColor: 'transparent',
         },
       },
-    }
+    },
+    MuiTablePagination: {
+      styleOverrides: {
+        toolbar: {
+          fontSize: "14px", // Customize toolbar font size
+        },
+        selectLabel: {
+          fontSize: "16px", // Customize "Rows per page" label font size
+        },
+        displayedRows: {
+          fontSize: "16px", // Customize "1-10 of X" text font size
+        },
+        select: {
+          fontSize: "16px", // Customize dropdown font size
+          paddingRight: "32px",
+          paddingTop: "8px"
+        },
+        selectIcon: {
+          left: "20px", // Adjust the dropdown icon position
+        },
+        actions: {
+          "& .MuiSvgIcon-root": {
+            fontSize: "2rem", // Customize icon size
+          },
+        },
+      },
+    },
   },
 });
 

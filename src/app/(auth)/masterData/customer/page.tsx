@@ -18,6 +18,8 @@ import {
   Button as Button2,
   IconButton,
   Switch as SwitchMUI,
+  CircularProgress,
+  TablePagination,
 } from "@mui/material/";
 import CloseIcon from "@mui/icons-material/Close";
 import Navbar from "@/components/Navbar";
@@ -42,25 +44,40 @@ import { LabelSelector } from "@/components/ui/selectors/labelSelector";
 import { Textbox } from "@/components/ui/textboxs/textbox";
 import LabelTextField from "@/components/ui/textboxs/LabelTextField";
 import data from "@/app/mockData.json";
+import {
+  deleteArea,
+  deleteCustomer,
+  fetchMasterCustomerData,
+  getAllMasterCustomerData,
+  getAllMasterDepartmentData,
+  getAllMasterGroupData,
+  getAllMasterSegmentData,
+  getAllMasterZoneData,
+  getMasterAreaDataWithCustomerId,
+  queryMasterContract,
+} from "@/app/lib/api";
+import { useConfirmDialog } from "../../../../components/ui/alertDialog/confirmDialog";
 
 type RowData = {
-  hrCode: string;
-  customerId: any;
-  departmentId: any;
-  segmentId: any;
-  groupId: any;
-  zoneId: any;
-  chkPtTotal: any;
-  contractTotal: any;
+  id: any;
+  department_Id: any;
+  areaId: string[];
+  segment_Id: any;
+  group_Id: any;
+  zone_Id: any;
+  hr_code: string;
   code: string;
   isActive: boolean;
   customerName: string;
+  totalCheckpoint: any;
+  contractTotal: any;
 };
 
 type AreaData = {
-  id: number;
+  id: string;
   custId: any;
   name: string;
+  roundIds: string[];
 };
 
 type selectedDelete = {
@@ -140,126 +157,45 @@ const zones = [
   },
 ];
 
-const rows: RowData[] = [
-  {
-    hrCode: "404-73-031-00",
-    customerId: 1,
-    departmentId: 1,
-    groupId: 1,
-    segmentId: 2,
-    zoneId: 1,
-    chkPtTotal: null,
-    contractTotal: "View",
-    code: "404-73-031-00",
-    isActive: true,
-    customerName: "วิทยาลัยนานาชาติ มหาวิทยาลัยมหิดล",
-  },
-  {
-    hrCode: "401-13-035-00",
-    customerId: 2,
-    groupId: 1,
-    departmentId: 2,
-    segmentId: 4,
-    zoneId: 4,
-    chkPtTotal: null,
-    contractTotal: "View",
-    code: "401-13-035-00",
-    isActive: true,
-    customerName: "เรนวูด ปาร์ค",
-  },
-  {
-    hrCode: "405-20-048-00",
-    customerId: 3,
-    groupId: 3,
-    departmentId: 3,
-    segmentId: 3,
-    zoneId: 2,
-    chkPtTotal: null,
-    contractTotal: "12345",
-    code: "405-20-048-00",
-    isActive: true,
-    customerName: "บริษัท สยามคอมเพรสเซอร์ อุตสาหกรรม จำกัด",
-  },
-  {
-    hrCode: "601-10-077-00",
-    customerId: 4,
-    departmentId: 4,
-    segmentId: null,
-    groupId: 2,
-    zoneId: 3,
-    chkPtTotal: null,
-    contractTotal: null,
-    code: "601-10-077-00",
-    isActive: false,
-    customerName: "สายการบิน แควนตัสแอร์เวย์",
-  },
-];
-
-const mockArea: AreaData[] = [
-  {
-    id: 1,
-    custId: 1,
-    name: "อาคาร1",
-  },
-  {
-    id: 2,
-    custId: 1,
-    name: "อาคารใหญ่",
-  },
-  {
-    id: 3,
-    custId: 2,
-    name: "อาคาร2",
-  },
-  {
-    id: 4,
-    custId: 3,
-    name: "หน้าประตูทางออก 1",
-  },
-];
-
 const mockChkPt = [
   {
-    areaId: 1,
+    areaId: "1",
     chkPtName: "จุดที่ 1",
   },
   {
-    areaId: 1,
+    areaId: "1",
     chkPtName: "จุดที่ 2",
   },
   {
-    areaId: 2,
+    areaId: "2",
     chkPtName: "หน้าประตู",
   },
   {
-    areaId: 3,
+    areaId: "3",
     chkPtName: "หน้าตึก",
   },
 ];
 
 const mockContract = data.contracts;
 
-const totalItems = rows.length;
-
 const initialArea: AreaData[] = [
   {
-    id: 1,
-    custId: null,
+    id: "",
+    custId: "",
     name: "",
+    roundIds: []
   },
 ];
 
 export default function Customer() {
-  const [editMode, setEditMode] = useState(Array(rows.length).fill(false)); // Array to track edit state for each row
-  const [rowData, setRowData] = useState(rows); // Local state for row data
-  const [customerNameList,setCustomerNameList] = useState([{id: 1, desc: ""}]);
-  const [areas, setAreas] = useState<AreaData[]>([
-    { id: 1, custId: null, name: "" },
+  const [rowData, setRowData] = useState<RowData[]>([]);
+  const [customerNameList, setCustomerNameList] = useState([
+    { id: 1, desc: "" },
   ]);
-  const [custAreas, setCustAreas] = useState<AreaData[]>(mockArea);
+  const [custAreas, setCustAreas] = useState<AreaData[]>([]);
   const [selectedRow, setSelectedRow] = useState<RowData | null>(null);
   const [isSelectedAll, setIsSelectedAll] = useState(false);
-  const [openAddCustModal, setShowAddCustModal] = useState(false);
+  const [showAddCustModal, setShowAddCustModal] = useState(false);
   const [openEditCustModal, setOpenEditCustModal] = useState<boolean>(false);
   const [openFilterModal, setOpenFilterModal] = useState<boolean>(false);
   const [selectedSegmentFilter, setSelectedSegmentFilter] = useState();
@@ -273,46 +209,39 @@ export default function Customer() {
   const [openAddContract, setOpenAddContract] = useState<boolean>(false);
   const [openEditContract, setOpenEditContract] = useState<boolean>(false);
   const [isCustomerPage, setIsCustomerPage] = useState<boolean>(true);
-  const pathName = usePathname();
+  const [departmantItemSource, setDepartmantItemSource] = useState<any[]>([]);
+  const [allSegment, setAllSegment] = useState<any[]>([]);
+  const [allGroup, setAllGroup] = useState<any[]>([]);
+  const [allZone, setAllZone] = useState<any[]>([]);
+  const { confirmDialog, ConfirmAlertDialog } = useConfirmDialog();
   const [selected, setSelected] = useState<selectedDelete[]>(
-    rows.map((row) => ({
+    rowData.map((row: any) => ({
       isSelected: false, // Default value for `selected`
       custId: row.customerId, // Convert customerId to string for custId
     }))
   );
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isAddOrUpdateSucces, setIsAddOrUpdateSucces] = useState(false);
+  const totalItems = rowData.length;
+  const [totalRows, setTotalRows] = useState(0);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
-  //calculate total checkpoint to display QR Code row
-  const calTotalChkPt = () => {
-    const rowDataUpdate = [...rowData];
-    rowDataUpdate.forEach((customer) => {
-      customer.customerId;
-      //use customerId to find area of that customer
-      const custArea = mockArea.filter((a) => a.custId === customer.customerId);
-      let sumChkPt = 0;
-      if (custArea.length > 0) {
-        custArea.forEach((area) => {
-          //use areaId to find number of checkpoint of that area
-          sumChkPt += mockChkPt.filter(
-            (chkPt) => chkPt.areaId === area.id
-          ).length;
+  async function totalCheckpointsOfAreas(customerId: any) {
+    const custArea = await getMasterAreaDataWithCustomerId(customerId);
+    let sumChkPt = 0;
+    if (custArea?.total !== undefined && custArea?.total > 0) {
+        custArea.documents.map((area) => {
+          sumChkPt += area.checkPointIDs?.length;
         });
-      }
-      customer.chkPtTotal = sumChkPt;
-    });
-    setRowData(rowDataUpdate);
-  };
+    }
+    return sumChkPt;
+  }
 
-  const calTotalContract = () => {
-    const rowDataUpdate = [...rowData];
-    rowDataUpdate.forEach((customer) => {
-      customer.customerId;
-      const custContract = mockContract.filter(
-        (a) => a.customerId === customer.customerId
-      );
-      customer.contractTotal = custContract.length;
-    });
-    setRowData(rowDataUpdate);
-  };
+  async function totalContractOfCustomer(customerId: any) {
+    const contracts = await queryMasterContract("customer_Id", customerId);
+    return contracts?.total;
+  }
 
   const handleScrollLock = (isLocked: boolean) => {
     if (isLocked) {
@@ -329,46 +258,179 @@ export default function Customer() {
   };
 
   useEffect(() => {
-    calTotalChkPt();
-    calTotalContract();
-    custNameList();
     handleScrollLock(openFilterModal);
     return () => handleScrollLock(false);
   }, [openFilterModal]);
 
-  const custNameList = () => {
-    const custName = rowData.map(cust => ({
-      id: cust.customerId,
-      desc: cust.customerName
+  useEffect(() => {
+    initialData();
+    tableData();
+  }, [isCustomerPage]);
+
+  useEffect(() => {
+    if (isAddOrUpdateSucces) {
+      setIsAddOrUpdateSucces(false);
+    }
+    tableData();
+  }, [isAddOrUpdateSucces]); //page, rowsPerPage,
+
+  const custNameList = (mappedRowData: RowData[]) => {
+    const custName = mappedRowData.map((cust) => ({
+      id: cust.id,
+      desc: cust.customerName,
     }));
     setCustomerNameList(custName);
+  };
+
+  const initialData = async () => {
+    setIsLoading(true);
+    const getDepartments = await getAllMasterDepartmentData();
+    const departmentItems =
+      getDepartments?.documents?.map((d) => {
+        return {
+          id: d.$id,
+          label: d.departmentName,
+          segment_Id: d.segment_Id,
+          group_Id: d.group_Id,
+          zone_Id: d.zone_Id,
+        };
+      }) || [];
+    setDepartmantItemSource(departmentItems);
+
+    const getSegments = await getAllMasterSegmentData();
+    const segmentItems =
+      getSegments?.documents?.map((s) => {
+        return {
+          id: s.$id,
+          desc: s.segment,
+          description: s.description,
+        };
+      }) || [];
+    setAllSegment(segmentItems);
+
+    const getGroups = await getAllMasterGroupData();
+    const groupItems =
+      getGroups?.documents?.map((g) => {
+        return {
+          id: g.$id,
+          desc: g.group,
+          description: g.description,
+        };
+      }) || [];
+    setAllGroup(groupItems);
+
+    const getZones = await getAllMasterZoneData();
+    const zoneItems =
+      getZones?.documents?.map((z) => {
+        return {
+          id: z.$id,
+          desc: z.zone,
+          description: z.description,
+        };
+      }) || [];
+    setAllZone(zoneItems);
+    setIsLoading(false);
+  };
+
+  const tableData = async () => {
+    setIsLoading(true);
+    const offset = page * rowsPerPage;
+    const customers = await getAllMasterCustomerData();
+    const tableData: RowData[] = await Promise.all(
+      customers?.documents?.map(async (doc) => {
+        return {
+          id: doc.$id,
+          customerName: doc.CustomerName,
+          department_Id: doc.department_Id,
+          segment_Id: doc.segment_Id,
+          group_Id: doc.group_Id,
+          zone_Id: doc.zone_Id,
+          areaId: doc.area_id,
+          hr_code: doc.hr_code,
+          code: doc.code,
+          isActive: doc.isActive,
+          totalCheckpoint: await totalCheckpointsOfAreas(doc.$id),
+          contractTotal: await totalContractOfCustomer(doc.$id),
+        };
+      }) || []
+    );
+    setRowData(tableData);
+    setTotalRows(customers?.total || 0);
+    console.log("tableData =", tableData);
+
+    const mapSelect = tableData.map((row: any) => ({
+      isSelected: false,
+      custId: row.id,
+    }));
+    setSelected(mapSelect);
+    custNameList(tableData);
+    setIsLoading(false);
   };
 
   const handleAddNewCust = () => {
     setShowAddCustModal(true);
   };
 
-  const handleDeleteCust = () => {};
+  const handleDeleteCust = async () => {
+    console.log("rowData =", rowData);
+    const confirmApprove = await confirmDialog(
+      "Delete Customer",
+      "Do you want to delete these selected customer?"
+    );
+    if (confirmApprove) {
+      let deleteResult = true;
+
+      const deleteId = selected
+        .filter((select) => select.isSelected === true)
+        .map((item) => item.custId);
+      const deleteRow = rowData.filter((row) => deleteId.includes(row.id));
+      console.log("deleteRow =", deleteRow);
+
+      setIsLoading(true);
+      for (const dr of deleteRow) {
+        let deleteCustResult = null;
+        const deleteAreaResult = await deleteArea(dr.areaId);
+        if (deleteAreaResult !== null) {
+          deleteCustResult = await deleteCustomer([dr.id]);
+          console.log("deleteCustResult =", deleteCustResult);
+
+          if (deleteCustResult.result === null) {
+            alert(
+              `Error occurred while deleting Customer: ${dr.customerName}.\n
+              ${deleteCustResult.error}`
+            );
+            deleteResult = false;
+            break; // Exit the loop if an error occurs
+          }
+          else{
+            setIsSelectedAll(false);
+          }
+        } else {
+          alert(
+            `Error occurred while deleting area of Customer: ${dr.customerName}.`
+          );
+          deleteResult = false;
+          break;
+        }
+      }
+
+      if (deleteResult) {
+        setIsAddOrUpdateSucces(true);
+        setIsSelectedAll(false);
+      }
+      setIsLoading(false);
+    }
+  };
 
   const setToggleFilter = () => {
     console.log("openFilterModal =", openFilterModal);
     setOpenFilterModal(!openFilterModal);
   };
 
-  const handleRowClick = (row: RowData) => {
+  const handleRowClick = async (row: RowData) => {
     setSelectedRow(row);
+    await handleCustArea(row);
     setOpenEditCustModal(true);
-
-    const custArea = mockArea.filter((a) => a.custId === row.customerId);
-    setAreas(initialArea);
-    if (custArea.length != 0) {
-      setAreas(
-        custArea.map((area, index) => ({
-          ...area,
-          id: index + 1, // use index of array+1 to set new id.
-        }))
-      );
-    }
   };
 
   function handleCloseCustomerForm(isEdit: boolean) {
@@ -377,7 +439,7 @@ export default function Customer() {
     } else {
       setOpenEditCustModal(false);
     }
-    setRowData(rows);
+    //setRowData(rows);
   }
 
   function handleCloseViewQr() {
@@ -392,29 +454,43 @@ export default function Customer() {
     }
   }
 
-  const handleEditContract = (selecectedRow: any) => {
+  const handleEditContract = async (selecectedRow: any) => {
     console.log("row =", selecectedRow);
     setSelectedRow(selecectedRow);
-    handleCustArea(selecectedRow);
+    await handleCustArea(selecectedRow);
     setOpenEditContract(true);
   };
 
-  const handleOpenViewQr = (selecectedRow: any) => {
+  const handleOpenViewQr = async (selecectedRow: any) => {
+    await handleCustArea(selecectedRow);
     setSelectedRow(selecectedRow);
-    handleCustArea(selecectedRow);
-    //setOpenViewQR(true);
+    setOpenViewQR(true);
   };
 
-  const handleCustArea = (selecectedRow: any) => {
-    const custArea = mockArea.filter(
-      (a) => a.custId === selecectedRow.customerId
+  const handleCustArea = async (selecectedRow: RowData) => {
+    setIsLoading(true);
+    const getAreasOfCustomer = await getMasterAreaDataWithCustomerId(
+      selecectedRow.id
     );
+    console.log("getAreasOfCustomer =", getAreasOfCustomer);
+    const custArea: AreaData[] =
+      getAreasOfCustomer?.documents.map((doc) => {
+        return {
+          id: doc.$id,
+          custId: doc.CustomerId,
+          name: doc.name,
+          roundIds: doc.roundIDs,
+        };
+      }) || [];
+    console.log("custArea =", custArea);
     setCustAreas(custArea);
-  }
+    setIsLoading(false);
+  };
 
   const handleSelected = (index: number) => {
+    console.log("selected =", selected);
     const newSelected = [...selected];
-    newSelected[index].isSelected = !selected[index].isSelected;
+    newSelected[index].isSelected = !selected[index]?.isSelected;
     setSelected(newSelected);
     const isCheckAll = !selected.some((item) => item.isSelected === false);
     if (isCheckAll) {
@@ -434,14 +510,17 @@ export default function Customer() {
     setSelected(selectedAll);
   };
 
-  const handleAddBtnOnClick = (
-    e: React.MouseEvent<HTMLButtonElement, MouseEvent>, selectedRow: any
+  const handleAddContract = (
+    e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
+    selectedRow: any
   ) => {
     e.stopPropagation();
     setSelectedRow(selectedRow);
     handleCustArea(selectedRow);
-    const selectedCust = customerNameList.find(c => c.id === selectedRow.customerId);
-    console.log("selectedRow = ", selectedRow)
+    const selectedCust = customerNameList.find(
+      (c) => c.id === selectedRow.customerId
+    );
+    console.log("selectedRow = ", selectedRow);
     setOpenAddContract(true);
   };
 
@@ -457,10 +536,19 @@ export default function Customer() {
     const { name, value } = e.target;
     if (name === "hrCode") {
       setHrCodeFilter(value);
-    }
-    else if (name === "code") {
+    } else if (name === "code") {
       setCodeFilter(value);
     }
+  };
+
+  const handlePageChange = (event: any, newPage: any) => {
+    console.log("newPage", newPage);
+    setPage(newPage);
+  };
+
+  const handleRowsPerPageChange = (event: any) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
   };
 
   return (
@@ -469,10 +557,7 @@ export default function Customer() {
       <Box className="px-2">
         {/* Main Content */}
         <Box px={2} pb={2}>
-        <Typography sx={{fontWeight: "700", color: "#F66262", border: "1px solid #F66262", width: "fit-content", borderRadius: "10px", mb: 1}} className="py-1 px-2">
-                Mockup data
-            </Typography>
-          {/* Sub Header */}
+          {/* Sub header */}
           <Box className="w-full">
             <Box justifyContent="space-between" className="flex">
               <Box className="space-x-4 py-4 flex">
@@ -490,19 +575,23 @@ export default function Customer() {
                     checked={isCustomerPage}
                     onCheckedChange={handleSelectCustomerPage}
                   />
-                  <Typography sx={{fontWeight: "700", color: "#1D7A9B"}} className="py-1 px-2">
+                  <Typography
+                    sx={{ fontWeight: "700", color: "#1D7A9B" }}
+                    className="py-1 px-2"
+                  >
                     Customer
                   </Typography>
                 </Box>
-                <Box
-                  className="justify-center flex p-1 bg-white rounded-lg"
-                >
+                <Box className="justify-center flex p-1 bg-white rounded-lg">
                   <Checkbox
                     className="bg-[#EBF4F6] border-none"
                     checked={!isCustomerPage}
                     onCheckedChange={handleSelectContractPage}
                   />
-                  <Typography sx={{fontWeight: "700", color: "#1D7A9B"}} className="py-1 px-2">
+                  <Typography
+                    sx={{ fontWeight: "700", color: "#1D7A9B" }}
+                    className="py-1 px-2"
+                  >
                     Contract
                   </Typography>
                 </Box>
@@ -521,6 +610,7 @@ export default function Customer() {
                 <Button
                   className="w-40 bg-[#1D7A9B] hover:bg-[#D9F0EC] hover:text-[#1D7A9B]"
                   onClick={setToggleFilter}
+                  disabled={true}
                 >
                   <Filter size={20} style={{ marginRight: "5px" }} /> Filter
                 </Button>
@@ -530,7 +620,7 @@ export default function Customer() {
 
           {isCustomerPage && (
             <TableContainer
-              className="h-screen bg-white"
+              className="h-[76vh] max-h-[76vh] bg-white" //h-[calc(100vh - 0px)]
               sx={{
                 display: "flex",
                 flexDirection: "column",
@@ -538,8 +628,8 @@ export default function Customer() {
                 boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
               }}
             >
-              <Table>
-                <TableHead>
+              <Table stickyHeader sx={{zIndex: 0}}>
+                <TableHead sx={{ mt: 0}}>
                   <TableRow
                     sx={{ borderBottom: "1px solid #C7D4D7" }}
                     className={`${styles.table}`}
@@ -578,15 +668,14 @@ export default function Customer() {
 
                 {/* Allow the TableBody to grow and fill vertical space */}
                 <TableBody sx={{ flexGrow: 1 }}>
-                  {rowData.map((row, index) => (
+                {rowData.slice(page * rowsPerPage, rowsPerPage + (page * rowsPerPage))
+                  .map((row, index) => (
                     <TableRow
                       onClick={() => handleRowClick(row)} // Row click handler
-                      key={index}
-                      className={
-                        editMode[index]
-                          ? `bg-[#D8EAFF]`
-                          : `${index % 2 === 1 ? `bg-inherit` : `bg-[#EBF4F6]`}`
-                      }
+                      key={index + (page*rowsPerPage)}
+                      className={`${
+                        index % 2 === 1 ? `bg-inherit` : `bg-[#EBF4F6]`
+                      }`}
                       sx={{
                         cursor: "pointer",
                         "& .MuiTableCell-root": {
@@ -599,16 +688,16 @@ export default function Customer() {
                     >
                       <TableCell align="left">
                         <Checkbox
-                          checked={selected[index].isSelected}
+                          checked={selected[index + (page*rowsPerPage)]?.isSelected}
                           onClick={(event) => {
                             event.stopPropagation(); // Prevent row click
-                            handleSelected(index);
+                            handleSelected(index + (page*rowsPerPage));
                           }}
                         />
                       </TableCell>
 
                       {/* HR Code */}
-                      <TableCell align="center">{row.hrCode}</TableCell>
+                      <TableCell align="center">{row.hr_code}</TableCell>
 
                       {/* Customer */}
                       <TableCell align="center">{row.customerName}</TableCell>
@@ -616,29 +705,31 @@ export default function Customer() {
                       {/* Department */}
                       <TableCell align="center">
                         {
-                          departments.find((d) => d.did === row.departmentId)
-                            ?.desc
+                          departmantItemSource.find(
+                            (d) => d.id === row.department_Id
+                          )?.label
                         }
                       </TableCell>
 
                       {/* Segment */}
                       <TableCell align="center">
-                        {row.segmentId === null
+                        {row.segment_Id === null
                           ? "-"
-                          : segments.find((s) => s.smid === row.segmentId)
-                              ?.desc}
+                          : allSegment.find((s) => s.id === row.segment_Id)
+                              ?.description}
                       </TableCell>
 
                       {/* Zone */}
                       <TableCell align="center">
-                        {row.zoneId === null
+                        {row.zone_Id === null
                           ? "-"
-                          : zones.find((z) => z.zid === row.zoneId)?.desc}
+                          : allZone.find((z) => z.id === row.zone_Id)
+                              ?.description}
                       </TableCell>
 
                       {/* ViewQR */}
                       <TableCell align="center">
-                        {row.chkPtTotal === 0 ? (
+                        {row.totalCheckpoint === 0 ? (
                           "-"
                         ) : (
                           <Button
@@ -659,12 +750,13 @@ export default function Customer() {
                       {/* Contract */}
                       <TableCell align="center">
                         {row.contractTotal === 0 ? (
-                          <AddButton onAddBtnClick={(e)=>handleAddBtnOnClick(e,row)} />
+                          <AddButton                         
+                            onAddBtnClick={(e) => handleAddContract(e, row)}
+                          />
                         ) : (
                           <ViewButton
-                            onViewBtnClick={handleEditContract}
-                            row={row}
-                          />
+                              onViewBtnClick={handleEditContract}
+                              row={row}                      />
                         )}
                       </TableCell>
                     </TableRow>
@@ -674,186 +766,74 @@ export default function Customer() {
             </TableContainer>
           )}
 
-          {/* {!isCustomerPage && (
-             <TableContainer 
-            className="h-screen bg-white"
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              borderRadius: "15px 15px 0px 0px",
-              boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
-            }}
-          >
-            <Table>
-              <TableHead>
-                <TableRow
-                  sx={{ borderBottom: "1px solid #C7D4D7" }}
-                  className={`${styles.table}`}
-                >
-                  <TableCell align="left" className="w-[4%]">
-                    <Checkbox className="mt-1 mb-2"
-                      checked={isSelectedAll}
-                      onCheckedChange={handleCheckAll}
-                    />
-                  </TableCell>
-                  <TableCell align="center" className="w-[14%]">
-                    Contract No
-                  </TableCell>
-                  <TableCell align="center" className="w-[18%]">
-                    Start Date
-                  </TableCell>
-                  <TableCell align="center" className="w-[20%]">
-                    End Date
-                  </TableCell>
-                  <TableCell align="center" className="w-[14%]">
-                    Customer
-                  </TableCell>
-                  <TableCell align="center" className="w-[12%]">
-                    Attachment
-                  </TableCell>
-                  <TableCell align="center" className="w-[9%]">
-                    Status
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-
-              <TableBody sx={{ flexGrow: 1 }}>
-                {contractData.map((row, index) => (
-                  <TableRow
-                    //onClick={() => handleRowClick(row)} // Row click handler
-                    key={index}
-                    className={
-                      editMode[index]
-                        ? `bg-[#D8EAFF]`
-                        : `${index % 2 === 1 ? `bg-inherit` : `bg-[#EBF4F6]`}`
-                    }
-                    sx={{
-                      cursor: "pointer",
-                      "& .MuiTableCell-root": {
-                        padding: "10px 20px 10px 20px", // Customize border color
-                      },
-                      "&:hover": {
-                        backgroundColor: "#DCE9EB", // Optional: Change background color on hover
-                      },
-                    }}
-                  >
-                    <TableCell align="left">
-                      <Checkbox
-                        checked={selected[index].isSelected}
-                        onClick={(event) => {
-                          event.stopPropagation(); // Prevent row click
-                          handleSelected(index);
-                        }}
-                      />
-                    </TableCell>
-
-
-                    <TableCell align="center">{row.id}</TableCell>
-
-
-                    <TableCell align="center">{row.startDate}</TableCell>
-
-
-                    <TableCell align="center">{row.endDate}</TableCell>
-
-
-                    <TableCell align="center">
-                      {
-                        rowData.find((d) => d.customerId === row.custId)
-                          ?.customerName
-                      }
-                    </TableCell>
-
-
-                    <TableCell align="center">
-                      <Box
-                        className="justify-between flex p-1 bg-white max-w-[220px] border-[1px] border-[#4C9BF5] cursor-pointer rounded-lg"
-                      >
-                       <Box className="w-[90%] text-left">
-                          <Typography className="py-1 px-2 text-[#2C5079]">
-                            {row.attachment}
-                          </Typography>
-                        </Box>
-                        <GoArrowUpRight size={24} color="#4C9BF5" style={{ marginTop: 5 }}/>
-                      </Box>
-                    </TableCell>
-
-
-                    <TableCell align="center">
-                      {row.isActive ? (
-                        <Box className="justify-center flex p-1 bg-[#86DC89] max-w-[220px] cursor-pointer rounded-lg">
-                          <Typography className="py-1 px-2 text-[white]">Active</Typography>
-                        </Box>
-                      ) : (
-                        <Box className="justify-center flex p-1 bg-[#83A2AD] max-w-[220px] cursor-pointer rounded-lg">
-                          <Typography className="py-1 px-2 text-[white]">Inactive</Typography>
-                        </Box>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        )}   */}
-
           {!isCustomerPage && (
-            <TableContract
-              contractData={mockContract}
-              custData={rowData}
-            />
+            <TableContract contractData={mockContract} custData={customerNameList} />
           )}
 
           {/* TableFooter*/}
           {isCustomerPage && (
-          <TableContainer
-            className="bg-white border-t"
-            sx={{
-              borderRadius: "0px 0px 15px 15px",
-              boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
-            }}
-          >
-            <Table>
-              <TableFooter className="w-full">
-                <TableRow>
-                  <TableCell colSpan={6}>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        width: "100%",
-                      }}
-                    >
-                      <Typography>Total: {totalItems} items</Typography>
-                      <Box>
-                        <DeleteButton
-                          onDeleteBtnClick={handleDeleteCust}
-                          disable={!selected.some((item) => item.isSelected)}
+            <TableContainer
+              className="bg-white border-t"
+              sx={{
+                borderRadius: "0px 0px 15px 15px",
+                boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
+              }}
+            >
+              <Table>
+                <TableFooter className="w-full">
+                  <TableRow>
+                    <TableCell colSpan={6}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          width: "100%",
+                        }}
+                      >
+                        <TablePagination
+                          sx={{color: "#2C5079"}}
+                          component="div"
+                          count={totalRows}
+                          page={page}
+                          onPageChange={handlePageChange}
+                          rowsPerPage={rowsPerPage}
+                          onRowsPerPageChange={handleRowsPerPageChange}
                         />
-                        <Button
-                          style={{ marginLeft: "auto", fontWeight: "bold" }}
-                          className="w-48 enabled:bg-gradient-to-r from-[#00336C] to-[#37B7C3] hover:from-[#4C9BF5] hover:to-[#D8EAFF] 
+                        <Box>
+                          <DeleteButton
+                            onDeleteBtnClick={handleDeleteCust}
+                            disable={!selected.some((item) => item.isSelected)}
+                          />
+                          <Button
+                            style={{ marginLeft: "auto", fontWeight: "bold" }}
+                            className="w-48 enabled:bg-gradient-to-r from-[#00336C] to-[#37B7C3] hover:from-[#4C9BF5] hover:to-[#D8EAFF]
                                  hover:text-[#00336C] disabled:bg-[#83A2AD]"
-                          onClick={() => handleAddNewCust()}
-                        >
-                          +New
-                        </Button>
+                            onClick={() => handleAddNewCust()}
+                          >
+                            +New
+                          </Button>
+                        </Box>
                       </Box>
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              </TableFooter>
-            </Table>
-          </TableContainer>)}
+                    </TableCell>
+                  </TableRow>
+                </TableFooter>
+              </Table>
+            </TableContainer>
+          )}
         </Box>
       </Box>
 
       {/* Add customer */}
-      {openAddCustModal && (
+      {showAddCustModal && (
         <CustomerForm
           closeModal={handleCloseCustomerForm}
-          customeraAeas={initialArea}
+          customeraAeas={[]}
+          departmantItemSource={departmantItemSource}
+          allSegment={allSegment}
+          allGroup={allGroup}
+          allZone={allZone}
+          setIsAddOrUpdateSuccess={setIsAddOrUpdateSucces}
         />
       )}
 
@@ -862,7 +842,12 @@ export default function Customer() {
         <CustomerForm
           closeModal={handleCloseCustomerForm}
           editCustomer={selectedRow}
-          customeraAeas={areas}
+          customeraAeas={custAreas}
+          departmantItemSource={departmantItemSource}
+          allSegment={allSegment}
+          allGroup={allGroup}
+          allZone={allZone}
+          setIsAddOrUpdateSuccess={setIsAddOrUpdateSucces}
         />
       )}
 
@@ -876,28 +861,36 @@ export default function Customer() {
           </Button>
           <div className="bg-white rounded-lg shadow-lg h-[600px] w-[498px] overflow-auto fixed right-6 top-[136px]">
             {/* Header */}
-            <Box 
-            sx={{
-              display: "flex",
-              width: "100%",
-              backgroundColor: "#D9F0EC",
-              paddingY: "5px",
-              borderRadius: "8px 8px 0px 0px", // Adjust rounded corners as needed
-              justifyContent: "center",
-              paddingTop: "0.5rem",
-              paddingBottom: "0.5rem",
-            }}>
-              <Box sx={{ width: "100%", display: "flex", justifyContent: "center" }}>
-                <Typography 
+            <Box
+              sx={{
+                display: "flex",
+                width: "100%",
+                backgroundColor: "#D9F0EC",
+                paddingY: "5px",
+                borderRadius: "8px 8px 0px 0px", // Adjust rounded corners as needed
+                justifyContent: "center",
+                paddingTop: "0.5rem",
+                paddingBottom: "0.5rem",
+              }}
+            >
+              <Box
                 sx={{
-                  width: "fit-content",
-                  fontSize: "1.125rem", // text-lg equivalent
-                  fontWeight: "bold",
-                  color: "#1D7A9B",
-                  marginTop: "0.25rem",
-                  marginLeft: "78px",
-                  display: "flex"
-                }}>
+                  width: "100%",
+                  display: "flex",
+                  justifyContent: "center",
+                }}
+              >
+                <Typography
+                  sx={{
+                    width: "fit-content",
+                    fontSize: "1.125rem", // text-lg equivalent
+                    fontWeight: "bold",
+                    color: "#1D7A9B",
+                    marginTop: "0.25rem",
+                    marginLeft: "78px",
+                    display: "flex",
+                  }}
+                >
                   <Filter
                     size={20}
                     style={{ marginRight: "5px", marginTop: "3px" }}
@@ -923,77 +916,77 @@ export default function Customer() {
                 {/* Segment */}
                 <Box className="w-full">
                   <LabelSelector
-                  selectorLabel={"Segment"}
-                  itemSource={segments}
-                  setSelectedVal={setSelectedSegmentFilter}
-                  selectedVal={selectedSegmentFilter}
-                  name={"segment"}
-                  defaultSelected="Select Segment"
-                />
+                    selectorLabel={"Segment"}
+                    itemSource={segments}
+                    setSelectedVal={setSelectedSegmentFilter}
+                    selectedVal={selectedSegmentFilter}
+                    name={"segment"}
+                    defaultSelected="Select Segment"
+                  />
                 </Box>
 
                 {/* Group */}
                 <Box className="w-full">
-                <LabelSelector
-                  selectorLabel={"Group"}
-                  itemSource={groups}
-                  setSelectedVal={setSelectedGroupFilter}
-                  selectedVal={selectedGroupFilter}
-                  name={"group"}
-                  defaultSelected="Select Group"
-                />
+                  <LabelSelector
+                    selectorLabel={"Group"}
+                    itemSource={groups}
+                    setSelectedVal={setSelectedGroupFilter}
+                    selectedVal={selectedGroupFilter}
+                    name={"group"}
+                    defaultSelected="Select Group"
+                  />
                 </Box>
 
                 {/* Zone */}
                 <Box className="w-full">
-                <LabelSelector
-                  selectorLabel={"Zone"}
-                  itemSource={zones}
-                  setSelectedVal={setSelectedZoneFilter}
-                  selectedVal={selectedZoneFilter}
-                  name={"zone"}
-                  defaultSelected="Select Zone"
-                />
+                  <LabelSelector
+                    selectorLabel={"Zone"}
+                    itemSource={zones}
+                    setSelectedVal={setSelectedZoneFilter}
+                    selectedVal={selectedZoneFilter}
+                    name={"zone"}
+                    defaultSelected="Select Zone"
+                  />
                 </Box>
 
                 {/* Department */}
                 <Box className="w-full">
-                <LabelSelector
-                  selectorLabel={"Department"}
-                  itemSource={departments}
-                  setSelectedVal={setSelectedDepartmentFilter}
-                  selectedVal={selectedDepartmentFilter}
-                  name={"department"}
-                  defaultSelected="Select Department"
-                />
+                  <LabelSelector
+                    selectorLabel={"Department"}
+                    itemSource={departments}
+                    setSelectedVal={setSelectedDepartmentFilter}
+                    selectedVal={selectedDepartmentFilter}
+                    name={"department"}
+                    defaultSelected="Select Department"
+                  />
                 </Box>
 
                 {/* Customer */}
                 <Box className="w-full">
                   <LabelSelector
-                  selectorLabel={"Customer"}
-                  itemSource={customerNameList}
-                  setSelectedVal={setSelectedCustomerFilter}
-                  selectedVal={selectedCustomerFilter}
-                  name={"customer"}
-                  defaultSelected="Select Customer"
-                />
+                    selectorLabel={"Customer"}
+                    itemSource={customerNameList}
+                    setSelectedVal={setSelectedCustomerFilter}
+                    selectedVal={selectedCustomerFilter}
+                    name={"customer"}
+                    defaultSelected="Select Customer"
+                  />
                 </Box>
 
                 {/* HR Code & Code */}
                 <Box className="w-full flex space-x-5">
-                <LabelTextField
-                  label="HR Code"
-                  placeholder="Type here..."
-                  inputVal={hrCodeFilter}
-                  setInputVal={setHrCodeFilter}
-                />
                   <LabelTextField
-                  label="Code"
-                  placeholder="Type here..."
-                  inputVal={codeFilter}
-                  setInputVal={setCodeFilter}
-                />
+                    label="HR Code"
+                    placeholder="Type here..."
+                    inputVal={hrCodeFilter}
+                    setInputVal={setHrCodeFilter}
+                  />
+                  <LabelTextField
+                    label="Code"
+                    placeholder="Type here..."
+                    inputVal={codeFilter}
+                    setInputVal={setCodeFilter}
+                  />
                 </Box>
 
                 {/* IsActive */}
@@ -1005,7 +998,14 @@ export default function Customer() {
                   />
                   <Typography
                     textAlign="left"
-                    sx={{fontSize: "14px", paddingBottom: "0.25rem", color: "#2C5079", fontWeight: "700", paddingLeft: '0.5rem', paddingTop: "0.5rem"}}
+                    sx={{
+                      fontSize: "14px",
+                      paddingBottom: "0.25rem",
+                      color: "#2C5079",
+                      fontWeight: "700",
+                      paddingLeft: "0.5rem",
+                      paddingTop: "0.5rem",
+                    }}
                   >
                     {/* {formData.isActive === true ? "Active" : "Inactive"} */}
                     Active
@@ -1043,7 +1043,8 @@ export default function Customer() {
           customerAreas={custAreas}
           selectedCustomer={selectedRow}
           isEditContract={false}
-          custList={[customerNameList.find(c => c.id === selectedRow?.customerId)]}
+          custList={[customerNameList.find((c) => c.id === selectedRow?.id)]}
+          setIsAddOrUpdateSuccess={setIsAddOrUpdateSucces}
         />
       )}
 
@@ -1054,7 +1055,19 @@ export default function Customer() {
           selectedCustomer={selectedRow}
           isEditContract={true}
           custList={customerNameList}
+          setIsAddOrUpdateSuccess={setIsAddOrUpdateSucces}
         />
+      )}
+
+      {/* Confirm dialog */}
+      {ConfirmAlertDialog}
+
+      {isLoading && (
+        <div className="fixed inset-0 bg-white bg-opacity-40 flex flex-col items-center justify-center z-50">
+          <Box sx={{ display: "flex" }}>
+            <CircularProgress />
+          </Box>
+        </div>
       )}
     </div>
   );

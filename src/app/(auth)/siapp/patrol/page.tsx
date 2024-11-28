@@ -12,6 +12,7 @@ import {
   Button as Button2,
   Grid2,
   CircularProgress,
+  TablePagination,
 } from "@mui/material/";
 import CloseIcon from "@mui/icons-material/Close";
 import Navbar from "@/components/Navbar";
@@ -38,7 +39,7 @@ import { GradientButton } from "@/components/ui/buttons/gradientButton";
 import PatrolDeatilView from "@/components/siapp/PatrolDetailView";
 import {
   getPatrolRoundData,
-  getAllPatrolCheckpointData,
+  getPatrolCheckpointData,
 } from "../../../lib/api";
 
 type RowData = {
@@ -220,27 +221,27 @@ export default function Patrol() {
   const [selectedCustomerFilter, setSelectedCustomerFilter] = useState();
   const [roundFilter, setRoundFilter] = useState(0);
   const [checkPointFilter, setCheckPointFilter] = useState(0);
-  const [openViewQR, setOpenViewQR] = useState<boolean>(false);
-  const [openAddContract, setOpenAddContract] = useState<boolean>(false);
-  const [openEditContract, setOpenEditContract] = useState<boolean>(false);
   const [isCheckpointPage, setIsCheckpointPage] = useState<boolean>(true);
   const totalItems = rowData.length;
   const [patrolRounds, setPatrolRounds] = useState<any>();
   const [patrolCheckpoints, setPatrolCheckpoints] = useState<any>();
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [totalRows, setTotalRows] = useState(0);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10); 
 
   useEffect(() => {
     tableData();
-  }, []);
+  }, [page, rowsPerPage]);
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string, isUTC7: boolean=false) => {
     const date = new Date(dateString);
 
     const day = String(date.getUTCDate()).padStart(2, "0"); // Get day and pad with 0 if necessary
     const month = String(date.getUTCMonth() + 1).padStart(2, "0"); // Months are 0-indexed
     const year = date.getUTCFullYear();
 
-    const hours = String(date.getUTCHours()).padStart(2, "0");
+    const hours = String(date.getUTCHours() + (isUTC7 ? 7 : 0)).padStart(2, "0");
     const minutes = String(date.getUTCMinutes()).padStart(2, "0");
     const seconds = String(date.getUTCSeconds()).padStart(2, "0");
 
@@ -262,8 +263,13 @@ export default function Patrol() {
     setIsLoading(true);
     const allPatrolRoundData = await getPatrolRoundData();
     console.log("data = ", allPatrolRoundData);
-    const allPatrolCheckpointData = await getAllPatrolCheckpointData();
+    const offset = page * rowsPerPage;
+    const allPatrolCheckpointData = await getPatrolCheckpointData(offset, rowsPerPage);
     console.log("patrolCheckpointData = ", allPatrolCheckpointData);
+    const reOrderData = allPatrolCheckpointData?.documents.sort((a, b) => {
+      return new Date(b.EndTime).getTime() - new Date(a.EndTime).getTime();
+    });
+    console.log("reOrderData =", reOrderData);
     const tableData: RowData[] =
       allPatrolCheckpointData?.documents.map((chkPt) => {
         return {
@@ -294,6 +300,7 @@ export default function Patrol() {
       }) || rowData;
     console.log("tableData", tableData);
     setRowData(tableData);
+    setTotalRows(allPatrolCheckpointData?.total || 0);
     setIsLoading(false);
   };
 
@@ -321,27 +328,6 @@ export default function Patrol() {
     }
   }
 
-  function handleCloseContractForm(isEdit: boolean) {
-    if (!isEdit) {
-      setOpenAddContract(false);
-    } else {
-      setOpenEditContract(false);
-    }
-  }
-
-  const handleEditContract = (selecectedRow: any) => {
-    console.log("row =", selecectedRow);
-    setSelectedRow(selecectedRow);
-    setOpenEditContract(true);
-  };
-
-  const handleAddBtnOnClick = (
-    e: React.MouseEvent<HTMLButtonElement, MouseEvent>
-  ) => {
-    e.stopPropagation();
-    setOpenAddContract(true);
-  };
-
   const handleSelectChkPtPage = (checked: boolean) => {
     if (checked) setIsCheckpointPage(true);
   };
@@ -357,6 +343,16 @@ export default function Patrol() {
     setOpenPatrolDetailModal(true);
   };
 
+  const handlePageChange = (event: any, newPage: any) => {
+    console.log("newPage", newPage);
+    setPage(newPage);
+  };
+
+  const handleRowsPerPageChange = (event: any) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
   return (
     <div>
       <Navbar menu={"SIAPP"} submenu={"Patrol"} />
@@ -366,7 +362,7 @@ export default function Patrol() {
           {/* Sub Header */}
           <Box className="w-full">
             <Box justifyContent="space-between" className="flex">
-              <Box className="space-x-4 py-4 flex w-fit">
+              <Box className="space-x-4 pt-2 pb-3 flex w-fit">
                 <Box className="justify-center flex p-1 pb-0 bg-white rounded-lg h-10 ">
                   <Checkbox
                     className="bg-[#EBF4F6] border-none"
@@ -395,7 +391,7 @@ export default function Patrol() {
                 </Box>
               </Box>
 
-              <Box className="space-x-2 py-4 flex">
+              <Box className="space-x-2 pt-2 pb-3 flex">
                 <Box className="justify-center flex p-1 bg-white rounded-lg">
                   <DatePicker />
                   <Typography className="text-[#2C5079] text-sm px-4 pt-1">
@@ -428,7 +424,7 @@ export default function Patrol() {
           {isCheckpointPage && (
             <>
               <TableContainer
-                className="h-screen bg-white p-2"
+                className="h-[76vh] max-h-[76vh] bg-white p-2"
                 sx={{
                   display: "flex",
                   flexDirection: "column",
@@ -436,13 +432,13 @@ export default function Patrol() {
                   boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
                 }}
               >
-                <Table>
-                  <TableHead>
+              <Table stickyHeader>
+                <TableHead sx={{ mt: 0}}>
                     <TableRow
                       sx={{ borderBottom: "1px solid #C7D4D7" }}
                       className={`${styles.table}`}
                     >
-                      <TableCell align="center" className="w-[6%]">
+                      <TableCell align="center" className="w-[8%]">
                         Date & Time
                       </TableCell>
                       <TableCell align="center" className="w-[22%]">
@@ -451,7 +447,7 @@ export default function Patrol() {
                       <TableCell align="center" className="w-[20%]">
                         Area
                       </TableCell>
-                      <TableCell align="center" className="w-[12%]">
+                      <TableCell align="center" className="w-[10%]">
                         Round
                       </TableCell>
                       <TableCell align="center" className="w-[19%]">
@@ -557,7 +553,15 @@ export default function Patrol() {
                             width: "100%",
                           }}
                         >
-                          <Typography>Total: {totalItems} items</Typography>
+                          <TablePagination
+                            sx={{color: "#2C5079"}}
+                            component="div"
+                            count={totalRows}
+                            page={page}
+                            onPageChange={handlePageChange}
+                            rowsPerPage={rowsPerPage}
+                            onRowsPerPageChange={handleRowsPerPageChange}
+                          />
                           {isCheckpointPage && (
                             <Box className="w-fit flex">
                               <Box className="w-fit p-2">
@@ -797,7 +801,7 @@ export default function Patrol() {
         </div>
       )}
 
-      {isLoading && <div className="fixed inset-0 bg-white bg-opacity-40 flex flex-col items-center justify-center z-indextop">
+      {isLoading && <div className="fixed inset-0 bg-white bg-opacity-40 flex flex-col items-center justify-center z-50">
         <Box sx={{ display: "flex" }}>
           <CircularProgress />
         </Box>

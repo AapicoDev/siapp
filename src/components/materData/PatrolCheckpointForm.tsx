@@ -48,9 +48,10 @@ import {
   deleteAssignedManpower,
   deleteCheckpoint,
   getAllMasterCheckListData,
+  getMasterAreaDataWithCustomerId,
   getMasterAssignedManpowerData,
   getMasterCheckpointData,
-  getMasterManpowerRoleData,
+  getMasterManpowerPositionData,
   updatAssignedManpower,
   updateAreaData,
   updateCheckpoint,
@@ -194,7 +195,7 @@ const PatrolCheckpointFrom = ({
 
   const roundsOfArea = async () => {
     setIsLoading(true);
-    const rounds = await getMasterRoundData(prelimData.areaId);
+    const rounds = await getMasterRoundData([{ field: "areaId", value: prelimData.areaId }]);
     const filteredRound = rounds?.documents.filter(
       (round) => round.isActive === true
     );
@@ -208,7 +209,7 @@ const PatrolCheckpointFrom = ({
     console.log("uniqueShiftIds =", uniqueShiftIds);
     setUniqueShiftsInPrelim(uniqueShiftIds);
 
-    const shifts = await getMasterShiftData(prelimData.customerId);
+    const shifts = await getMasterShiftData("customerID", prelimData.customerId);
     console.log("shifts= ", shifts);
     const filteredShifts = shifts?.documents
       .filter((s) => s.customerID === prelimData.customerId)
@@ -297,7 +298,7 @@ const PatrolCheckpointFrom = ({
     setCheckPointDatas([
       ...checkPointDatas,
       {
-        checkPointId: checkPointDatas.length + 1,
+        checkPointId: Date.now(),
         checkPointName: "",
         areaId: prelimData.areaId,
         locationName: "",
@@ -312,12 +313,12 @@ const PatrolCheckpointFrom = ({
     ]);
   };
 
-  const removeCheckpoint = (id: any, status: any) => {
+  const removeCheckpoint = (id: any, status: any, selectedIndex: number) => {
     if (status === "existed" || status === "edit")
       setCheckpointRemoveList(checkpointRemoveList.concat(id));
     if (checkPointDatas.length > 0) {
       const filteredCheckpoints = checkPointDatas.filter(
-        (checkpoint) => checkpoint.checkPointId !== id
+        (checkpoint, index) => index !== selectedIndex//checkpoint.checkPointId !== id
       );
       setCheckPointDatas(filteredCheckpoints);
     }
@@ -340,7 +341,7 @@ const PatrolCheckpointFrom = ({
         ? {
             ...checkpoint,
             checkListId: checkpoint.checkListId.filter((_, i) => i !== index),
-            status: "edit",
+            status: checkpoint.status === "new" ? checkpoint.status : "edit",
           }
         : checkpoint
     );
@@ -360,7 +361,8 @@ const PatrolCheckpointFrom = ({
   const handleSave = async () => {
     let addNewCheckpointResult, updateCheckpointResult, deleteCheckpointResult;
     let addNewAssignedManpowerResult, updateAssignedManpowerResult, deleteAssignedManpowerResult;
-    //Checkpoit and Check List Tab
+    let updateNewCheckpoints = checkPointDatas.map((item) => item.checkPointId);
+
       //save new Checkpoint
       console.log("checkPointDatas = ", checkPointDatas);
       const newCheckpoints = checkPointDatas.filter(
@@ -377,24 +379,33 @@ const PatrolCheckpointFrom = ({
               longitude: checkPoint.longitude,
               altitude: checkPoint.altitude,
               isRestrictionTime: checkPoint.isRestrictionTime,
-              timeLimit: checkPoint.timeLimit,
+              timeLimit: parseInt(checkPoint.timeLimit),
               checkListId: checkPoint.checkListId,
             };
           }) || [];
         setIsLoading(true);
         addNewCheckpointResult = await addNewCheckpoint(dataToSubmit);
         setIsLoading(false);
-        if (addNewCheckpointResult) {
-          let updateNewCheckpoints = checkPointDatas
-            .filter((item) => item.status === "existed")
+        //console.log("addNewCheckpointResult", addNewCheckpointResult);
+        if (addNewCheckpointResult.result !== null) {
+          updateNewCheckpoints = checkPointDatas
+            .filter((item) => item.status === "existed" || item.status === "edit")
             .map((item) => item.checkPointId);
-          updateNewCheckpoints = updateNewCheckpoints.concat(addNewCheckpointResult);
+          updateNewCheckpoints = updateNewCheckpoints.concat(addNewCheckpointResult.result);
+          console.log("updateNewCheckpoints", updateNewCheckpoints);
           const resultUpdateCheckpoitsOfArea = await updateAreaData(
             prelimData.areaId,
             { checkPointIDs: updateNewCheckpoints }
           );
           checkpointsOfArea();
           setIsAddOrUpdateSuccess(true);
+        }
+        else{
+          const confirmApprove = await confirmDialog(
+            "Error to add Checkpoint",
+            `erro to add checkpoint`,
+            true, "danger"
+          );
         }
       }
 
@@ -403,13 +414,10 @@ const PatrolCheckpointFrom = ({
         setIsLoading(true);
         deleteCheckpointResult = await deleteCheckpoint(checkpointRemoveList);
         setIsLoading(false);
-        console.log("deleteResult", deleteCheckpointResult);
-        if (deleteCheckpointResult) {
+        //console.log("deleteResult", deleteCheckpointResult);
+        if (deleteCheckpointResult.result !== null) {
           setCheckpointRemoveList([]);
-          const updateNewCheckpoints = checkPointDatas.map(
-            (item) => item.checkPointId
-          );
-          console.log("updateNewCheckpoints", updateNewCheckpoints);
+          console.log("updateNewCheckpoints delete", updateNewCheckpoints);
           setIsLoading(true);
           const resultUpdateCheckpoitsOfArea = await updateAreaData(
             prelimData.areaId,
@@ -418,6 +426,13 @@ const PatrolCheckpointFrom = ({
           setIsLoading(false);
           checkpointsOfArea();
           setIsAddOrUpdateSuccess(true);
+        }
+        else{
+          const confirmApprove = await confirmDialog(
+            "Error to delete Checkpoint",
+            `${deleteCheckpointResult.error}`,
+            true, "danger"
+          );
         }
       }
 
@@ -439,7 +454,7 @@ const PatrolCheckpointFrom = ({
                 longitude: checkPoint.longitude,
                 altitude: checkPoint.altitude,
                 isRestrictionTime: checkPoint.isRestrictionTime,
-                timeLimit: checkPoint.timeLimit,
+                timeLimit: parseInt(checkPoint.timeLimit),
                 checkListId: checkPoint.checkListId,
               },
             };
@@ -448,12 +463,19 @@ const PatrolCheckpointFrom = ({
         setIsLoading(true);
         updateCheckpointResult = await updateCheckpoint(dataToSubmit);
         setIsLoading(false);
-        console.log("updateResult =", updateCheckpointResult);
+        //console.log("updateCheckpointResult =", updateCheckpointResult);
+        if(updateCheckpointResult.result === null){
+          const confirmApprove = await confirmDialog(
+            "Error to save Checkpoint data",
+            `${updateCheckpointResult.error}`,
+            true, "danger"
+          );
+        }
         checkpointsOfArea();
       }
 
     //Manpower Tab
-      //delete assigned Mnapower
+      //delete assigned Manpower
       if (assignedManpowerRemoveList.length > 0) {
         console.log("assignedManpowerRemoveList=", assignedManpowerRemoveList);
         setIsLoading(true);
@@ -479,7 +501,7 @@ const PatrolCheckpointFrom = ({
                 employeeName: man.employeeName,
                 shift_Id: man.shift_Id,
                 checkpoint_IDs: man.checkpoint_IDs,
-                manpowerRole_Id: man.manpowerRole_Id,
+                manpowerPosition_Id: man.manpowerPosition_Id,
               };
             }) || [];
           console.log("dataToSubmit", addataToSubmit);
@@ -503,7 +525,7 @@ const PatrolCheckpointFrom = ({
                   employeeName: man.employeeName,
                   shift_Id: man.shift_Id,
                   checkpoint_IDs: man.checkpoint_IDs,
-                  manpowerRole_Id: man.manpowerRole_Id,
+                  manpowerPosition_Id: man.manpowerPosition_Id,
                 },
               };
             }) || [];
@@ -551,19 +573,20 @@ const PatrolCheckpointFrom = ({
     if (activeStep > 0) setActiveStep((prevActiveStep) => prevActiveStep - 1);
   };
 
-  const handleFieldPreliminaryChange = (e: any) => {
+  const handleFieldPreliminaryChange = async (e: any) => {
     const fieldName = e.target.name;
     const value = e.target.value;
     let updatedPrelimData = { ...prelimData, [fieldName]: value };
     console.log("updatedPrelimData = ", updatedPrelimData);
     if (fieldName === "customerId") {
-      const areaList = data.areas.filter((a) => a.custId === value);
-      const custAreaList = areaList.map((area) => {
+      setIsLoading(true);
+      const areaOfCustomer = await getMasterAreaDataWithCustomerId(value);
+      const custAreaList = areaOfCustomer?.documents.map((area) => {
         return {
-          id: area.id,
+          id: area.$id,
           desc: area.name,
         };
-      });
+      }) || [];
       console.log("custAreaList = ", custAreaList);
       setAreas(custAreaList);
       updatedPrelimData = {
@@ -573,6 +596,7 @@ const PatrolCheckpointFrom = ({
     }
     console.log("updatedPrelimData = ", updatedPrelimData);
     setPrelimData(updatedPrelimData);
+    setIsLoading(false);
   };
 
   const handleFieldCheckpointChange = (e: any, id: any) => {
@@ -591,15 +615,15 @@ const PatrolCheckpointFrom = ({
     checkpointId: any,
     field: keyof CheckPointData,
     value: any,
-    index?: number
+    selectedIndex?: number
   ) => {
     if (field === "checkListId") {
       const checkpointList: CheckPointData[] = checkPointDatas.map(
         (checkpoint) => {
           if (checkpoint.checkPointId === checkpointId) {
-            if (index !== undefined) {
+            if (selectedIndex !== undefined) {
               const updatedCheckListId = [...checkpoint.checkListId];
-              updatedCheckListId[index] = value;
+              updatedCheckListId[selectedIndex] = value;
 
               return {
                 ...checkpoint,
@@ -659,8 +683,7 @@ const PatrolCheckpointFrom = ({
     const filteredshiftDatas: ShiftData[] = uniqueShiftsInPrelim.map((s) => {
       return {
         shiftId: s,
-        shiftName: shiftsOfCustomer.find((shift) => shift.shiftId === s)
-          .shiftName,
+        shiftName: shiftsOfCustomer.find((shift) => shift.shiftId === s)?.shiftName,
       };
     });
     console.log("shiftDatas =", filteredshiftDatas);
@@ -668,19 +691,11 @@ const PatrolCheckpointFrom = ({
 
     setIsLoading(true);
     //use unique shiftIds to find manpower roles
-    const manpowerRoles = await getMasterManpowerRoleData(uniqueShiftsInPrelim);
-    setfilteredManpowerData(manpowerRoles?.documents || []);
+    if(uniqueShiftsInPrelim.length > 0){
+      const manpowerRoles = await getMasterManpowerPositionData(uniqueShiftsInPrelim);
+      setfilteredManpowerData(manpowerRoles?.documents || []);
 
-    const mappedEmployeeItemSource = data.employees.map((emp) => {
-      return {
-        id: emp.empId,
-        desc: emp.fname + " " + emp.lname,
-        email: emp.email,
-      };
-    });
-    setEmployeeItemSource(mappedEmployeeItemSource);
-
-    //use unique shiftIds to find assigned mnapowers
+      //use unique shiftIds to find assigned mnapowers
     const assignedManpower = await getMasterAssignedManpowerData(
       uniqueShiftsInPrelim
     );
@@ -691,13 +706,25 @@ const PatrolCheckpointFrom = ({
           id: man.$id,
           employee_Id: man.employee_Id,
           employeeName: man.employeeName,
-          role_Name: man.role_Name,
+          position_Name: man.position_Name,
           shift_Id: man.shift_Id,
-          checkpoint_IDs: man.checkpoint_IDs,
-          manpowerRole_Id: man.manpowerRole_Id,
+          checkpoint_IDs: checkpointItemSource.filter(item => man.checkpoint_IDs.includes(item.id)).map(item => item.id),
+          manpowerPosition_Id: man.manpowerPosition_Id,
         };
       }) || [];
     setAssignedManpowers(mappedAssigned || []);
+    }
+    
+    ////// Mock Data ///////
+    const mappedEmployeeItemSource = data.employees.map((emp) => {
+      return {
+        id: emp.empId,
+        desc: emp.fname + " " + emp.lname,
+        email: emp.email,
+      };
+    });
+    setEmployeeItemSource(mappedEmployeeItemSource);
+
     setIsLoading(false);
   };
 
@@ -716,7 +743,7 @@ const PatrolCheckpointFrom = ({
         id: "new" + assignedManpowers.length + 1,
         employee_Id: "",
         employeeName: "",
-        manpowerRole_Id: roleId,
+        manpowerPosition_Id: roleId,
         shift_Id: shiftId,
         checkpoint_IDs: [],
       },
@@ -1103,7 +1130,7 @@ const PatrolCheckpointFrom = ({
                               ) =>
                                 handleFieldCheckpointChange(
                                   e,
-                                  checkpoint.checkPointId
+                                  checkpoint.checkPointId,
                                 )
                               }
                               value={checkpoint.checkPointName}
@@ -1233,7 +1260,7 @@ const PatrolCheckpointFrom = ({
                             onClick={() =>
                               removeCheckpoint(
                                 checkpoint.checkPointId,
-                                checkpoint.status
+                                checkpoint.status,index
                               )
                             }
                             className="bg-[#F66262] rounded-lg"
@@ -1306,7 +1333,6 @@ const PatrolCheckpointFrom = ({
                       </Typography>
                     </Box>
                     {checkPointDatas.map((checkpoint, index) => {
-                      console.log(checkpoint.longitude);
 
                       return (
                         <Box
@@ -1510,9 +1536,8 @@ const PatrolCheckpointFrom = ({
                                 </Typography>
                               </Box>
                             </div>
-                            {checkpoint.status === "new" ||
-                              (checkpoint.status === "edit" && (
-                                <Typography
+                            {(checkpoint.status === "new" || checkpoint.status === "edit") 
+                              && (<Typography
                                   sx={{
                                     fontSize: "14px",
                                     color: "#F66262",
@@ -1524,14 +1549,15 @@ const PatrolCheckpointFrom = ({
                                     ? "New Checkpoint: Please save."
                                     : "Edit Checkpoint: Please save."}
                                 </Typography>
-                              ))}
+                              )}
                           </Box>
                           <Box className="flex align-middle ml-2 justify-around">
                             <Button
                               onClick={() =>
                                 removeCheckpoint(
                                   checkpoint.checkPointId,
-                                  checkpoint.status
+                                  checkpoint.status,
+                                  index
                                 )
                               }
                               className="bg-[#F66262] rounded-lg"
@@ -1623,6 +1649,7 @@ const PatrolCheckpointFrom = ({
                                     color: "#2C5079",
                                     textDecorationLine: "underline",
                                     fontSize: "14px",
+                                    textAlign: "left",
                                   }}
                                 >
                                   Total : {checkpoint.checkListId.length} Check
@@ -1797,7 +1824,7 @@ const PatrolCheckpointFrom = ({
                       </Typography>
                       {shiftDatas.map((shift, index) => (
                         <div className="mb-2" key={index}>
-                          <Accordion sx={{ bgcolor: "#EBF4F6", mb: "0.5rem" }}>
+                          <Accordion key={"acc" + index} sx={{ bgcolor: "#EBF4F6", mb: "0.5rem" }}>
                             <AccordionSummary
                               sx={{ borderBottom: "1px solid #C7D4D7" }}
                               expandIcon={<FaSortDown />}
@@ -1835,7 +1862,7 @@ const PatrolCheckpointFrom = ({
                                 </Typography>
                               </Box>
                             </AccordionSummary>
-                            <AccordionDetails>
+                            <AccordionDetails key={"shiftName" + index}>
                               {filteredManpowerData
                                 ?.filter(
                                   (item) => item.shift_Id === shift.shiftId
@@ -1866,7 +1893,7 @@ const PatrolCheckpointFrom = ({
                                             // data.roles.find(
                                             //   (r) => r.id === role.roleId
                                             // )?.desc
-                                            role.role_Name
+                                            role.position_Name
                                           }
                                         </Typography>
                                       </div>
@@ -1889,7 +1916,7 @@ const PatrolCheckpointFrom = ({
                                           {
                                             assignedManpowers?.filter(
                                               (item) =>
-                                                item.manpowerRole_Id ===
+                                                item.manpowerPosition_Id ===
                                                 role.$id
                                             ).length
                                           }
@@ -1900,7 +1927,7 @@ const PatrolCheckpointFrom = ({
                                     {assignedManpowers
                                       ?.filter(
                                         (item) =>
-                                          item.manpowerRole_Id === role.$id
+                                          item.manpowerPosition_Id === role.$id
                                       )
                                       .map((man: any, index: number) => (
                                         <Box
@@ -1991,7 +2018,7 @@ const PatrolCheckpointFrom = ({
                                         disable={
                                           assignedManpowers?.filter(
                                             (item) =>
-                                              item.manpowerRole_Id === role.$id
+                                              item.manpowerPosition_Id === role.$id
                                           ).length === role.requireQuantity
                                         }
                                         onAddBtnClick={(e) =>
@@ -2038,7 +2065,7 @@ const PatrolCheckpointFrom = ({
 
         {isEdit && (
           <Box className="flex w-full justify-between px-6 border-t-2 pt-4 pb-4">
-            <Button
+            {tabValue !== "1" &&<Button
               className="flex text-[#2C5079] pt-2 bg-transparent hover:bg-transparent underline"
               onClick={handleUndo}
             >
@@ -2047,13 +2074,13 @@ const PatrolCheckpointFrom = ({
                 size={24}
               />
               Undo all changes
-            </Button>
+            </Button>}
             <Box className="space-x-4">
               {/* <DeleteBtnFooter
                 onDeleteBtnFooterClick={handleDelete}
                 disable={false}
               /> */}
-              <SaveBtnFooter onSaveBtnFooterClick={handleSave} />
+              {tabValue !== "1" && <SaveBtnFooter onSaveBtnFooterClick={handleSave} />}
             </Box>
           </Box>
         )}

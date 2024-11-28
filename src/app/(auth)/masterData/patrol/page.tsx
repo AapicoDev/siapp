@@ -19,6 +19,7 @@ import {
   IconButton,
   Switch as SwitchMUI,
   CircularProgress,
+  TablePagination,
 } from "@mui/material/";
 import CloseIcon from "@mui/icons-material/Close";
 import Navbar from "@/components/Navbar";
@@ -37,8 +38,10 @@ import {
   getAllMasterCustomerData,
   getAllMasterAreaData,
   getMasterRoundData,
+  fetchMasterAreaData,
 } from "@/app/lib/api";
 import { TableMasterPatrolRandom } from "@/components/materData/TableMasterPatrolRandom";
+import { IoClose } from "react-icons/io5";
 
 type RowData = {
   customerId: any;
@@ -48,6 +51,7 @@ type RowData = {
   checkpointId: any[];
   totalRound: any;
   totalCheckpoint: any;
+  totalCheckpointOfArea: any;
   //isActive: boolean;
 };
 
@@ -182,10 +186,13 @@ export default function Patrol() {
   const [allArea, setAllArea] = useState<any[]>();
   const [isAddOrUpdateSucces, setIsAddOrUpdateSucces] = useState(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [totalRows, setTotalRows] = useState(0);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10); 
 
   useEffect(() => {
     tableData();
-  }, []);
+  }, [page, rowsPerPage]);
 
   const tableData = async () => {
     setIsLoading(true);
@@ -207,7 +214,8 @@ export default function Patrol() {
     // });
     // setCustAreaList(custAreaList);
 
-    const areaList = await getAllMasterAreaData();
+    const offset = page * rowsPerPage;
+    const areaList = await fetchMasterAreaData(offset, rowsPerPage);
     setAllArea(areaList?.documents);
     console.log("areaList =", areaList);
     const mappedPatrolList: RowData[] =
@@ -220,10 +228,12 @@ export default function Patrol() {
           checkpointId: area.checkPointIDs,
           totalRound: getRound(area.$id),
           totalCheckpoint: area.checkPointIDs?.length,
+          totalCheckpointOfArea: area.checkPointIDs?.length,
         };
       }) || [];
     console.log("mappedPatrolList =", mappedPatrolList);
     setRowData(mappedPatrolList);
+    setTotalRows(areaList?.total || 0);
     setSelected(
       mappedPatrolList?.map((row) => ({
         isSelected: false, // Default value for `selected`
@@ -234,7 +244,7 @@ export default function Patrol() {
   };
 
   const getRound = async (areaId: any) => {
-    const rounds = await getMasterRoundData(areaId);
+    const rounds = await getMasterRoundData([{ field: "areaId", value: areaId }]);
     const filteredRound = rounds?.documents.filter(
       (round) => round.isActive === true
     ).length;
@@ -283,8 +293,19 @@ export default function Patrol() {
     }
   }
 
-  const handleOpenViewQr = (selecectedRow: any) => {
-    setSelectedRow(selecectedRow);
+  const handleOpenViewQr = (selecectedRow: RowData) => {
+    let sumChkPt = 0;
+    allArea?.forEach((area) => {
+      if(area.CustomerId === selecectedRow.customerId){
+        sumChkPt += area.checkPointIDs?.length
+      }
+    });
+    console.log("allArea =", allArea)
+    console.log("sumChkPt =", sumChkPt)
+    const calChkPtOfAllArea = selecectedRow;
+    calChkPtOfAllArea.totalCheckpoint = sumChkPt;
+    setSelectedRow(calChkPtOfAllArea);
+
     const custAreaList = allArea
       ?.filter((a) => a.CustomerId === selecectedRow.customerId)
       .map((area) => {
@@ -327,6 +348,15 @@ export default function Patrol() {
   };
   const handleSelectRandomPatrolPage = (checked: boolean) => {
     if (checked) setIsCheckpointPage(false);
+  };
+
+  const handlePageChange = (event: any, newPage: any) => {
+    console.log("newPage", newPage);
+    setPage(newPage);
+  };
+  const handleRowsPerPageChange = (event: any) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
   };
 
   return (
@@ -383,8 +413,10 @@ export default function Patrol() {
                   className='border-none bg-white p-4 mr-2 min-w-80 custom-placeholder'
                 />
                 <Button
-                  className='w-40 bg-[#1D7A9B] hover:bg-[#D9F0EC] hover:text-[#1D7A9B]'
-                  onClick={setToggleFilter}>
+                  className="w-40 bg-[#1D7A9B] hover:bg-[#D9F0EC] hover:text-[#1D7A9B]"
+                  onClick={setToggleFilter}
+                  disabled={true}
+                >
                   <Filter size={20} style={{ marginRight: "5px" }} /> Filter
                 </Button>
               </Box>
@@ -394,7 +426,7 @@ export default function Patrol() {
           {isCheckpointPage && (
             <>
               <TableContainer
-                className="h-screen bg-white"
+                className="h-[76vh] max-h-[76vh] bg-white"
                 sx={{
                   display: "flex",
                   flexDirection: "column",
@@ -402,22 +434,22 @@ export default function Patrol() {
                   boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
                 }}
               >
-                <Table>
-                  <TableHead>
+                <Table stickyHeader sx={{zIndex: 0}}>
+                  <TableHead sx={{ mt: 0}}>
                     <TableRow
-                      sx={{ borderBottom: "1px solid #C7D4D7" }}
+                      sx={{ borderBottom: "1px solid #C7D4D7", height: "64px" }}
                       className={`${styles.table}`}
                     >
-                      <TableCell align="left" className="w-[4%]">
-                        {/* <Checkbox className="mt-1 mb-2"
+                      {/* <TableCell align="left" className="w-[4%]">
+                        <Checkbox className="mt-1 mb-2"
                       checked={isSelectedAll}
                       onCheckedChange={handleCheckAll}
-                    /> */}
-                      </TableCell>
-                      <TableCell align="center" className="w-[26%]">
+                    />
+                      </TableCell> */}
+                      <TableCell align="center" className="w-[28%]">
                         Customer
                       </TableCell>
-                      <TableCell align="center" className="w-[26%]">
+                      <TableCell align="center" className="w-[28%]">
                         Area
                       </TableCell>
                       <TableCell align="center" className="w-[15%]">
@@ -442,6 +474,7 @@ export default function Patrol() {
                           index % 2 === 1 ? `bg-inherit` : `bg-[#EBF4F6]`
                         }`}
                         sx={{
+                          height: "60px",
                           cursor: "pointer",
                           "& .MuiTableCell-root": {
                             padding: "10px 20px 10px 20px", // Customize border color
@@ -451,15 +484,15 @@ export default function Patrol() {
                           },
                         }}
                       >
-                        <TableCell align="left">
-                          {/* <Checkbox className="mt-1 mb-2"
+                        {/* <TableCell align="left">
+                          <Checkbox className="mt-1 mb-2"
                         checked={selected[index]?.isSelected}
                         onClick={(event) => {
                           event.stopPropagation(); // Prevent row click
                           handleSelected(index);
                         }}
-                      /> */}
-                        </TableCell>
+                      />
+                        </TableCell> */}
 
                         {/* Customer */}
                         <TableCell align="center">{row.customerName}</TableCell>
@@ -472,12 +505,12 @@ export default function Patrol() {
 
                         {/* Total Checkpoint */}
                         <TableCell align="center">
-                          {row.totalCheckpoint}
+                          {row.totalCheckpointOfArea}
                         </TableCell>
 
                         {/* ViewQR */}
                         <TableCell align="center">
-                          {row.totalCheckpoint === 0 ? (
+                          {row.totalCheckpointOfArea === 0 ? (
                             "-"
                           ) : (
                             <Button
@@ -521,18 +554,16 @@ export default function Patrol() {
                             width: "100%",
                           }}
                         >
-                          <Typography>Total: {rowData.length} items</Typography>
-                          {/* <Box>
-                      <DeleteButton onDeleteBtnClick={handleDeleteCust} disable={!selected.some((item) => item.isSelected)}/>
-                      <Button
-                        style={{ marginLeft: "auto", fontWeight: "bold" }}
-                        className="w-48 enabled:bg-gradient-to-r from-[#00336C] to-[#37B7C3] hover:from-[#4C9BF5] hover:to-[#D8EAFF] 
-                               hover:text-[#00336C] disabled:bg-[#83A2AD]"
-                        onClick={() => handleAddNewPatrol()}
-                      >
-                        +New
-                      </Button>
-                    </Box> */}
+                          {/* <Typography>Total: {rowData.length} items</Typography> */}
+                          <TablePagination
+                            sx={{color: "#2C5079"}}
+                            component="div"
+                            count={totalRows}
+                            page={page}
+                            onPageChange={handlePageChange}
+                            rowsPerPage={rowsPerPage}
+                            onRowsPerPageChange={handleRowsPerPageChange}
+                          />
                         </Box>
                       </TableCell>
                     </TableRow>
@@ -555,9 +586,36 @@ export default function Patrol() {
           </Button>
           <div className='bg-white rounded-lg shadow-lg h-[600px] w-[498px] overflow-auto fixed right-6 top-[136px]'>
             {/* Header */}
-            <Box className='flex w-[full] bg-[#D9F0EC] py-2 rounded-t-lg justify-center'>
-              <Box className='w-[100%] justify-center flex'>
-                <Typography className='w-fit text-xl font-semibold text-[#1D7A9B] h-fit mt-1 ml-[78px] flex'>
+            <Box
+              sx={{
+                display: "flex",
+                width: "100%",
+                backgroundColor: "#D9F0EC",
+                paddingY: "5px",
+                borderRadius: "8px 8px 0px 0px", // Adjust rounded corners as needed
+                justifyContent: "center",
+                paddingTop: "0.5rem",
+                paddingBottom: "0.5rem",
+              }}
+            >
+              <Box
+                sx={{
+                  width: "100%",
+                  display: "flex",
+                  justifyContent: "center",
+                }}
+              >
+                <Typography
+                  sx={{
+                    width: "fit-content",
+                    fontSize: "1.125rem", // text-lg equivalent
+                    fontWeight: "bold",
+                    color: "#1D7A9B",
+                    marginTop: "0.25rem",
+                    marginLeft: "78px",
+                    display: "flex",
+                  }}
+                >
                   <Filter
                     size={20}
                     style={{ marginRight: "5px", marginTop: "3px" }}
@@ -566,10 +624,11 @@ export default function Patrol() {
                 </Typography>
               </Box>
               <Button2
-                className='bg-transparent text-[#83A2AD] float'
-                sx={{ position: "relative", right: 0 }}
-                onClick={() => setOpenFilterModal(false)}>
-                <CloseIcon className='w-[26px] h-[26px]' />
+                className="bg-transparent float w-fit"
+                sx={{ position: "relative", right: 0, color: "#83A2AD" }}
+                onClick={() => setOpenFilterModal(false)}
+              >
+                <IoClose size={26} />
               </Button2>
             </Box>
 
@@ -944,6 +1003,7 @@ export default function Patrol() {
           closeModal={handleCloseViewQr}
           customerAreas={custAreaList}
           selectedCustomer={selectedRow}
+          selectArea={selectedRow?.areaId}
         />
       )}
 

@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { Box, Table, TableBody, TableCell, TableContainer, TableFooter, TableHead, TableRow, Typography } from "@mui/material";
-import { useState } from "react";
+import { Box, CircularProgress, Table, TableBody, TableCell, TableContainer, TableFooter, TableHead, TablePagination, TableRow, Typography } from "@mui/material";
+import { useEffect, useState } from "react";
 import { GoArrowUpRight } from "react-icons/go";
 import styles from "../../app/styles.module.css";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -11,19 +11,33 @@ import { Button } from "@/components/ui/buttons/button";
 import ContractForm from "./ContractForm";
 import data from "@/app/mockData.json";
 import { Item } from "@radix-ui/react-dropdown-menu";
+import { deleteContract, deleteManpowerPosition, deletePatrolAlertTo, deleteRoundData, deleteShift, fetchMasterContractData, getAllMasterContractData, getMasterAreaDataWithCustomerId, getMasterManpowerPositionData, getMasterPatrolAlertToData, getMasterRoundData, getMasterShiftData, queryMasterContract } from "@/app/lib/api";
+import { useConfirmDialog } from "../../components/ui/alertDialog/confirmDialog";
 
 type RowData = {
-  hrCode: string;
-  customerId: any;
-  departmentId: any;
-  segmentId: any;
-  groupId: any;
-  zoneId: any;
-  chkPtTotal: any;
-  contractTotal: any;
-  code: string;
+  id: any;
+  contractNo: string;
+  startDate: Date;
+  endDate: Date;
+  attachments: any[];
+  shift_Ids: string[];
+  alertTo_Ids: string[];
   isActive: boolean;
   customerName: string;
+  customer_Id: string;
+};
+
+type CustomerData = {
+  id: any;
+  customerName: string;
+  selectedContractId: string;
+};
+
+type AreaData = {
+  id: string;
+  custId: any;
+  name: string;
+  roundIds: string[];
 };
 
 type selectedDelete = {
@@ -38,18 +52,71 @@ interface TableContract{
 
 export function TableContract({contractData, custData,}: TableContract) {
 
+  const { confirmDialog, ConfirmAlertDialog } = useConfirmDialog();
+  const [rowData, setRowData] = useState<RowData[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [customerNameList, setCustomerNameList] = useState<any[]>([]);
   const [openAddContract, setOpenAddContract] = useState<boolean>(false);
   const [openEditContract, setOpenEditContract] = useState<boolean>(false);
   const [selectedRow, setSelectedRow] = useState<RowData>();
+  const [selectedCustomer, setSelectedCustomer] = useState<CustomerData>();
   const [custArea, setCustArea] = useState<any[]>([]);
   const [isSelectedAll, setIsSelectedAll] = useState(false);
+  const [isAddOrUpdateSucces, setIsAddOrUpdateSucces] = useState(false);
   const [selected, setSelected] = useState<selectedDelete[]>(
     contractData.map((row) => ({
       isSelected: false, // Default value for `selected`
       contractId: row.customerId, // Convert customerId to string for custId
     }))
   );
+  const [totalRows, setTotalRows] = useState(0);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10); 
+
+  useEffect(() => {
+    tableData();
+  }, []);
+  useEffect(() => {
+    if (isAddOrUpdateSucces) {
+      setIsAddOrUpdateSucces(false);
+    }
+    tableData();
+  }, [isAddOrUpdateSucces]); // page, rowsPerPage
+
+  const tableData = async () => {
+    console.log("enter table data");
+    setIsLoading(true);
+    const offset = page * rowsPerPage;
+    const contracts = await getAllMasterContractData();
+    const tableData: RowData[] = await Promise.all(
+      contracts?.documents?.map(async (doc) => {
+        return {
+          id: doc.$id,
+          customerName: doc.customerName,
+          customer_Id: doc.customer_Id,
+          contractNo: doc.contractNo,
+          startDate: doc.startDate,
+          endDate: doc.endDate,
+          attachments: doc.attachments,
+          shift_Ids: doc.shift_Ids,
+          alertTo_Ids: doc.alertTo_Ids,
+          isActive: doc.isActive,
+        };
+      }) || []
+    );
+    setRowData(tableData);
+    setTotalRows(contracts?.total || 0);
+    console.log("tableData =", tableData);
+    console.log("custData =", custData);
+
+    const mapSelect: selectedDelete[] = tableData.map((row: any) => ({
+      isSelected: false,
+      contractId: row.id,
+    }));
+    setSelected(mapSelect);
+    custNameList(tableData);
+    setIsLoading(false);
+  };
 
   function handleCloseContractForm(isEdit: boolean) {
     if (!isEdit) {
@@ -74,34 +141,114 @@ export function TableContract({contractData, custData,}: TableContract) {
     return `${day}/${month}/${year}`;
   };
 
-  const custNameList = () => {
-    const custName = data.customers.map(cust => ({
-      id: cust.id,
-      desc: cust.customerName
+  const custNameList = (mappedRowData: RowData[]) => {
+    const custName = mappedRowData.map((cust) => ({
+      id: cust.customer_Id,
+      desc: cust.customerName,
     }));
     setCustomerNameList(custName);
   };
 
   const handleAddNewContract = () => {
-    custNameList();
     setOpenAddContract(true);
   }
 
-  const handleDeleteContract = () => {
+  const handleDeleteContract = async () => {
+    console.log("selected =", selected);
+    const confirmApprove = await confirmDialog(
+      "Delete Contract",
+      "Do you want to delete these selected contract?",false, "danger"
+    );
+    if (confirmApprove) {
+      const deleteId = selected
+        .filter((select) => select.isSelected === true)
+        .map((item) => item.contractId);
+      const deleteRow = rowData.filter((row) => deleteId.includes(row.id));
+      console.log("deleteRow =", deleteRow);
+
+      setIsLoading(true);
+      for (const dr of deleteRow) {
+        let deleteContractResult = null;
+        const roundOfContract = await getMasterRoundData([{field: "contractId", value: dr.id}]);
+        const patrolAlertToOfContract = await getMasterPatrolAlertToData(dr.id);
+        const shiftOfContract = await getMasterShiftData("contractID",dr.id);
+        const shiftIds = shiftOfContract?.documents?.map(shift => shift.$id);
+        let manpowerPositionOfShift;
+        if(shiftIds !== undefined && shiftIds?.length > 0 ){
+          manpowerPositionOfShift = await getMasterManpowerPositionData(shiftIds);
+        }
+        if(patrolAlertToOfContract?.total !== undefined && patrolAlertToOfContract?.total > 0) {
+          const deleteAlertToResult = await deletePatrolAlertTo(patrolAlertToOfContract?.documents?.map(alert => alert.$id));
+          if(deleteAlertToResult === null) console.error("error to delete AlertToList of contract id:", dr.id);
+        }
+        if(roundOfContract?.total !== undefined && roundOfContract?.total > 0) {
+          const deleteRoundResult = await deleteRoundData(roundOfContract?.documents?.map(round => round.$id));
+          if(deleteRoundResult === null) console.error("error to delete Round of contract id:", dr.id);
+        }
+        if(manpowerPositionOfShift?.total !== undefined && manpowerPositionOfShift?.total > 0) {
+          const deleteManpowerPositionResult = await deleteManpowerPosition(manpowerPositionOfShift?.documents?.map(man => man.$id));
+          if(deleteManpowerPositionResult === null) console.error("error to delete ManpowerPOsition of shift ids:", manpowerPositionOfShift);
+        }
+        if(shiftIds !== undefined && shiftIds?.length > 0){
+          const deleteShiftResult = await deleteShift(shiftIds);
+          if(deleteShiftResult === null) console.error("error to delete Shift of contract id", dr.id);
+        }
+
+        deleteContractResult = await deleteContract([dr.id]);
+        console.log("deleteCustResult =", deleteContractResult);
+        if (deleteContractResult.result !== null) {
+          const confirmApprove = await confirmDialog(
+            "Delete Success",
+            "delete Conract success.", true
+         );
+         if(confirmApprove){
+          setIsAddOrUpdateSucces(true);
+          setIsSelectedAll(false);
+         }
+        }
+        else {
+          const confirmApprove = await confirmDialog(
+            "Error to delete contract",
+            `${deleteContractResult.error}`,
+            true, "danger"
+          );
+        }
+      }
+      setIsLoading(false);
+    }
   }
   
-  const handleRowClick = (row: RowData) => {
+  const handleRowClick = async (row: RowData) => {
+    await customerArea(row);
     console.log("row = ", row);
-    const mapRow: RowData = {...row, customerName: custData.find(c => c.customerId === row.customerId).customerName}
-    setSelectedRow(mapRow);
-    console.log("maprow = ", mapRow);
-    customerArea(row);
+    const mapSelectedCustomer: CustomerData = {
+      id: row.customer_Id,
+      customerName: row.customerName,
+      selectedContractId: row.id
+    }
+    setSelectedRow(row);
+    setSelectedCustomer(mapSelectedCustomer);
     setOpenEditContract(true);
   };
 
-  const customerArea = (row: RowData) => {
-    const customerArea = data.areas.filter(cust => cust.custId === row.customerId);
-    setCustArea(customerArea);
+  const customerArea = async (row: RowData) => {
+    setIsLoading(true);
+    const getAreasOfCustomer = await getMasterAreaDataWithCustomerId(
+      row.customer_Id
+    );
+    console.log("getAreasOfCustomer =", getAreasOfCustomer);
+    const custArea: AreaData[] =
+      getAreasOfCustomer?.documents.map((doc) => {
+        return {
+          id: doc.$id,
+          custId: doc.CustomerId,
+          name: doc.name,
+          roundIds: doc.roundIDs,
+        };
+      }) || [];
+    console.log("custArea =", custArea);
+    setCustArea(custArea);
+    setIsLoading(false);
   };
 
   const handleSelected = (index: number) => {
@@ -126,10 +273,19 @@ export function TableContract({contractData, custData,}: TableContract) {
     setSelected(selectedAll);
   };
 
+  const handlePageChange = (event: any, newPage: any) => {
+    console.log("newPage", newPage);
+    setPage(newPage);
+  };
+  const handleRowsPerPageChange = (event: any) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
   return (
       <>
       <TableContainer
-            className="h-screen bg-white"
+            className="h-[76vh] max-h-[76vh] bg-white"
             sx={{
               display: "flex",
               flexDirection: "column",
@@ -137,8 +293,8 @@ export function TableContract({contractData, custData,}: TableContract) {
               boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
             }}
           >
-            <Table>
-              <TableHead>
+            <Table stickyHeader sx={{zIndex: 0}}>
+              <TableHead sx={{ mt: 0}}>
                 <TableRow
                   sx={{ borderBottom: "1px solid #C7D4D7" }}
                   className={`${styles.table}`}
@@ -172,10 +328,11 @@ export function TableContract({contractData, custData,}: TableContract) {
 
               {/* Allow the TableBody to grow and fill vertical space */}
               <TableBody sx={{ flexGrow: 1 }}>
-                {contractData.map((row, index) => (
+              {rowData.slice(page * rowsPerPage, rowsPerPage + (page * rowsPerPage))
+                .map((row, index) => (
                   <TableRow
                     onClick={() => handleRowClick(row)} // Row click handler
-                    key={index}
+                    key={index + (page*rowsPerPage)}
                     className={`${index % 2 === 1 ? `bg-inherit` : `bg-[#EBF4F6]`}`}
                     sx={{
                       cursor: "pointer",
@@ -189,48 +346,51 @@ export function TableContract({contractData, custData,}: TableContract) {
                   >
                     <TableCell align="left">
                       <Checkbox
-                        checked={selected[index].isSelected}
+                        checked={selected[index + (page*rowsPerPage)]?.isSelected}
                         onClick={(event) => {
                           event.stopPropagation(); // Prevent row click
-                          handleSelected(index);
+                          handleSelected(index + (page*rowsPerPage));
                         }}
                       />
                     </TableCell>
 
                     {/* Contract No */}
-                    <TableCell align="center">{row.id}</TableCell>
+                    <TableCell align="center">{row.contractNo}</TableCell>
 
                     {/* Start Date */}
-                    <TableCell align="center">{formatDate(row.startDate)}</TableCell>
+                    <TableCell align="center">{formatDate(row.startDate.toString())}</TableCell>
 
                     {/* End Date */}
-                    <TableCell align="center">{formatDate(row.finishDate)}</TableCell>
+                    <TableCell align="center">{formatDate(row.endDate.toString())}</TableCell>
 
                     {/* Customer */}
                     <TableCell align="center">
                       {
-                        custData.find((d) => d.customerId === row.customerId)?.customerName
+                        custData.find((d) => d.id === row.customer_Id)?.desc === null ? 
+                        custData.find((d) => d.id === row.customer_Id)?.desc
+                        : row.customerName
                       }
                     </TableCell>
 
                     {/* Attachment */}
                     <TableCell align="center">
-                      <Box display={"flex"} className="w-full">
+                    {row.attachments?.length > 0 ?
+                      (<Box display={"flex"} className="w-full">
                       <Box
                         className="justify-between flex p-1 bg-white max-w-[220px] border-[1px] border-[#4C9BF5] cursor-pointer rounded-lg"
                       >
                        <Box className="w-[100%] text-left">
                           <Typography className="py-1 px-2 text-[#2C5079]">
-                            {row.attachment[0].length > 20 ? row.attachment[0].substring(0, 18)+"..." : row.attachment[0]}
+                            {row.attachments[0]?.split(";;")[0]?.length > 20 ? row.attachments[0]?.split(";;")[0]?.substring(0, 18)+"..." : row.attachments[0]?.split(";;")[0]}
                           </Typography>
                         </Box>
                         <GoArrowUpRight size={24} color="#4C9BF5" style={{ marginTop: 5 }}/>
                       </Box>
                       <Typography sx={{pl: 1, pt: 1, fontSize: "16px"}}>
-                        {row.attachment.length > 1 ? "+" + (row.attachment.length-1) : ""}
+                        {row.attachments.length > 1 ? "+" + (row.attachments.length-1) : ""}
                       </Typography>
-                      </Box>
-                      
+                      </Box>)
+                      : "-"}
                     </TableCell>
 
                     {/* Status */}
@@ -270,7 +430,16 @@ export function TableContract({contractData, custData,}: TableContract) {
                         width: "100%",
                       }}
                     >
-                      <Typography>Total: {contractData.length} item{contractData.length > 1 ? "s" : ""}</Typography>
+                      {/* <Typography>Total: {rowData.length} item{rowData.length > 1 ? "s" : ""}</Typography> */}
+                      <TablePagination
+                          sx={{color: "#2C5079"}}
+                          component="div"
+                          count={totalRows}
+                          page={page}
+                          onPageChange={handlePageChange}
+                          rowsPerPage={rowsPerPage}
+                          onRowsPerPageChange={handleRowsPerPageChange}
+                        />
                       <Box>
                         <DeleteButton
                           onDeleteBtnClick={handleDeleteContract}
@@ -298,20 +467,31 @@ export function TableContract({contractData, custData,}: TableContract) {
           customerAreas={[]}
           selectedCustomer={null}
           isEditContract={false}
-          custList={customerNameList}
+          custList={custData}
           isFromCustomerPage={false}
-        />
+          setIsAddOrUpdateSuccess={setIsAddOrUpdateSucces}/>
       )}
 
         {openEditContract && (
         <ContractForm
           closeModal={handleCloseContractForm}
           customerAreas={custArea}
-          selectedCustomer={selectedRow}
+          selectedCustomer={selectedCustomer}
           isEditContract={true}
           custList={customerNameList}
           isFromCustomerPage={false}
-        />
+          setIsAddOrUpdateSuccess={setIsAddOrUpdateSucces}/>
+      )}
+
+      {/* Confirm dialog */}
+      {ConfirmAlertDialog}
+
+      {isLoading && (
+        <div className="fixed inset-0 bg-white bg-opacity-40 flex flex-col items-center justify-center z-indextop">
+          <Box sx={{ display: "flex" }}>
+            <CircularProgress />
+          </Box>
+        </div>
       )}
       </>
   );

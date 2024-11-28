@@ -17,7 +17,7 @@ import { SaveBtnFooter } from "../ui/buttons/saveBtnFooter";
 import { IoClose } from "react-icons/io5";
 import { PatrolStatus } from "./PatrolStatus";
 import { CheckListStatus } from "./CheckListStatus";
-import { getPatrolCheckList, getMasterRoundData } from "../../app/lib/api";
+import { getPatrolCheckList } from "../../app/lib/api";
 import { Row } from "react-day-picker";
 import { formatDate } from "date-fns";
 
@@ -93,7 +93,7 @@ const RandomPatrolDeatilView = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 flex flex-col items-center justify-center z-indextop">
+    <div className="fixed inset-0 bg-black bg-opacity-40 flex flex-col items-center justify-center z-40">
       {/* Header */}
       {!openMapDetailView && (
         <>

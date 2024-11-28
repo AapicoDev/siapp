@@ -19,6 +19,7 @@ import {
   IconButton,
   Grid2,
   CircularProgress,
+  TablePagination,
 } from "@mui/material/";
 import CloseIcon from "@mui/icons-material/Close";
 import { Checkbox as Checkbox3 } from "@/components/ui/checkbox3";
@@ -40,12 +41,16 @@ import { LabelSelector } from "@/components/ui/selectors/labelSelector";
 import { IoClose } from "react-icons/io5";
 import { Checkbox as Checkbox2 } from "@/components/ui/checkbox";
 import {
+  fetchIncidentData,
   getIncidentData,
   getIncidentTypeData,
   updateIncidentStatus,
 } from "../../../lib/api";
 import IncidentDeatilView from "@/components/siapp/IncidentDetailView";
 import { useConfirmDialog } from "../../../../components/ui/alertDialog/confirmDialog";
+import TableQrErrorReport from "@/components/siapp/TableQrErrorReport";
+import { useData } from '../../../../context/DataContext';
+import { SearchSelector } from "@/components/ui/selectors/searchSelector";
 
 type RowData = {
   incidentId: string;
@@ -116,18 +121,15 @@ export default function Incident() {
       attchments: [],
     },
   ]);
+  const [incidentTypeItemSource, setIncidentTypeItemSource] = useState<any[]>([]);
   const [customers, setCustomers] = useState(data.customers);
   const [segments, setSegment] = useState(data.segments);
-  const [groups, setGroups] = useState(data.groups);
-  const [zones, setZones] = useState(data.zones);
   const [selectedRow, setSelectedRow] = useState<RowData | null>(null);
   const [openIncidentDeatilView, setOpenIncidentDeatilView] =
     useState<boolean>(false);
   const [confirmApprove, setConfirmApprove] = useState<boolean>(false);
   const [openFilterModal, setOpenFilterModal] = useState<boolean>(false);
-  const [openAddContract, setOpenAddContract] = useState<boolean>(false);
-  const [openEditContract, setOpenEditContract] = useState<boolean>(false);
-  const [isIncidentPage, setIsIncidentPage] = useState<boolean>(true);
+  const [tableValue, setTableValue] = useState<number>(1);
   const [selectedCustomerFilter, setSelectedCustomerFilter] = useState();
   const [selectedIncidentTypeFilter, setSelectedIncidentTypeFilter] =
     useState();
@@ -145,12 +147,18 @@ export default function Incident() {
   const totalItems = rowData.length;
   const { confirmDialog, ConfirmAlertDialog } = useConfirmDialog();
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const { user } = useData();
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10); 
+  const [totalRows, setTotalRows] = useState(0);
+  const [selectedSearchIncidentType, setSelectedSearchIncidentType] = useState<any>("");
+  const [selectedSearchStatus, setSelectedSearchStatus] = useState<any>("");
 
   useEffect(() => {
     const time = new Date().toLocaleString(); //Output format = 10/2/2024, 1:28:36 PM
     tableData();
     incidentTypeData();
-  }, [isIncidentPage]);
+  }, []); //[page, rowsPerPage]
 
   const formatDate = (dateString: string, isUTC7: boolean = false) => {
     let date = new Date(dateString);
@@ -169,6 +177,7 @@ export default function Incident() {
 
   const tableData = async () => {
     setIsLoading(true);
+    const offset = page * rowsPerPage;
     const response = await getIncidentData();
     console.log("incident =", response?.documents);
     const reOrder = response?.documents.sort((a, b) => {
@@ -199,6 +208,7 @@ export default function Incident() {
       }) || rowData;
     console.log("incident tableData = ", tableData);
     setRowData(tableData);
+    setTotalRows(response?.total || 0);
     const mapSelect = tableData.map((row) => ({
       isSelected: false,
       segId: row.rowNo,
@@ -224,6 +234,14 @@ export default function Incident() {
       }) || incidentTypes;
     console.log("mapincidentTypes = ", mapincidentTypes);
     setIncidentTypes(mapincidentTypes);
+
+    const itemSource = response?.documents.map(doc => {
+      return{
+        id: doc.IncidentType_EN,
+        label: doc.IncidentType_EN
+      }
+    });
+    setIncidentTypeItemSource(itemSource || incidentTypeItemSource);
   };
 
   const handleApproved = async (index: number, row: RowData) => {
@@ -236,7 +254,11 @@ export default function Incident() {
       console.log("confirmApprove =", confirmApprove);
       if (confirmApprove) {
         approveRow[index].status = "Approved";
-        const dataToSubmit = { ["Status"]: approveRow[index]["status"] };
+        const dataToSubmit = { 
+          ["Status"]: approveRow[index]["status"],
+          Approver_Id: user?.$id,
+          Approver: user?.name
+        };
         const response = await updateIncidentStatus(
           row.incidentId,
           dataToSubmit
@@ -253,26 +275,19 @@ export default function Incident() {
     setOpenFilterModal(!openFilterModal);
   };
 
-  function handleCloseContractForm(isEdit: boolean) {
-    if (!isEdit) {
-      setOpenAddContract(false);
-    } else {
-      setOpenEditContract(false);
+  const handleSelectPage = (checked: boolean, tableName: string) => {
+    console.log("checked =", checked);
+    console.log("tableName =", tableName);
+
+    if(tableName === "incident" && checked){
+      setTableValue(1);
     }
-  }
-
-  const handleEditContract = (selecectedRow: any) => {
-    console.log("row =", selecectedRow);
-    setSelectedRow(selecectedRow);
-    setOpenEditContract(true);
-  };
-
-  const handleSelectChkPtPage = (checked: boolean) => {
-    if (checked) setIsIncidentPage(true);
-  };
-
-  const handleSelectRandomPage = (checked: boolean) => {
-    if (checked) setIsIncidentPage(false);
+    else if(tableName === "correctiveAction" && checked){
+      setTableValue(2);
+    }
+    else if(tableName === "qrError" && checked){
+      setTableValue(3);
+    }
   };
 
   const handleSelected = (index: number) => {
@@ -308,6 +323,27 @@ export default function Incident() {
     setOpenIncidentDeatilView(false);
   }
 
+  const handlePageChange = (event: any, newPage: any) => {
+    console.log("newPage", newPage);
+    setPage(newPage);
+  };
+
+  const handleRowsPerPageChange = (event: any) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  const handleSearchSelectorChange = (newValue: any, name: any) => {
+    console.log("newValue =", newValue);
+    console.log("name =", name);
+    if(name === "incidentType"){
+      newValue === null ? setSelectedSearchIncidentType("") : setSelectedSearchIncidentType(newValue?.id);
+    }
+    else if(name === "status"){
+      newValue === null ? setSelectedSearchStatus("") : setSelectedSearchStatus(newValue?.id);
+    }
+  };
+
   return (
     <div>
       <Navbar menu={"SIAPP"} submenu={"Incident"} />
@@ -320,9 +356,9 @@ export default function Incident() {
               <Box className='space-x-4 py-4 flex w-fit'>
                 <Box className='justify-center flex p-1 pb-0 bg-white rounded-lg h-10 w-30 '>
                   <Checkbox
-                    className='bg-[#EBF4F6] border-none'
-                    checked={isIncidentPage}
-                    onCheckedChange={handleSelectChkPtPage}
+                    className="bg-[#EBF4F6] border-none"
+                    checked={tableValue===1}
+                    onCheckedChange={(check: boolean) => handleSelectPage(check, "incident")}
                   />
                   <Typography
                     sx={{ fontWeight: "700", color: "#1D7A9B" }}
@@ -332,9 +368,9 @@ export default function Incident() {
                 </Box>
                 <Box className='justify-center flex p-1 bg-white rounded-lg h-10 w-fit'>
                   <Checkbox
-                    className='bg-[#EBF4F6] border-none'
-                    checked={!isIncidentPage}
-                    onCheckedChange={handleSelectRandomPage}
+                    className="bg-[#EBF4F6] border-none"
+                    checked={tableValue===2}
+                    onCheckedChange={(check: boolean) => handleSelectPage(check, "correctiveAction")}
                   />
                   <Typography
                     sx={{ fontWeight: "700", color: "#1D7A9B" }}
@@ -342,16 +378,49 @@ export default function Incident() {
                     Corrective Action
                   </Typography>
                 </Box>
+                <Box className="justify-center flex p-1 bg-white rounded-lg h-10 w-fit">
+                  <Checkbox
+                    className="bg-[#EBF4F6] border-none"
+                    checked={tableValue===3}
+                    onCheckedChange={(check: boolean) => handleSelectPage(check, "qrError")}
+                  />
+                  <Typography
+                    sx={{ fontWeight: "700", color: "#1D7A9B" }}
+                    className="py-1 px-2"
+                  >
+                    QR Code Error
+                  </Typography>
+                </Box>
               </Box>
 
-              <Box className='space-x-2 py-4 flex'>
-                <Box className='justify-center flex p-1 bg-white rounded-lg'>
+              <Box className="space-x-2 py-4 flex">
+              {tableValue === 1 &&
+                <Box className="justify-center flex p-1 bg-white rounded-lg">
                   <DatePicker />
                   <Typography className='text-[#2C5079] text-sm px-4 pt-1'>
                     to
                   </Typography>
                   <DatePicker />
-                </Box>
+                </Box>}
+                {/* Selector Add Segment */}
+                {tableValue === 2 &&
+                <SearchSelector
+                    itemSource={incidentTypeItemSource}
+                    handleChange={(newVal: any, name: any) => handleSearchSelectorChange(newVal, name)}
+                    selectedVal={selectedSearchIncidentType}
+                    name={"incidentType"}
+                    inlineLabel="Incident Type"
+                    borderColor="white"
+                  />}
+                  {tableValue === 3 &&
+                <SearchSelector
+                    itemSource={[{id: "Approved", label: "Approved"}, {id: "Pending", label: "Pending"}]}
+                    handleChange={(newVal: any, name: any) => handleSearchSelectorChange(newVal, name)}
+                    selectedVal={selectedSearchStatus}
+                    name={"status"}
+                    inlineLabel="Status"
+                    borderColor="white"
+                  />}
                 <Grid2 size={{ xs: 6, md: 12 }}>
                   <Input
                     type='text'
@@ -374,38 +443,40 @@ export default function Incident() {
             </Box>
           </Box>
 
-          {isIncidentPage && (
+          {tableValue === 1 && (
             <>
               <TableContainer
-                className='h-screen bg-white p-2'
+                className="h-[76vh] max-h-[76vh] bg-white px-2"
                 sx={{
                   display: "flex",
                   flexDirection: "column",
                   borderRadius: "15px 15px 0px 0px",
                   boxShadow: "0px 1px 12px rgba(29, 122, 155, 0.1)",
-                }}>
-                <Table>
-                  <TableHead>
+                }}
+              >
+                <Table stickyHeader>
+                  <TableHead sx={{mt:0}}>
                     <TableRow
-                      sx={{ borderBottom: "1px solid #C7D4D7" }}
-                      className={`${styles.table}`}>
-                      <TableCell align='left' className='w-[12%]'>
+                      sx={{ borderBottom: "1px solid #C7D4D7"}}
+                      className={`${styles.table}`}
+                    >
+                      <TableCell align="left" className="w-[6%]">
                         <Checkbox2
                           className='mt-1 mb-2'
                           checked={isSelectedAll}
                           onCheckedChange={handleCheckAll}
                         />
                       </TableCell>
-                      <TableCell align='center' className='w-[8%]'>
+                      <TableCell align="center" className="w-[10%]">
                         Date & Time
                       </TableCell>
-                      <TableCell align='center' className='w-[22%]'>
+                      <TableCell align="center" className="w-[26%]">
                         Customer
                       </TableCell>
-                      <TableCell align='center' className='w-[20%]'>
+                      <TableCell align="center" className="w-[16%]">
                         Incident Type
                       </TableCell>
-                      <TableCell align='center' className='w-[12%]'>
+                      <TableCell align="center" className="w-[18%]">
                         Topic
                       </TableCell>
                       <TableCell align='center' className='w-[11%]'>
@@ -419,10 +490,11 @@ export default function Incident() {
 
                   {/* Allow the TableBody to grow and fill vertical space */}
                   <TableBody sx={{ flexGrow: 1 }}>
-                    {rowData.map((row, index) => (
+                  {rowData.slice(page * rowsPerPage, rowsPerPage + (page * rowsPerPage))
+                    .map((row, index) => (
                       <TableRow
                         onClick={() => handleRowClick(row)}
-                        key={index}
+                        key={index + (page * rowsPerPage)}
                         className={`${
                           index % 2 === 1 ? `bg-inherit` : `bg-[#EBF4F6]`
                         }`}
@@ -437,10 +509,10 @@ export default function Incident() {
                         }}>
                         <TableCell align='left'>
                           <Checkbox2
-                            checked={selected[index].isSelected}
+                            checked={selected[index + (page * rowsPerPage)].isSelected}
                             onClick={(event) => {
                               event.stopPropagation(); // Prevent row click
-                              handleSelected(index);
+                              handleSelected(index + (page * rowsPerPage));
                             }}
                           />
                         </TableCell>
@@ -510,10 +582,19 @@ export default function Incident() {
                             justifyContent: "space-between",
                             alignItems: "center",
                             width: "100%",
-                          }}>
-                          <Typography>Total: {totalItems} items</Typography>
-                          <Box className='w-fit flex'>
-                            <Box className='w-fit p-2'>
+                          }}
+                        >
+                          <TablePagination
+                        sx={{color: "#2C5079"}}
+                        component="div"
+                        count={totalRows}
+                        page={page}
+                        onPageChange={handlePageChange}
+                        rowsPerPage={rowsPerPage}
+                        onRowsPerPageChange={handleRowsPerPageChange}
+                      />
+                          <Box className="w-fit flex">
+                            <Box className="w-fit p-2">
                               <Button
                                 style={{ fontWeight: "bold" }}
                                 className='w-32 h-10 bg-white text-[#4c9bf5] border-[1px] border-[#4c9bf5] hover:text-white hover:bg-[#4c9bf5]'
@@ -548,8 +629,12 @@ export default function Incident() {
             </>
           )}
 
-          {!isIncidentPage && (
+          {tableValue === 2 && (
             <TableCorrectiveAction incidentTypes={incidentTypes} />
+          )}
+
+          {tableValue === 3 && (
+            <TableQrErrorReport />
           )}
         </Box>
       </Box>

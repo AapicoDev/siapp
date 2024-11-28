@@ -6,6 +6,7 @@ import ThemeProviderWrapper from "../components/ThemeProviderWrapper";
 import { Inter } from "next/font/google";
 import Sidebar from "@/components/Sidebar";
 import { Kanit } from 'next/font/google';
+import { DataProvider } from "@/context/DataContext";
 
 // Configure Kanit font
 const kanit = Kanit({
@@ -40,7 +41,11 @@ export default function RootLayout({
   return (
     <html lang="en" className={kanit.className}>
       <body className={`${kanit.className} flex items-start justify-between`}>
-        <ThemeProviderWrapper>{children}</ThemeProviderWrapper>
+        <ThemeProviderWrapper>
+          <DataProvider>
+            {children}
+          </DataProvider>
+        </ThemeProviderWrapper>
       </body>
     </html>
   );

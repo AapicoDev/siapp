@@ -434,7 +434,7 @@
     },
     {
       "id": "al0002",
-      "isAsm": 2,
+      "isAsm": 0,
       "name": "วัฒนา เฉลิม",
       "email": "wattana.cha@mahidol.edu",
       "otherPositionId": ["r01", "r02", "r04"],
@@ -442,7 +442,7 @@
     },
     {
       "id": "al0003",
-      "isAsm": 2,
+      "isAsm": 1,
       "name": "กตคน์ แย้มโสพิศ",
       "email": "kitty@asm-company.com",
       "otherPositionId": ["r01", "r02"],
@@ -450,7 +450,7 @@
     },
     {
       "id": "al0004",
-      "isAsm": 1,
+      "isAsm": 0,
       "name": "สมมติ1 สมมติ1",
       "email": "numberone@mail.com",
       "otherPositionId": ["r01"],
@@ -458,7 +458,7 @@
     },
     {
       "id": "al0005",
-      "isAsm": 1,
+      "isAsm": 0,
       "name": "สมมติ2 สมมติ2",
       "email": "numberTwo@mail.com",
       "otherPositionId": ["r02"],
@@ -597,6 +597,24 @@
       "isActive": true
     }
   ],
+  "positions": [
+    {
+      "id": "p01",
+      "desc": "หัวหน้าเจ้าหน้าที่รักษาความปลอดภัย",
+      "isActive": true
+    },
+    {
+      "id": "p02",
+      "desc": "เจ้าหน้าที่รักษาความปลอดภัย",
+      "isActive": true
+    }
+    ,
+    {
+      "id": "p03",
+      "desc": "Premium Guard",
+      "isActive": true
+    }
+  ],
   "userRoles": [
     {
       "userId": 1,
@@ -679,11 +697,13 @@
   "activeStatus": [
     {
       "id": 1,
-      "desc": "Active"
+      "desc": "Active",
+      "label": "Active"
     },
     {
       "id": 2,
-      "desc": "Inactive"
+      "desc": "Inactive",
+      "label": "Inactive"
     }
   ],
   "employees": [
