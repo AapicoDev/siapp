@@ -187,6 +187,7 @@ export default function Group() {
       if(confirmApprove) {
         setAddGroupVal("");
         setAddGroupDescVal("");
+        if(isSearch === true) setIsSearch(false);
       }
     }
     else{
@@ -196,7 +197,7 @@ export default function Group() {
         true, "danger"
       );
     }
-    isSearch === true ? await search() : await tableData();
+    await tableData();
     setIsLoading(false);
   };
 

@@ -153,6 +153,7 @@ export default function CheckList() {
         setAddAbnormalStatus("");
         setPhotoAmt("");
         setIsNeedAttachPhoto(false);
+        if(isSearch === true) setIsSearch(false);
       }
     }
     else{
@@ -162,8 +163,7 @@ export default function CheckList() {
         true, "danger"
       );
     }
-    isSearch === true ?
-    await search() : await tableData()
+    await tableData();
   };
 
   const handleSearch = async () => {

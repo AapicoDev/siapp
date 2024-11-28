@@ -184,6 +184,7 @@ export default function Zone() {
       if(confirmApprove) {
         setAddZoneVal("");
         setAddZoneDescVal("");
+        if(isSearch === true) setIsSearch(false);
       }
     }
     else{
@@ -193,7 +194,7 @@ export default function Zone() {
         true, "danger"
       );
     }
-    isSearch === true ? await search() : await tableData();
+    await tableData();
     setIsLoading(false);
   };
 

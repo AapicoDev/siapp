@@ -199,7 +199,7 @@ export function TableContract({contractData, custData,}: TableContract) {
         if (deleteContractResult.result !== null) {
           const confirmApprove = await confirmDialog(
             "Delete Success",
-            "delete Conract success.", true
+            `delete Conract No.: ${dr.contractNo} success.`, true
          );
          if(confirmApprove){
           setIsAddOrUpdateSucces(true);

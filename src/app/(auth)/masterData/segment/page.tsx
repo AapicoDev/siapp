@@ -190,6 +190,7 @@ export default function Segment() {
       if(confirmApprove) {
         setAddSegmentDescVal("");
         setAddSegmentVal("");
+        if(isSearch === true) setIsSearch(false);
       }
     }
     else{
@@ -199,7 +200,8 @@ export default function Segment() {
         true, "danger"
       );
     }
-    isSearch === true ? await search() : await tableData();
+    
+    await tableData();
     setIsLoading(false);
   };
 

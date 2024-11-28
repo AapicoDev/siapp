@@ -10,6 +10,7 @@ import {
   TableCell,
   TableBody,
   Grid2,
+  CircularProgress,
 } from "@mui/material";
 import { Gallery, Trash } from "iconsax-react";
 import { ChangeEvent, useEffect, useState } from "react";
@@ -30,19 +31,23 @@ type RandomRowData = {
     checkPointName: any;
     patroller: string;
     remark: string;
-    reasonId: string;
-    reason: string;
+    reasonIds: string[];
+    reasons: string[];
     image: any[];
     latestEdit: string;
   };
 
 interface RandomPatrolDeatilViewProps {
   checkpoint: RandomRowData;
+  normalWord: any[];
+  abnormalWord: any[];
   closeModal: () => void;
 }
 
 const RandomPatrolDeatilView = ({
   checkpoint,
+  normalWord,
+  abnormalWord,
   closeModal,
 }: RandomPatrolDeatilViewProps) => {
   const [isEdit, setIsEdit] = useState(false);
@@ -64,6 +69,7 @@ const RandomPatrolDeatilView = ({
   const [checkList, setCheckList] = useState<any[]>();
   const [roundTime, setRoundTime] = useState<any>();
   const [openMapDetailView, setOpenMapDetailView] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const formatTime = (dateString: string, isUTC7: boolean = false) => {
     const date = new Date(dateString);
@@ -79,9 +85,11 @@ const RandomPatrolDeatilView = ({
   }, []);
 
   const getCheckListData = async () => {
+    setIsLoading(true);
     const getCheckList = await getPatrolCheckList(checkpoint.checkpointId);
     setCheckList(getCheckList?.documents);
     console.log("checkList =", getCheckList?.documents);
+    setIsLoading(false);
   };
 
   function handleCloseCustomerForm() {
@@ -203,7 +211,7 @@ const RandomPatrolDeatilView = ({
                           fontWeight: 700,
                         }}
                       >
-                        Date
+                        Date :
                       </Typography>
                       <Typography
                         textAlign="left"
@@ -217,7 +225,7 @@ const RandomPatrolDeatilView = ({
                       </Typography>
                     </div>
                     <div className="flex">
-                      <Typography
+                    <Typography
                         textAlign="left"
                         sx={{
                           fontSize: "14px",
@@ -225,9 +233,23 @@ const RandomPatrolDeatilView = ({
                           paddingTop: "0.25rem",
                           pr: 1,
                           fontWeight: 700,
+                          textWrap: "nowrap"
                         }}
                       >
-                        Reason {randomPatrolCheckpoint.reason}
+                        Reason :
+                      </Typography>
+                      <Typography
+                        textAlign="left"
+                        sx={{
+                          fontSize: "14px",
+                          color: "#2C5079",
+                          paddingTop: "0.25rem",
+                          pr: 1,
+                        }}
+                      >
+                        {randomPatrolCheckpoint?.reasons?.length > 1 ?
+                         randomPatrolCheckpoint?.reasons?.join(", ")
+                         : randomPatrolCheckpoint?.reasons}
                       </Typography>
                     </div>
                     <div>
@@ -243,12 +265,12 @@ const RandomPatrolDeatilView = ({
                     </div>
                   </Box>
                   {/* Map */}
-                  <Box
+                  {/* <Box
                     className="flex w-[30%] space-x-5 bg-[#F1F4F4] rounded-lg hover:cursor-pointer"
                     onClick={(e) => setOpenMapDetailView(true)}
                   >
                     Map
-                  </Box>
+                  </Box> */}
                 </Box>
 
                 <Box className="flex w-full bg-[#EBF4F6] rounded-lg mb-3 p-2">
@@ -334,7 +356,7 @@ const RandomPatrolDeatilView = ({
                             }}
                           >
                             <div className="flex justify-center w-full h-full">
-                              <CheckListStatus status={row.Status} />
+                              <CheckListStatus normal={normalWord} abnormal={abnormalWord} status={row.Status} />
                             </div>
                           </TableCell>
 
@@ -541,6 +563,12 @@ const RandomPatrolDeatilView = ({
           </div>
         </>
       )}
+
+      {isLoading && <div className="fixed inset-0 bg-white bg-opacity-40 flex flex-col items-center justify-center z-50">
+        <Box sx={{ display: "flex" }}>
+          <CircularProgress />
+        </Box>
+      </div>}
     </div>
   );
 };

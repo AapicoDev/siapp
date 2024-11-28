@@ -222,6 +222,7 @@ export default function Department() {
         setSelectedAddSegment("");
         setSelectedAddGroup("");
         setsSelectedAddZone("");
+        if(isSearch === true) setIsSearch(false);
       }
     }
     else{
@@ -231,7 +232,7 @@ export default function Department() {
         true, "danger"
       );
     }
-    isSearch === true ? await search() : await tableData();
+    await tableData();
   };
 
   const search = async () => {

@@ -119,7 +119,7 @@ export function TableMasterPatrolRandom({}: TableMasterPatrolRandomProps) {
   const { confirmDialog, ConfirmAlertDialog } = useConfirmDialog();
   const [totalRows, setTotalRows] = useState(0);
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(1); 
+  const [rowsPerPage, setRowsPerPage] = useState(10); 
 
   const checkListsOfCheckpoint = async () => {
     setIsLoading(true);
@@ -348,7 +348,6 @@ export function TableMasterPatrolRandom({}: TableMasterPatrolRandomProps) {
                     onPageChange={handlePageChange}
                     rowsPerPage={rowsPerPage}
                     onRowsPerPageChange={handleRowsPerPageChange}
-                    rowsPerPageOptions={[1,2]}
                   />
                   <Box>
                     <DeleteButton

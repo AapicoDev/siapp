@@ -10,6 +10,7 @@ import {
   TableCell,
   TableBody,
   Grid2,
+  CircularProgress,
 } from "@mui/material";
 import { Gallery, Trash } from "iconsax-react";
 import { ChangeEvent, useEffect, useState } from "react";
@@ -17,7 +18,7 @@ import { SaveBtnFooter } from "../ui/buttons/saveBtnFooter";
 import { IoClose } from "react-icons/io5";
 import { PatrolStatus } from "./PatrolStatus";
 import { CheckListStatus } from "./CheckListStatus";
-import { getPatrolCheckList, getMasterRoundData } from "../../app/lib/api";
+import { getPatrolCheckList, getMasterRoundData, filterMasterCheckpointData, filterPatrolCheckpointData, getMasterCheckListSelectedAttibute } from "../../app/lib/api";
 import { Row } from "react-day-picker";
 import PatrolCheckpointMapComponent from "../PatrolCheckpointMapView";
 
@@ -29,12 +30,13 @@ type RowData = {
   areaId: string;
   areaName: any;
   round: any;
+  masterRoundId: string;
   checkpointId: string;
   checkpointNo: any;
   checkPointName: any;
   patroller: string;
   status: string;
-  allCheckpoints: number; //string[];
+  allCheckpoints: string[];
   remark: string;
   image: any[];
 };
@@ -88,6 +90,10 @@ const PatrolDeatilView = ({
   const [checkList, setCheckList] = useState<any[]>();
   const [roundTime, setRoundTime] = useState<any>();
   const [openMapDetailView, setOpenMapDetailView] = useState<boolean>(false);
+  const [normalWords, setNormalWords] = useState<any>([]);
+  const [abnormalWords, setAbnormalWords] = useState<any>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [longLat, setLongLat] = useState<any>([]);
 
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
@@ -100,23 +106,66 @@ const PatrolDeatilView = ({
 
   useEffect(() => {
     console.log("patrolCheckpoint =", patrolCheckpoint);
+    getCheckpointDetailData();
     getCheckListData();
     getRoundDetailData();
   }, []);
 
   const getCheckListData = async () => {
+    setIsLoading(true);
     const getCheckList = await getPatrolCheckList(checkpoint.checkpointId);
     setCheckList(getCheckList?.documents);
-    console.log("checkList =", getCheckList?.documents);
+
+    const getChecklistStatus = await getMasterCheckListSelectedAttibute(["normalStatus", "abnormalStatus"]);
+    const uniqueNormal = new Set(getChecklistStatus?.documents.map(doc => doc.normalStatus));
+    const uniqueAbNormal = new Set(getChecklistStatus?.documents.map(doc => doc.abnormalStatus));
+    setNormalWords(Array.from(uniqueNormal));
+    setAbnormalWords(Array.from(uniqueAbNormal));
+    setIsLoading(false);
   };
 
   const getRoundDetailData = async () => {
-    const response = await getMasterRoundData([{ field: "areaId", value: checkpoint.areaId }]);
+    setIsLoading(true);
+    const response = await getMasterRoundData([{ field: "$id", value: checkpoint.masterRoundId }]);
     const startTime = formatTime(response?.documents[0].startTime);
     const endTime = formatTime(response?.documents[0].endTime);
     setRoundTime(startTime + " - " + endTime);
     console.log("roundTime = ", startTime + " - " + endTime);
+    setIsLoading(false);
   };
+
+  const getCheckpointDetailData = async () => {
+    setIsLoading(true);
+    console.log("checkpoint.allCheckpoints =", checkpoint.allCheckpoints);
+    if(checkpoint.allCheckpoints?.length > 0){
+      const filterPatrolCheckpoints = await filterPatrolCheckpointData([{ field: "$id", value: checkpoint.allCheckpoints }]);
+      console.log("filterPatrolCheckpoints =", filterPatrolCheckpoints);
+      const masterCheckpointIds = filterPatrolCheckpoints?.documents?.map(doc => doc.masterCheckpointID);
+      console.log("filterCheckpoints =", filterPatrolCheckpoints);
+      const filterMasterCheckpoints = await filterMasterCheckpointData([{ field: "$id", value: masterCheckpointIds }]);
+      const centerCheckpoint = filterPatrolCheckpoints?.documents.find(p => p.$id === checkpoint.checkpointId)?.masterCheckpointID;
+      const masterCheckpointLongLat = filterPatrolCheckpoints?.documents?.map(doc => 
+        {
+        return{
+          center: [
+            filterMasterCheckpoints?.documents.find(m => m.$id === centerCheckpoint)?.longitude,
+            filterMasterCheckpoints?.documents.find(m => m.$id === centerCheckpoint)?.latitude
+          ],
+          checkpoint: doc.CheckpointName,
+          patroller: doc.Patroller,
+          longlat: [
+            filterMasterCheckpoints?.documents.find(m => m.$id === doc.masterCheckpointID)?.longitude,
+            filterMasterCheckpoints?.documents.find(m => m.$id === doc.masterCheckpointID)?.latitude
+          ]
+        }
+      }
+      //[doc.longitude, doc.latitude]
+      )
+      console.log("masterCheckpointLongLat =", masterCheckpointLongLat);
+      setLongLat(masterCheckpointLongLat);
+    }
+    setIsLoading(false);
+  }
 
   function handleCloseCustomerForm() {
     closeModal();
@@ -237,7 +286,7 @@ const PatrolDeatilView = ({
                           fontWeight: 700,
                         }}
                       >
-                        Date
+                        Date : 
                       </Typography>
                       <Typography
                         textAlign="left"
@@ -283,8 +332,8 @@ const PatrolDeatilView = ({
                         }}
                         textAlign={"left"}
                       >
-                        {patrolCheckpoint.allCheckpoints} Check Point
-                        {`${patrolCheckpoint.allCheckpoints > 1 ? `s` : ``}`}
+                        {patrolCheckpoint?.allCheckpoints?.length} Check Point
+                        {`${patrolCheckpoint?.allCheckpoints?.length > 1 ? `s` : ``}`}
                       </Typography>
                     </div>
                   </Box>
@@ -295,7 +344,7 @@ const PatrolDeatilView = ({
                   >
                     <PatrolCheckpointMapComponent
                       zoom={16}
-                      longlat={[["100.55826768112321", "13.715759496081468"],["100.55857312480582", "13.715866960484869"]]}/>
+                      longlat={longLat}/>
                   </div>
                 </Box>
 
@@ -408,7 +457,7 @@ const PatrolDeatilView = ({
                             }}
                           >
                             <div className="flex justify-center w-full h-full">
-                              <CheckListStatus status={row.Status} />
+                              <CheckListStatus status={row.Status} normal={normalWords} abnormal={abnormalWords} />
                             </div>
                           </TableCell>
 
@@ -573,9 +622,10 @@ const PatrolDeatilView = ({
                 <div className="flex w-full h-[329px] rounded-lg border-[#2C5079] border-[1px] bg-slate-200 p-1 justify-center">
                   <PatrolCheckpointMapComponent
                     zoom={16}
-                    longlat={[["100.55826768112321", "13.715759496081468"],["100.55857312480582", "13.715866960484869"]]}/>
+                    longlat={longLat}/>
+                    {/* [["100.55826768112321", "13.715759496081468"],["100.55857312480582", "13.715866960484869"]] */}
                 </div>
-              <Box className="flex">
+              {/* <Box className="flex">
               <Typography
                 sx={{
                   fontSize: "16px",
@@ -608,11 +658,16 @@ const PatrolDeatilView = ({
               >
                 Name Surname2
               </Typography>
-              </Box>
+              </Box> */}
             </div>
           </div>
         </>
       )}
+      {isLoading && <div className="fixed inset-0 bg-white bg-opacity-40 flex flex-col items-center justify-center z-50">
+        <Box sx={{ display: "flex" }}>
+          <CircularProgress />
+        </Box>
+      </div>}
     </div>
   );
 };

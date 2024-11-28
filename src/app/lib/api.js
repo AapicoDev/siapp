@@ -507,6 +507,20 @@ export async function getAllMasterCheckListData() {
     console.error("Error retrieving data:", error);
   }
 }
+export async function getMasterCheckListSelectedAttibute(attibutes) {
+  console.log("attibutes =", attibutes);
+  try {
+    const response = await fetchDataList(
+      databaseId, 
+      masterCheckListTableId,
+      [Query.select(attibutes)]
+    );
+    console.log(response);
+    return response;
+  } catch (error) {
+    console.error("Error retrieving data:", error);
+  }
+}
 export async function fetchMasterCheckListData(offset, limit) {
   try {
     const response = await fetchDataList(
@@ -1318,6 +1332,22 @@ export async function getMasterCheckpointData(areaId) {
     console.error("Error retrieving data:", error);
   }
 }
+export async function filterMasterCheckpointData(filters) {
+  const conditions = filters.map((filter) =>
+    Query.equal(filter.field, filter.value)
+  );
+  try {
+    const response = await fetchDataList(
+      databaseId,
+      masterCheckpointTableId,
+      conditions
+    );
+    console.log(response);
+    return response;
+  } catch (error) {
+    console.error("Error retrieving data:", error);
+  }
+}
 export async function deleteCheckpoint(id) {
   try {
     console.log("id:", id);
@@ -1489,6 +1519,22 @@ export async function getPatrolCheckpointData(offset, limit) {
   } catch (error) {
     console.error("Error fetching data:", error);
     return null;
+  }
+}
+export async function filterPatrolCheckpointData(filters) {
+  const conditions = filters.map((filter) =>
+    Query.equal(filter.field, filter.value)
+  );
+  try {
+    const response = await fetchDataList(
+      databaseId,
+      patrolCheckpointTableId,
+      conditions
+    );
+    console.log(response);
+    return response;
+  } catch (error) {
+    console.error("Error retrieving data:", error);
   }
 }
 export async function getPatrolCheckList(checkpointId) {

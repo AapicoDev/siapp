@@ -181,6 +181,7 @@ const PatrolCheckpointFrom = ({
     []
   );
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [sameChecklistForAllCheckpoint, setSameChecklistForAllCheckpoint] = useState<boolean>(false);
   const [employeeItemSource, setEmployeeItemSource] = useState<any[]>([]);
   const { confirmDialog, ConfirmAlertDialog } = useConfirmDialog();
 
@@ -354,6 +355,7 @@ const PatrolCheckpointFrom = ({
     setCheckpointRemoveList([]);
     setAssignedManpowerAddList([]);
     setAssignedManpowerRemoveList([]);
+    setSameChecklistForAllCheckpoint(false);
   };
 
   const handleDelete = () => {};
@@ -774,6 +776,8 @@ const PatrolCheckpointFrom = ({
   };
 
   const handleSameCheckList = (check: boolean) => {
+    console.log("check =", check);
+    setSameChecklistForAllCheckpoint(check);
     if (check) {
       const checkpointsSameCheckList = checkPointDatas.map((checkpoint) => {
         if (checkpoint != checkPointDatas[0]) {
@@ -782,10 +786,12 @@ const PatrolCheckpointFrom = ({
           return {
             ...checkpoint,
             checkListId: updatedCheckListId,
+            status: checkpoint.status != "new" ? "edit" : "new",
           };
         }
         return checkpoint;
       });
+      console.log("checkpointsSameCheckList =", checkpointsSameCheckList);
       setCheckPointDatas(checkpointsSameCheckList);
     }
   };
@@ -1581,6 +1587,7 @@ const PatrolCheckpointFrom = ({
                         className="mt-1 mr-2 border-[#C7D4D7]"
                         onCheckedChange={handleSameCheckList}
                         disabled={checkPointDatas.length < 2}
+                        checked={sameChecklistForAllCheckpoint}
                       />
                       <Typography
                         sx={{

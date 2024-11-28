@@ -50,12 +50,13 @@ type RowData = {
   areaId: string;
   areaName: any;
   round: any;
+  masterRoundId: string;
   checkpointId: string;
   checkpointNo: any;
   checkPointName: any;
   patroller: string;
   status: string;
-  allCheckpoints: number; //string[],
+  allCheckpoints: string[],
   remark: string;
   image: any[];
 };
@@ -190,12 +191,13 @@ export default function Patrol() {
       areaName: "",
       areaId: "",
       round: 0,
+      masterRoundId: "",
       checkPointName: "",
       checkpointId: "",
       checkpointNo: undefined,
       patroller: "",
       status: "",
-      allCheckpoints: 0,
+      allCheckpoints: [],
       remark: "",
       image: [],
     },
@@ -288,12 +290,15 @@ export default function Patrol() {
           round: allPatrolRoundData?.documents.find(
             (p) => p.$id === chkPt.PatrolRoundId
           )?.Round,
+          masterRoundId: allPatrolRoundData?.documents.find(
+            (p) => p.$id === chkPt.PatrolRoundId
+          )?.MasterRoundID,
           checkpointId: chkPt.$id,
           checkpointNo: chkPt.CheckpointNumber,
           checkPointName: chkPt.CheckpointName,
           patroller: chkPt.Patroller,
           status: chkPt.Status,
-          allCheckpoints: allPatrolCheckpointData?.documents.length, //allPatrolRoundData?.documents.find(p => p.$id === chkPt.PatrolRoundId)?.PatrolCheckPointId,
+          allCheckpoints: allPatrolRoundData?.documents.find(p => p.$id === chkPt.PatrolRoundId)?.PatrolCheckPointId,
           remark: chkPt.Remark,
           image: chkPt.Image,
         };
