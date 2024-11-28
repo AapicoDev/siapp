@@ -70,7 +70,7 @@ export function TableCorrectiveAction({
   const { confirmDialog, ConfirmAlertDialog } = useConfirmDialog();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(2); 
+  const [rowsPerPage, setRowsPerPage] = useState(10); 
   const [totalRows, setTotalRows] = useState(0);
 
   useEffect(() => {
@@ -312,7 +312,6 @@ export function TableCorrectiveAction({
                         onPageChange={handlePageChange}
                         rowsPerPage={rowsPerPage}
                         onRowsPerPageChange={handleRowsPerPageChange}
-                        rowsPerPageOptions={[2,4]}
                       />
                   <Box className="w-fit flex">
                     <Box className="w-fit py-2">

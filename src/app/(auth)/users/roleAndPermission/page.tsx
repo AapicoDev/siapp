@@ -98,7 +98,7 @@ export default function UsersPage() {
     }))
   );
   const [rolePage, setRolePage] = useState(0);
-  const [rowsPerRolePage, setRowsPerRolePage] = useState(2);
+  const [rowsPerRolePage, setRowsPerRolePage] = useState(10);
   const [totalRoleRows, setTotalRoleRows] = useState(0);
   const [permissionPage, setPermissionPage] = useState(0);
   const [rowsPerPermissionPage, setRowsPerPermissionPage] = useState(10);
@@ -643,7 +643,6 @@ export default function UsersPage() {
                             onPageChange={handleRolePageChange}
                             rowsPerPage={rowsPerRolePage}
                             onRowsPerPageChange={handleRoleRowsPerPageChange}
-                            rowsPerPageOptions={[2, 4]}
                           />
                           </Box>
                           <Box className="flex w-[45%]">

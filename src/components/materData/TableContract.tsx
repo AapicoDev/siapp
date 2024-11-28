@@ -71,7 +71,7 @@ export function TableContract({contractData, custData,}: TableContract) {
   );
   const [totalRows, setTotalRows] = useState(0);
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(4); 
+  const [rowsPerPage, setRowsPerPage] = useState(10); 
 
   useEffect(() => {
     tableData();
@@ -439,7 +439,6 @@ export function TableContract({contractData, custData,}: TableContract) {
                           onPageChange={handlePageChange}
                           rowsPerPage={rowsPerPage}
                           onRowsPerPageChange={handleRowsPerPageChange}
-                          rowsPerPageOptions={[4,8]}
                         />
                       <Box>
                         <DeleteButton
