@@ -1,6 +1,13 @@
 import React, { useEffect, useRef } from "react";
 import "maplibre-gl/dist/maplibre-gl.css"; // Import the MapLibre CSS
 import maplibregl from "maplibre-gl"; // Import MapLibre
+import { Kanit } from "next/font/google";
+const kanit = Kanit({
+  weight: ["300", "400"],
+  style: ["normal", "italic"],
+  subsets: ["latin"],
+});
+import {styles} from "../app/styles.module.css"
 
 const PatrolCheckpointMapComponent = ({ longlat, zoom }) => {
   //latlong = [[123, 123],[123, 124]]
@@ -24,7 +31,28 @@ const PatrolCheckpointMapComponent = ({ longlat, zoom }) => {
         console.log("coord =", coord);
          // Create a popup but do not attach it yet
          const popup = new maplibregl.Popup({ offset: 25, closeButton: false, closeOnClick: false })
-         .setHTML(`<p><strong>Checkpoint: </strong>${coord.checkpoint}</p><strong>Patroller: </strong> ${coord.patroller}`);
+         .setHTML(`
+            <p style="color: #2C5079; font-family:${kanit.style.fontFamily};">
+              <strong>
+                Checkpoint:
+              </strong>${coord.checkpoint}
+            </p>
+            <p style="color: #2C5079; font-family:${kanit.style.fontFamily};">
+              <strong>
+                Patroller: 
+              </strong> ${coord.patroller}
+            </p>
+            <p style="color: #2C5079; font-family:${kanit.style.fontFamily};">
+              <strong>
+                Status: 
+              </strong> ${coord.status}
+            </p>
+            <p style="color: #2C5079; font-family:${kanit.style.fontFamily};">
+              <strong>
+                Time: 
+              </strong> ${coord.time}
+            </p>
+          `);
 
      // Create the marker
      const marker = new maplibregl.Marker()

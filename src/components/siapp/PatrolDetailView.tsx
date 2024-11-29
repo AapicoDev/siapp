@@ -153,6 +153,8 @@ const PatrolDeatilView = ({
           ],
           checkpoint: doc.CheckpointName,
           patroller: doc.Patroller,
+          time: `${formatTime(doc?.StartTime)} - ${formatTime(doc?.EndTime)}`,
+          status: doc.Status,
           longlat: [
             filterMasterCheckpoints?.documents.find(m => m.$id === doc.masterCheckpointID)?.longitude,
             filterMasterCheckpoints?.documents.find(m => m.$id === doc.masterCheckpointID)?.latitude

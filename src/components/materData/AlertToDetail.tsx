@@ -12,6 +12,7 @@ import {
   TableRow,
   TableCell,
   TableBody,
+  CircularProgress,
 } from "@mui/material";
 import { Button } from "@/components/ui/buttons/button";
 import { VscRefresh } from "react-icons/vsc";
@@ -20,6 +21,8 @@ import { SaveBtnFooter } from "../ui/buttons/saveBtnFooter";
 import { FaSortDown } from "react-icons/fa6";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useEffect, useState } from "react";
+import { updateRoundData, updateRoundDataWithHandle } from "@/app/lib/api";
+import { useConfirmDialog } from "../../components/ui/alertDialog/confirmDialog";
 
 type ShiftListType = {
   id: number;
@@ -41,6 +44,7 @@ type RoundData = {
   alertTo: any;
   isNeed: any;
   isStrictOrder: any;
+  status: string;
 };
 
 type AreaListType = {
@@ -48,7 +52,9 @@ type AreaListType = {
   areaName: any;
   totalChkPt: any;
   roundList: RoundData[];
+  roundIdList: string[];
   latestRoundID: number;
+  areaStatus: string;
 };
 
 type ManpowerType = {
@@ -99,6 +105,8 @@ const AlertToDatail = ({
   const [areas, setAreas] = useState<AreaListType[]>(areaList);
   const [isEnbleSave, setIsEnbleSave] = useState<boolean>(false);
   const [isEnbleUndo, setIsEnbleUndo] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const { confirmDialog, ConfirmAlertDialog } = useConfirmDialog();
 
   function handleCloseAlertToDetail() {
     closeModal();
@@ -129,13 +137,13 @@ const AlertToDatail = ({
         ...area,
         roundList: area.roundList.map(round => {
           if (filterRound.includes(round.id)) {
-            console.log("filterRound include")
             return {
               ...round,
-              alertTo: round.alertTo.filter((a: string) => a !== selectedAlertTo.id) // Explicitly type 'a' as string
+              alertTo: round.alertTo.filter((a: string) => a !== selectedAlertTo.id),
+              status: "edit"
             };
           }
-          return round; // Return the round unchanged if condition is not met
+          return round;
         })
       }))
     console.log("selectedAlertTo = ", selectedAlertTo)
@@ -144,12 +152,67 @@ const AlertToDatail = ({
     setIsEnbleSave(true);
   };
 
-  const handleSave = () => {
-    setAreaList(areas);
+  const handleSave = async () => {
     setIsEnbleUndo(false);
-    console.log("selectedAlertTo = ", selectedAlertTo)
+    console.log("selectedAlertTo = ", selectedAlertTo);
     console.log("selected =", selected);
-    console.log("areaList =", areaList);
+    console.log("areaList =", areas);
+    const editedRound = areas.flatMap(area => area.roundList).filter(round => round.status === "edit");
+    console.log("editedRound =", editedRound);
+    if(editedRound?.length > 0){
+      const dataToSubmit =
+      editedRound?.map((updateRound) => {
+        return {
+          documentId: updateRound.id,
+          updateFields: {
+            alertTo: updateRound.alertTo,
+          }
+         }
+      })
+      console.log("dataToSubmit =", dataToSubmit);
+      setIsLoading(true);
+      const updateRoundResult = await updateRoundDataWithHandle(dataToSubmit);
+      setIsLoading(false);
+      if(updateRoundResult.successfulUpdates !== null){
+        const areaAfterUpdatedRound = areas.map(area => ({
+          ...area,
+          roundList: area.roundList.map(round => {
+          if (round.status === "edit") {
+            return {
+              ...round,
+              status: "existed"
+            };
+          }
+          return round;
+          })
+        }))
+        setAreaList(areaAfterUpdatedRound);
+        if(updateRoundResult.failedUpdates?.length === 0){
+          const confirmApprove = await confirmDialog(
+            "Save Patrol Alert List of Round data Success",
+            "Save Patrol Alert List of Round Data successfully.",
+            true,
+            "success"
+          );
+        }
+        else {
+          const confirmApprove = await confirmDialog(
+            "Some Patrol Alert List of Round data failed to update",
+            `Some Patrol Alert List of Round data failed to update : \n ${updateRoundResult.failedUpdates}` ,
+            true,
+            "Warning"
+          );
+        }
+      }
+      else{
+        const confirmApprove = await confirmDialog(
+          "Error to update Patrol Alert List of round data",
+          `${updateRoundResult.failedUpdates}`,
+          true, "danger"
+        );
+      }
+    }
+    
   };
 
   const handleSelected = (roundId: any) => {
@@ -314,6 +377,17 @@ const AlertToDatail = ({
           </Box>
         </Box>
       </div>
+
+      {/* Confirm dialog */}
+      {ConfirmAlertDialog}
+
+      {isLoading && (
+        <div className="fixed inset-0 bg-white bg-opacity-40 flex flex-col items-center justify-center z-indextop">
+          <Box sx={{ display: "flex" }}>
+            <CircularProgress />
+          </Box>
+        </div>
+      )}
     </>
   );
 };

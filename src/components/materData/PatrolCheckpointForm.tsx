@@ -682,13 +682,14 @@ const PatrolCheckpointFrom = ({
   };
 
   const initialShiftData = async () => {
-    const filteredshiftDatas: ShiftData[] = uniqueShiftsInPrelim.map((s) => {
-      return {
-        shiftId: s,
-        shiftName: shiftsOfCustomer.find((shift) => shift.shiftId === s)?.shiftName,
-      };
+    const filteredshiftDatas: ShiftData[] = uniqueShiftsInPrelim.filter(shiftId => shiftsOfCustomer.includes(shiftId)).map((s) => {
+        return{
+          shiftId: s,
+          shiftName: shiftsOfCustomer.find((shift) => shift.shiftId === s)?.shiftName,
+        }
     });
     console.log("shiftDatas =", filteredshiftDatas);
+    console.log("shiftsOfCustomer =", shiftsOfCustomer);
     setShiftDatas(filteredshiftDatas);
 
     setIsLoading(true);
@@ -947,7 +948,7 @@ const PatrolCheckpointFrom = ({
                   {
                     shiftsOfCustomer.find(
                       (shift) => shift.shiftId === round.shiftId
-                    )?.shiftName
+                    )?.shiftName || "-"
                   }
                 </Box>
                 <Box className="flex flex-grow pl-10">

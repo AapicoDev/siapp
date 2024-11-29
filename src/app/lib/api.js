@@ -1234,6 +1234,36 @@ export async function updateRoundData(updateRoundData) {
     return null;
   }
 }
+export async function updateRoundDataWithHandle(updateRoundData) {
+  try {
+    const updatePromises = updateRoundData.map((data) =>
+      databases.updateDocument(
+        databaseId,
+        masterRoundTableId,
+        data.documentId,
+        data.updateFields
+      )
+    );
+
+    // Use Promise.allSettled to handle each promise individually
+    const results = await Promise.allSettled(updatePromises);
+
+    // Separate successful and failed updates
+    const successfulUpdates = results.filter(result => result.status === "fulfilled").map(result => result.value) || [];
+    const failedUpdates = results.filter(result => result.status === "rejected").map(result => result.reason) || [];
+
+    if (failedUpdates.length > 0) {
+      console.warn("Some documents failed to update:", failedUpdates);
+    }
+
+    console.log("Documents updated successfully:", successfulUpdates);
+    return { successfulUpdates, failedUpdates };
+  } catch (error) {
+    console.error("Unexpected error updating documents:", error);
+    return { successfulUpdates: null, failedUpdates: [error] };
+  }
+}
+
 //#endregion master_Round
 
 //#region master_RandomPatrolReason
