@@ -467,7 +467,7 @@ const PatrolDeatilView = ({
                             {row.Image.length > 0
                               ? row.Image.map(
                                   (i: string | undefined, index: any) => (
-                                    <Box key={index} sx={{ height: "100px",display: "flex", justifyContent: "center", mb: 1 }}>
+                                    <Box key={index} sx={{ maxHeight: "100px",display: "flex", justifyContent: "center", mb: 1 }}>
                                       <img
                                         src={i}
                                         alt="Checklist Img"
