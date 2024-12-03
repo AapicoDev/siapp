@@ -148,12 +148,14 @@ const PatrolDeatilView = ({
       const centerCheckpoint = filterPatrolCheckpoints?.documents.find(p => p.$id === checkpoint.checkpointId)?.masterCheckpointID;
       const masterCheckpointLongLat = filterPatrolCheckpoints?.documents?.map(doc => 
         {
-        const long = filterMasterCheckpoints?.documents.find(m => m.$id === centerCheckpoint)?.longitude;
-        const lat = filterMasterCheckpoints?.documents.find(m => m.$id === centerCheckpoint)?.latitude;
+        const centerLong = filterMasterCheckpoints?.documents.find(m => m.$id === centerCheckpoint)?.longitude;
+        const centerLat = filterMasterCheckpoints?.documents.find(m => m.$id === centerCheckpoint)?.latitude;
+        const long = filterMasterCheckpoints?.documents.find(m => m.$id === doc.masterCheckpointID)?.longitude;
+        const lat = filterMasterCheckpoints?.documents.find(m => m.$id === doc.masterCheckpointID)?.latitude;
         return{
           center: [
-            long === "" ? "0" : long,
-            lat === "" ? "0" : lat,
+            centerLong === "" ? "0" : centerLong,
+            centerLat === "" ? "0" : centerLat,
           ],
           checkpoint: doc.CheckpointName,
           patroller: doc.Patroller,
