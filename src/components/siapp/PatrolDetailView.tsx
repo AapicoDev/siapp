@@ -10,6 +10,7 @@ import {
   TableCell,
   TableBody,
   Grid2,
+  CircularProgress,
 } from "@mui/material";
 import { Gallery, Trash } from "iconsax-react";
 import { ChangeEvent, useEffect, useState } from "react";
@@ -17,7 +18,7 @@ import { SaveBtnFooter } from "../ui/buttons/saveBtnFooter";
 import { IoClose } from "react-icons/io5";
 import { PatrolStatus } from "./PatrolStatus";
 import { CheckListStatus } from "./CheckListStatus";
-import { getPatrolCheckList, getMasterRoundData } from "../../app/lib/api";
+import { getPatrolCheckList, getMasterRoundData, filterMasterCheckpointData, filterPatrolCheckpointData, getMasterCheckListSelectedAttibute } from "../../app/lib/api";
 import { Row } from "react-day-picker";
 import PatrolCheckpointMapComponent from "../PatrolCheckpointMapView";
 
@@ -29,12 +30,13 @@ type RowData = {
   areaId: string;
   areaName: any;
   round: any;
+  masterRoundId: string;
   checkpointId: string;
   checkpointNo: any;
   checkPointName: any;
   patroller: string;
   status: string;
-  allCheckpoints: number; //string[];
+  allCheckpoints: string[];
   remark: string;
   image: any[];
 };
@@ -88,6 +90,12 @@ const PatrolDeatilView = ({
   const [checkList, setCheckList] = useState<any[]>();
   const [roundTime, setRoundTime] = useState<any>();
   const [openMapDetailView, setOpenMapDetailView] = useState<boolean>(false);
+  const [openImage, setOpenImage] = useState<boolean>(false);
+  const [normalWords, setNormalWords] = useState<any>([]);
+  const [abnormalWords, setAbnormalWords] = useState<any>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [longLat, setLongLat] = useState<any>([]);
+  const [image, setImage] = useState<any>();
 
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
@@ -100,23 +108,72 @@ const PatrolDeatilView = ({
 
   useEffect(() => {
     console.log("patrolCheckpoint =", patrolCheckpoint);
+    getCheckpointDetailData();
     getCheckListData();
     getRoundDetailData();
   }, []);
 
   const getCheckListData = async () => {
+    setIsLoading(true);
     const getCheckList = await getPatrolCheckList(checkpoint.checkpointId);
     setCheckList(getCheckList?.documents);
-    console.log("checkList =", getCheckList?.documents);
+
+    const getChecklistStatus = await getMasterCheckListSelectedAttibute(["normalStatus", "abnormalStatus"]);
+    const uniqueNormal = new Set(getChecklistStatus?.documents.map(doc => doc.normalStatus));
+    const uniqueAbNormal = new Set(getChecklistStatus?.documents.map(doc => doc.abnormalStatus));
+    setNormalWords(Array.from(uniqueNormal));
+    setAbnormalWords(Array.from(uniqueAbNormal));
+    setIsLoading(false);
   };
 
   const getRoundDetailData = async () => {
-    const response = await getMasterRoundData([{ field: "areaId", value: checkpoint.areaId }]);
+    setIsLoading(true);
+    const response = await getMasterRoundData([{ field: "$id", value: checkpoint.masterRoundId }]);
     const startTime = formatTime(response?.documents[0].startTime);
     const endTime = formatTime(response?.documents[0].endTime);
     setRoundTime(startTime + " - " + endTime);
     console.log("roundTime = ", startTime + " - " + endTime);
+    setIsLoading(false);
   };
+
+  const getCheckpointDetailData = async () => {
+    setIsLoading(true);
+    console.log("checkpoint.allCheckpoints =", checkpoint.allCheckpoints);
+    if(checkpoint.allCheckpoints?.length > 0){
+      const filterPatrolCheckpoints = await filterPatrolCheckpointData([{ field: "$id", value: checkpoint.allCheckpoints }]);
+      console.log("filterPatrolCheckpoints =", filterPatrolCheckpoints);
+      const masterCheckpointIds = filterPatrolCheckpoints?.documents?.map(doc => doc.masterCheckpointID);
+      console.log("filterCheckpoints =", filterPatrolCheckpoints);
+      const filterMasterCheckpoints = await filterMasterCheckpointData([{ field: "$id", value: masterCheckpointIds }]);
+      const centerCheckpoint = filterPatrolCheckpoints?.documents.find(p => p.$id === checkpoint.checkpointId)?.masterCheckpointID;
+      const masterCheckpointLongLat = filterPatrolCheckpoints?.documents?.map(doc => 
+        {
+        const centerLong = filterMasterCheckpoints?.documents.find(m => m.$id === centerCheckpoint)?.longitude;
+        const centerLat = filterMasterCheckpoints?.documents.find(m => m.$id === centerCheckpoint)?.latitude;
+        const long = filterMasterCheckpoints?.documents.find(m => m.$id === doc.masterCheckpointID)?.longitude;
+        const lat = filterMasterCheckpoints?.documents.find(m => m.$id === doc.masterCheckpointID)?.latitude;
+        return{
+          center: [
+            centerLong === "" ? "0" : centerLong,
+            centerLat === "" ? "0" : centerLat,
+          ],
+          checkpoint: doc.CheckpointName,
+          patroller: doc.Patroller,
+          time: `${formatTime(doc?.StartTime)} - ${formatTime(doc?.EndTime)}`,
+          status: doc.Status,
+          longlat: [
+            long === "" ? "0" : long,
+            lat === "" ? "0" : lat,
+          ]
+        }
+      }
+      //[doc.longitude, doc.latitude]
+      )
+      console.log("masterCheckpointLongLat =", masterCheckpointLongLat);
+      setLongLat(masterCheckpointLongLat);
+    }
+    setIsLoading(false);
+  }
 
   function handleCloseCustomerForm() {
     closeModal();
@@ -129,7 +186,7 @@ const PatrolDeatilView = ({
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 flex flex-col items-center justify-center z-40">
       {/* Header */}
-      {!openMapDetailView && (
+      {(!openMapDetailView && !openImage)  && (
         <>
           <Box
             sx={{
@@ -237,7 +294,7 @@ const PatrolDeatilView = ({
                           fontWeight: 700,
                         }}
                       >
-                        Date
+                        Date : 
                       </Typography>
                       <Typography
                         textAlign="left"
@@ -283,8 +340,8 @@ const PatrolDeatilView = ({
                         }}
                         textAlign={"left"}
                       >
-                        {patrolCheckpoint.allCheckpoints} Check Point
-                        {`${patrolCheckpoint.allCheckpoints > 1 ? `s` : ``}`}
+                        {patrolCheckpoint?.allCheckpoints?.length} Check Point
+                        {`${patrolCheckpoint?.allCheckpoints?.length > 1 ? `s` : ``}`}
                       </Typography>
                     </div>
                   </Box>
@@ -295,7 +352,7 @@ const PatrolDeatilView = ({
                   >
                     <PatrolCheckpointMapComponent
                       zoom={16}
-                      longlat={[["100.55826768112321", "13.715759496081468"],["100.55857312480582", "13.715866960484869"]]}/>
+                      longlat={longLat}/>
                   </div>
                 </Box>
 
@@ -408,7 +465,7 @@ const PatrolDeatilView = ({
                             }}
                           >
                             <div className="flex justify-center w-full h-full">
-                              <CheckListStatus status={row.Status} />
+                              <CheckListStatus status={row.Status} normal={normalWords} abnormal={abnormalWords} />
                             </div>
                           </TableCell>
 
@@ -416,7 +473,8 @@ const PatrolDeatilView = ({
                             {row.Image.length > 0
                               ? row.Image.map(
                                   (i: string | undefined, index: any) => (
-                                    <Box key={index} sx={{ height: "100px",display: "flex", justifyContent: "center", mb: 1 }}>
+                                    <Box key={index} sx={{ maxHeight: "100px",display: "flex", justifyContent: "center", mb: 1, cursor:"pointer" }}
+                                         onClick={(e) => {setOpenImage(true); setImage(i)}}>
                                       <img
                                         src={i}
                                         alt="Checklist Img"
@@ -466,7 +524,9 @@ const PatrolDeatilView = ({
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "center",
+                                cursor: "pointer"
                               }}
+                              onClick={(e) => {setOpenImage(true); setImage(img)}}
                             >
                               <img
                                 src={img}
@@ -573,9 +633,10 @@ const PatrolDeatilView = ({
                 <div className="flex w-full h-[329px] rounded-lg border-[#2C5079] border-[1px] bg-slate-200 p-1 justify-center">
                   <PatrolCheckpointMapComponent
                     zoom={16}
-                    longlat={[["100.55826768112321", "13.715759496081468"],["100.55857312480582", "13.715866960484869"]]}/>
+                    longlat={longLat}/>
+                    {/* [["100.55826768112321", "13.715759496081468"],["100.55857312480582", "13.715866960484869"]] */}
                 </div>
-              <Box className="flex">
+              {/* <Box className="flex">
               <Typography
                 sx={{
                   fontSize: "16px",
@@ -608,11 +669,79 @@ const PatrolDeatilView = ({
               >
                 Name Surname2
               </Typography>
-              </Box>
+              </Box> */}
             </div>
           </div>
         </>
       )}
+
+      {openImage && (
+        <>
+          {/* Header */}
+          <Box
+            sx={{
+              display: "flex",
+              width: "450px",
+              backgroundColor: "#D9F0EC",
+              paddingY: "5px",
+              borderRadius: "8px 8px 0px 0px", // Adjust rounded corners as needed
+              justifyContent: "center",
+            }}
+          >
+            <Box
+              sx={{ width: "100%", display: "flex", justifyContent: "left" }}
+            >
+              <Button2
+                sx={{
+                  color: "#1D7A9B",
+                  backgroundColor: "white",
+                  width: "20%",
+                  border: "1px solid #1D7A9B",
+                  fontWeight: 700,
+                  ml: 1,
+                }}
+                onClick={() => setOpenImage(false)}
+              >
+                Back
+              </Button2>
+              <Typography
+                sx={{
+                  width: "fit-content",
+                  fontSize: "1.125rem", // text-lg equivalent
+                  fontWeight: "bold",
+                  color: "#1D7A9B",
+                  marginTop: "0.25rem",
+                  marginLeft: "20%",
+                }}
+              >
+              </Typography>
+            </Box>
+          </Box>
+
+          <div className="bg-white rounded-b-lg shadow-lg max-h-[700px] w-[450px]">
+            {/* Body */}
+            <div className="max-h-[700px] overflow-auto p-2">
+              <div className="flex w-full rounded-lg border-[#2C5079] border-[1px] bg-slate-200 p-1 justify-center align-middle">
+                <img
+                  src={image}
+                  alt="Checklist Img"
+                  style={{
+                    maxWidth: "100%",
+                    borderRadius: "10px",
+                    maxHeight: "100%",
+                   }}
+                />
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {isLoading && <div className="fixed inset-0 bg-white bg-opacity-40 flex flex-col items-center justify-center z-50">
+        <Box sx={{ display: "flex" }}>
+          <CircularProgress />
+        </Box>
+      </div>}
     </div>
   );
 };

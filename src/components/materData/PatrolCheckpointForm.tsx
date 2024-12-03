@@ -181,6 +181,7 @@ const PatrolCheckpointFrom = ({
     []
   );
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [sameChecklistForAllCheckpoint, setSameChecklistForAllCheckpoint] = useState<boolean>(false);
   const [employeeItemSource, setEmployeeItemSource] = useState<any[]>([]);
   const { confirmDialog, ConfirmAlertDialog } = useConfirmDialog();
 
@@ -354,6 +355,7 @@ const PatrolCheckpointFrom = ({
     setCheckpointRemoveList([]);
     setAssignedManpowerAddList([]);
     setAssignedManpowerRemoveList([]);
+    setSameChecklistForAllCheckpoint(false);
   };
 
   const handleDelete = () => {};
@@ -375,8 +377,8 @@ const PatrolCheckpointFrom = ({
               checkpointName: checkPoint.checkPointName,
               areaId: checkPoint.areaId,
               locationName: checkPoint.locationName,
-              latitude: checkPoint.latitude,
-              longitude: checkPoint.longitude,
+              latitude: checkPoint.latitude === "" ? "0" : checkPoint.latitude,
+              longitude: checkPoint.longitude === "" ? "0" : checkPoint.latitude, 
               altitude: checkPoint.altitude,
               isRestrictionTime: checkPoint.isRestrictionTime,
               timeLimit: parseInt(checkPoint.timeLimit),
@@ -680,13 +682,14 @@ const PatrolCheckpointFrom = ({
   };
 
   const initialShiftData = async () => {
-    const filteredshiftDatas: ShiftData[] = uniqueShiftsInPrelim.map((s) => {
-      return {
-        shiftId: s,
-        shiftName: shiftsOfCustomer.find((shift) => shift.shiftId === s)?.shiftName,
-      };
+    const filteredshiftDatas: ShiftData[] = uniqueShiftsInPrelim.filter(shiftId => shiftsOfCustomer.includes(shiftId)).map((s) => {
+        return{
+          shiftId: s,
+          shiftName: shiftsOfCustomer.find((shift) => shift.shiftId === s)?.shiftName,
+        }
     });
     console.log("shiftDatas =", filteredshiftDatas);
+    console.log("shiftsOfCustomer =", shiftsOfCustomer);
     setShiftDatas(filteredshiftDatas);
 
     setIsLoading(true);
@@ -774,6 +777,8 @@ const PatrolCheckpointFrom = ({
   };
 
   const handleSameCheckList = (check: boolean) => {
+    console.log("check =", check);
+    setSameChecklistForAllCheckpoint(check);
     if (check) {
       const checkpointsSameCheckList = checkPointDatas.map((checkpoint) => {
         if (checkpoint != checkPointDatas[0]) {
@@ -782,10 +787,12 @@ const PatrolCheckpointFrom = ({
           return {
             ...checkpoint,
             checkListId: updatedCheckListId,
+            status: checkpoint.status != "new" ? "edit" : "new",
           };
         }
         return checkpoint;
       });
+      console.log("checkpointsSameCheckList =", checkpointsSameCheckList);
       setCheckPointDatas(checkpointsSameCheckList);
     }
   };
@@ -941,7 +948,7 @@ const PatrolCheckpointFrom = ({
                   {
                     shiftsOfCustomer.find(
                       (shift) => shift.shiftId === round.shiftId
-                    )?.shiftName
+                    )?.shiftName || "-"
                   }
                 </Box>
                 <Box className="flex flex-grow pl-10">
@@ -1581,6 +1588,7 @@ const PatrolCheckpointFrom = ({
                         className="mt-1 mr-2 border-[#C7D4D7]"
                         onCheckedChange={handleSameCheckList}
                         disabled={checkPointDatas.length < 2}
+                        checked={sameChecklistForAllCheckpoint}
                       />
                       <Typography
                         sx={{

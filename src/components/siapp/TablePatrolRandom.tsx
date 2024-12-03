@@ -8,6 +8,7 @@ import styles from "../../app/styles.module.css";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   getAllRandomPatrolCheckpointData,
+  getMasterCheckListSelectedAttibute,
   getRandomPatrolCheckpointData
 } from "../../app/lib/api";
 import PatrolDeatilView from "./PatrolDetailView";
@@ -26,9 +27,10 @@ type RandomRowData = {
   checkPointName: any;
   patroller: string;
   remark: string;
-  reasonId: string;
-  reason: string;
+  reasonIds: string[];
+  reasons: string[];
   image: any[];
+  longLat: any[];
   latestEdit: string;
 };
 type selectedCheckBox = {
@@ -51,9 +53,12 @@ export function TablePatrolRandom({ }: TableContractProps) {
   const [totalRows, setTotalRows] = useState(0);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10); 
+  const [normalWords, setNormalWords] = useState<any>([]);
+  const [abnormalWords, setAbnormalWords] = useState<any>([]);
 
   useEffect(() => {
     getRandomData();
+    getChecklistStatus();
   }, []); //page, rowsPerPage
 
   const formatTime = (dateString: string) => {
@@ -115,8 +120,9 @@ export function TablePatrolRandom({ }: TableContractProps) {
           patroller: random.patrollerName,
           remark: random.remark,
           image: random.images,
-          reasonId: random.reason_Id,
-          reason: random.reason,
+          reasonIds: random.resons_ID,
+          reasons: random.reasons,
+          longLat: random.Location,
           latestEdit: random.$updatedAt,
         };
       }) || patrolRandomCheckpoints;
@@ -128,6 +134,18 @@ export function TablePatrolRandom({ }: TableContractProps) {
       id: row.checkpointId,
     }));
     setSelected(mapSelect);
+    setIsLoading(false);
+  };
+
+  const getChecklistStatus = async () => {
+    setIsLoading(true);
+    const getChecklistStatus = await getMasterCheckListSelectedAttibute(["normalStatus", "abnormalStatus"]);
+    const uniqueNormal = new Set(getChecklistStatus?.documents.map(doc => doc.normalStatus));
+    const uniqueAbNormal = new Set(getChecklistStatus?.documents.map(doc => doc.abnormalStatus));
+    console.log("uniqueNormal =", uniqueNormal);
+    console.log("uniqueAbNormal =", uniqueAbNormal);
+    setNormalWords(Array.from(uniqueNormal));
+    setAbnormalWords(Array.from(uniqueAbNormal));
     setIsLoading(false);
   };
 
@@ -315,6 +333,8 @@ export function TablePatrolRandom({ }: TableContractProps) {
         <RandomPatrolDeatilView
           closeModal={handleClosePatrolDetailView}
           checkpoint={selectedRow || patrolRandomCheckpoints[0]}
+          normalWord={normalWords}
+          abnormalWord={abnormalWords}
         />
       )}
 

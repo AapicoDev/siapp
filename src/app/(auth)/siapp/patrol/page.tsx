@@ -40,6 +40,7 @@ import PatrolDeatilView from "@/components/siapp/PatrolDetailView";
 import {
   getPatrolRoundData,
   getPatrolCheckpointData,
+  filterPatrolCheckpointData,
 } from "../../../lib/api";
 
 type RowData = {
@@ -50,12 +51,13 @@ type RowData = {
   areaId: string;
   areaName: any;
   round: any;
+  masterRoundId: string;
   checkpointId: string;
   checkpointNo: any;
   checkPointName: any;
   patroller: string;
   status: string;
-  allCheckpoints: number; //string[],
+  allCheckpoints: string[],
   remark: string;
   image: any[];
 };
@@ -190,12 +192,13 @@ export default function Patrol() {
       areaName: "",
       areaId: "",
       round: 0,
+      masterRoundId: "",
       checkPointName: "",
       checkpointId: "",
       checkpointNo: undefined,
       patroller: "",
       status: "",
-      allCheckpoints: 0,
+      allCheckpoints: [],
       remark: "",
       image: [],
     },
@@ -232,7 +235,7 @@ export default function Patrol() {
 
   useEffect(() => {
     tableData();
-  }, [page, rowsPerPage]);
+  }, [isCheckpointPage]);//page, rowsPerPage
 
   const formatDate = (dateString: string, isUTC7: boolean=false) => {
     const date = new Date(dateString);
@@ -270,8 +273,8 @@ export default function Patrol() {
       return new Date(b.EndTime).getTime() - new Date(a.EndTime).getTime();
     });
     console.log("reOrderData =", reOrderData);
-    const tableData: RowData[] =
-      allPatrolCheckpointData?.documents.map((chkPt) => {
+    const tableData: RowData[] = await Promise.all(
+      allPatrolCheckpointData?.documents.map(async (chkPt) => {
         return {
           dateTime: formatDate(chkPt.EndTime),
           startDateTime: formatDate(chkPt.StartTime),
@@ -288,16 +291,20 @@ export default function Patrol() {
           round: allPatrolRoundData?.documents.find(
             (p) => p.$id === chkPt.PatrolRoundId
           )?.Round,
+          masterRoundId: allPatrolRoundData?.documents.find(
+            (p) => p.$id === chkPt.PatrolRoundId
+          )?.MasterRoundID,
           checkpointId: chkPt.$id,
           checkpointNo: chkPt.CheckpointNumber,
           checkPointName: chkPt.CheckpointName,
           patroller: chkPt.Patroller,
           status: chkPt.Status,
-          allCheckpoints: allPatrolCheckpointData?.documents.length, //allPatrolRoundData?.documents.find(p => p.$id === chkPt.PatrolRoundId)?.PatrolCheckPointId,
+          allCheckpoints: allPatrolCheckpointData?.documents.filter(p => p.PatrolRoundId === chkPt.PatrolRoundId)?.map(chkpt => chkpt.$id),
           remark: chkPt.Remark,
           image: chkPt.Image,
         };
-      }) || rowData;
+      }) || rowData
+    );
     console.log("tableData", tableData);
     setRowData(tableData);
     setTotalRows(allPatrolCheckpointData?.total || 0);
@@ -465,7 +472,8 @@ export default function Patrol() {
 
                   {/* Allow the TableBody to grow and fill vertical space */}
                   <TableBody sx={{ flexGrow: 1 }}>
-                    {rowData.map((row, index) => (
+                    {rowData.slice(page * rowsPerPage, rowsPerPage + (page * rowsPerPage))
+                      .map((row, index) => (
                       <TableRow
                         onClick={() => handleRowClick(row)} // Row click handler
                         key={index}

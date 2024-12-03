@@ -417,6 +417,10 @@ export default function Customer() {
       if (deleteResult) {
         setIsAddOrUpdateSucces(true);
         setIsSelectedAll(false);
+        const confirmApprove = await confirmDialog(
+          "Delete Success",
+          `delete customers success.`, true
+       );
       }
       setIsLoading(false);
     }

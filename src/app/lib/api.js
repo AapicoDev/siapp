@@ -507,6 +507,20 @@ export async function getAllMasterCheckListData() {
     console.error("Error retrieving data:", error);
   }
 }
+export async function getMasterCheckListSelectedAttibute(attibutes) {
+  console.log("attibutes =", attibutes);
+  try {
+    const response = await fetchDataList(
+      databaseId, 
+      masterCheckListTableId,
+      [Query.select(attibutes)]
+    );
+    console.log(response);
+    return response;
+  } catch (error) {
+    console.error("Error retrieving data:", error);
+  }
+}
 export async function fetchMasterCheckListData(offset, limit) {
   try {
     const response = await fetchDataList(
@@ -1220,6 +1234,36 @@ export async function updateRoundData(updateRoundData) {
     return null;
   }
 }
+export async function updateRoundDataWithHandle(updateRoundData) {
+  try {
+    const updatePromises = updateRoundData.map((data) =>
+      databases.updateDocument(
+        databaseId,
+        masterRoundTableId,
+        data.documentId,
+        data.updateFields
+      )
+    );
+
+    // Use Promise.allSettled to handle each promise individually
+    const results = await Promise.allSettled(updatePromises);
+
+    // Separate successful and failed updates
+    const successfulUpdates = results.filter(result => result.status === "fulfilled").map(result => result.value) || [];
+    const failedUpdates = results.filter(result => result.status === "rejected").map(result => result.reason) || [];
+
+    if (failedUpdates.length > 0) {
+      console.warn("Some documents failed to update:", failedUpdates);
+    }
+
+    console.log("Documents updated successfully:", successfulUpdates);
+    return { successfulUpdates, failedUpdates };
+  } catch (error) {
+    console.error("Unexpected error updating documents:", error);
+    return { successfulUpdates: null, failedUpdates: [error] };
+  }
+}
+
 //#endregion master_Round
 
 //#region master_RandomPatrolReason
@@ -1312,6 +1356,22 @@ export async function getMasterCheckpointData(areaId) {
     const response = await fetchDataList(databaseId, masterCheckpointTableId, [
       Query.equal("areaId", areaId),
     ]);
+    console.log(response);
+    return response;
+  } catch (error) {
+    console.error("Error retrieving data:", error);
+  }
+}
+export async function filterMasterCheckpointData(filters) {
+  const conditions = filters.map((filter) =>
+    Query.equal(filter.field, filter.value)
+  );
+  try {
+    const response = await fetchDataList(
+      databaseId,
+      masterCheckpointTableId,
+      conditions
+    );
     console.log(response);
     return response;
   } catch (error) {
@@ -1483,12 +1543,28 @@ export async function getPatrolCheckpointData(offset, limit) {
     const response = await fetchDataList(
       databaseId,
       patrolCheckpointTableId,
-      [Query.limit(limit), Query.offset(offset), Query.orderDesc("EndTime")]
+      [Query.orderDesc("EndTime")]//[Query.limit(limit), Query.offset(offset), Query.orderDesc("EndTime")]
     );
     return response;
   } catch (error) {
     console.error("Error fetching data:", error);
     return null;
+  }
+}
+export async function filterPatrolCheckpointData(filters) {
+  const conditions = filters.map((filter) =>
+    Query.equal(filter.field, filter.value)
+  );
+  try {
+    const response = await fetchDataList(
+      databaseId,
+      patrolCheckpointTableId,
+      conditions
+    );
+    console.log(response);
+    return response;
+  } catch (error) {
+    console.error("Error retrieving data:", error);
   }
 }
 export async function getPatrolCheckList(checkpointId) {
@@ -2072,6 +2148,14 @@ export async function deleteAuthUser(dataToSubmit) {
   const result = await response.json();
   console.log('Delete Result:', result.results);
   return {result: result};
+}
+export async function isUserLogin(){
+  try{
+      const session = await account.get();
+      if(session) return true;
+  }catch(error){
+      return false;
+  }
 }
 //#endregion Auth User
 

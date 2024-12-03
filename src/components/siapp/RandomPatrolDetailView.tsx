@@ -10,6 +10,7 @@ import {
   TableCell,
   TableBody,
   Grid2,
+  CircularProgress,
 } from "@mui/material";
 import { Gallery, Trash } from "iconsax-react";
 import { ChangeEvent, useEffect, useState } from "react";
@@ -20,6 +21,7 @@ import { CheckListStatus } from "./CheckListStatus";
 import { getPatrolCheckList } from "../../app/lib/api";
 import { Row } from "react-day-picker";
 import { formatDate } from "date-fns";
+import PatrolCheckpointMapComponent from "../PatrolCheckpointMapView";
 
 type RandomRowData = {
     startDateTime: string;
@@ -30,19 +32,24 @@ type RandomRowData = {
     checkPointName: any;
     patroller: string;
     remark: string;
-    reasonId: string;
-    reason: string;
+    reasonIds: string[];
+    reasons: string[];
     image: any[];
+    longLat: any[];
     latestEdit: string;
   };
 
 interface RandomPatrolDeatilViewProps {
   checkpoint: RandomRowData;
+  normalWord: any[];
+  abnormalWord: any[];
   closeModal: () => void;
 }
 
 const RandomPatrolDeatilView = ({
   checkpoint,
+  normalWord,
+  abnormalWord,
   closeModal,
 }: RandomPatrolDeatilViewProps) => {
   const [isEdit, setIsEdit] = useState(false);
@@ -58,12 +65,16 @@ const RandomPatrolDeatilView = ({
         checkPointName: "",
         patroller: "",
         remark: "",
+        longLat: ["0", "0"],
         image: [],
     }
   );
   const [checkList, setCheckList] = useState<any[]>();
   const [roundTime, setRoundTime] = useState<any>();
   const [openMapDetailView, setOpenMapDetailView] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [openImage, setOpenImage] = useState<boolean>(false);
+  const [image, setImage] = useState<any>();
 
   const formatTime = (dateString: string, isUTC7: boolean = false) => {
     const date = new Date(dateString);
@@ -79,9 +90,11 @@ const RandomPatrolDeatilView = ({
   }, []);
 
   const getCheckListData = async () => {
+    setIsLoading(true);
     const getCheckList = await getPatrolCheckList(checkpoint.checkpointId);
     setCheckList(getCheckList?.documents);
     console.log("checkList =", getCheckList?.documents);
+    setIsLoading(false);
   };
 
   function handleCloseCustomerForm() {
@@ -95,7 +108,7 @@ const RandomPatrolDeatilView = ({
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 flex flex-col items-center justify-center z-40">
       {/* Header */}
-      {!openMapDetailView && (
+      {(!openMapDetailView && !openImage) && (
         <>
           <Box
             sx={{
@@ -203,7 +216,7 @@ const RandomPatrolDeatilView = ({
                           fontWeight: 700,
                         }}
                       >
-                        Date
+                        Date :
                       </Typography>
                       <Typography
                         textAlign="left"
@@ -213,11 +226,11 @@ const RandomPatrolDeatilView = ({
                           paddingTop: "0.25rem",
                         }}
                       >
-                        {formatDate(randomPatrolCheckpoint.endDateTime, "dd/MM/yyyy")}
+                        {randomPatrolCheckpoint.endDateTime === null ? "" : formatDate(randomPatrolCheckpoint.endDateTime, "dd/MM/yyyy")}
                       </Typography>
                     </div>
                     <div className="flex">
-                      <Typography
+                    <Typography
                         textAlign="left"
                         sx={{
                           fontSize: "14px",
@@ -225,9 +238,23 @@ const RandomPatrolDeatilView = ({
                           paddingTop: "0.25rem",
                           pr: 1,
                           fontWeight: 700,
+                          textWrap: "nowrap"
                         }}
                       >
-                        Reason {randomPatrolCheckpoint.reason}
+                        Reason :
+                      </Typography>
+                      <Typography
+                        textAlign="left"
+                        sx={{
+                          fontSize: "14px",
+                          color: "#2C5079",
+                          paddingTop: "0.25rem",
+                          pr: 1,
+                        }}
+                      >
+                        {randomPatrolCheckpoint?.reasons?.length > 1 ?
+                         randomPatrolCheckpoint?.reasons?.join(", ")
+                         : randomPatrolCheckpoint?.reasons}
                       </Typography>
                     </div>
                     <div>
@@ -244,10 +271,23 @@ const RandomPatrolDeatilView = ({
                   </Box>
                   {/* Map */}
                   <Box
-                    className="flex w-[30%] space-x-5 bg-[#F1F4F4] rounded-lg hover:cursor-pointer"
+                    className="flex w-[30%] rounded-lg border-[#2C5079] border-[1px] bg-slate-200 p-1 justify-center hover:cursor-pointer"
                     onClick={(e) => setOpenMapDetailView(true)}
                   >
-                    Map
+                    <PatrolCheckpointMapComponent
+                      zoom={16}
+                      longlat={[{
+                        center: randomPatrolCheckpoint.longLat.length === 2 ?
+                                [randomPatrolCheckpoint.longLat[1] < 0 ? 0 : randomPatrolCheckpoint.longLat[1], randomPatrolCheckpoint.longLat[0] < 0 ? 0 : randomPatrolCheckpoint.longLat[0]]
+                                : [0,0],
+                        checkpoint: randomPatrolCheckpoint.checkPointName,
+                        patroller: randomPatrolCheckpoint.patroller,
+                        time: `${formatTime(randomPatrolCheckpoint?.startDateTime)} - ${formatTime(randomPatrolCheckpoint?.endDateTime)}`,
+                        status: randomPatrolCheckpoint.endDateTime === null ? "Not Finish" : "Finished",
+                        longlat: randomPatrolCheckpoint.longLat.length === 2 ?
+                                [randomPatrolCheckpoint.longLat[1] < 0 ? 0 : randomPatrolCheckpoint.longLat[1], randomPatrolCheckpoint.longLat[0] < 0 ? 0 : randomPatrolCheckpoint.longLat[0]]
+                                : [0,0],
+                      }]}/>
                   </Box>
                 </Box>
 
@@ -334,7 +374,7 @@ const RandomPatrolDeatilView = ({
                             }}
                           >
                             <div className="flex justify-center w-full h-full">
-                              <CheckListStatus status={row.Status} />
+                              <CheckListStatus normal={normalWord} abnormal={abnormalWord} status={row.Status} />
                             </div>
                           </TableCell>
 
@@ -342,15 +382,15 @@ const RandomPatrolDeatilView = ({
                             {row.Image.length > 0
                               ? row.Image.map(
                                   (i: string | undefined, index: any) => (
-                                    <Box key={index} sx={{ height: "90px" }}>
+                                    <Box key={index} sx={{ maxHeight: "100px",display: "flex", justifyContent: "center", mb: 1, cursor: "pointer"}}
+                                         onClick={(e) => {setOpenImage(true); setImage(i); console.log("randomPatrolCheckpoint.longLat =", randomPatrolCheckpoint.longLat)}}>
                                       <img
                                         src={i}
                                         alt="Checklist Img"
                                         style={{
                                           maxWidth: "100%",
                                           borderRadius: "10px",
-                                          maxHeight: "200px",
-                                          marginTop: "10px",
+                                          maxHeight: "100px",
                                         }}
                                       />
                                     </Box>
@@ -393,7 +433,9 @@ const RandomPatrolDeatilView = ({
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "center",
+                                cursor: "pointer"
                               }}
+                              onClick={(e) => {setOpenImage(true); setImage(img)}}
                             >
                               <img
                                 src={img}
@@ -497,13 +539,24 @@ const RandomPatrolDeatilView = ({
           <div className="bg-white rounded-b-lg shadow-lg min-h-[394px] max-h-[494px] w-[700px]">
             {/* Body */}
             <div className="max-h-[494px] overflow-auto p-2">
-              <Box
-                className="w-full justify-center p-2 rounded-lg bg-slate-100 h-[329px]"
-                textAlign="center"
-              >
-                Map
-              </Box>
-              <Box className="flex">
+              <div className="flex w-full h-[329px] rounded-lg border-[#2C5079] border-[1px] bg-slate-200 p-1 justify-center">
+                  <PatrolCheckpointMapComponent
+                    zoom={16}
+                    longlat={[{
+                      center: randomPatrolCheckpoint.longLat.length === 2 ?
+                                [randomPatrolCheckpoint.longLat[1] < 0 ? 0 : randomPatrolCheckpoint.longLat[1], randomPatrolCheckpoint.longLat[0] < 0 ? 0 : randomPatrolCheckpoint.longLat[0]]
+                                : [0,0],
+                        checkpoint: randomPatrolCheckpoint.checkPointName,
+                        patroller: randomPatrolCheckpoint.patroller,
+                        time: `${formatTime(randomPatrolCheckpoint?.startDateTime)} - ${formatTime(randomPatrolCheckpoint?.endDateTime)}`,
+                        status: randomPatrolCheckpoint.endDateTime === null ? "Not Finish" : "Finished",
+                        longlat: randomPatrolCheckpoint.longLat.length === 2 ?
+                                [randomPatrolCheckpoint.longLat[1] < 0 ? 0 : randomPatrolCheckpoint.longLat[1], randomPatrolCheckpoint.longLat[0] < 0 ? 0 : randomPatrolCheckpoint.longLat[0]]
+                                : [0,0],
+                    }]}/>
+                    {/* [["100.55826768112321", "13.715759496081468"],["100.55857312480582", "13.715866960484869"]] */}
+                </div>
+              {/* <Box className="flex">
               <Typography
                 sx={{
                   fontSize: "16px",
@@ -536,11 +589,79 @@ const RandomPatrolDeatilView = ({
               >
                 Name Surname2
               </Typography>
-              </Box>
+              </Box> */}
             </div>
           </div>
         </>
       )}
+
+      {openImage && (
+        <>
+          {/* Header */}
+          <Box
+            sx={{
+              display: "flex",
+              width: "450px",
+              backgroundColor: "#D9F0EC",
+              paddingY: "5px",
+              borderRadius: "8px 8px 0px 0px", // Adjust rounded corners as needed
+              justifyContent: "center",
+            }}
+          >
+            <Box
+              sx={{ width: "100%", display: "flex", justifyContent: "left" }}
+            >
+              <Button2
+                sx={{
+                  color: "#1D7A9B",
+                  backgroundColor: "white",
+                  width: "20%",
+                  border: "1px solid #1D7A9B",
+                  fontWeight: 700,
+                  ml: 1,
+                }}
+                onClick={() => setOpenImage(false)}
+              >
+                Back
+              </Button2>
+              <Typography
+                sx={{
+                  width: "fit-content",
+                  fontSize: "1.125rem", // text-lg equivalent
+                  fontWeight: "bold",
+                  color: "#1D7A9B",
+                  marginTop: "0.25rem",
+                  marginLeft: "20%",
+                }}
+              >
+              </Typography>
+            </Box>
+          </Box>
+
+          <div className="bg-white rounded-b-lg shadow-lg min-h-[394px] max-h-[700px] w-[450px]">
+            {/* Body */}
+            <div className="max-h-[700px] overflow-auto p-2">
+              <div className="flex w-full rounded-lg border-[#2C5079] border-[1px] bg-slate-200 p-1 justify-center">
+                <img
+                  src={image}
+                  alt="Checklist Img"
+                  style={{
+                    maxWidth: "100%",
+                    borderRadius: "10px",
+                    maxHeight: "100%",
+                   }}
+                />
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {isLoading && <div className="fixed inset-0 bg-white bg-opacity-40 flex flex-col items-center justify-center z-50">
+        <Box sx={{ display: "flex" }}>
+          <CircularProgress />
+        </Box>
+      </div>}
     </div>
   );
 };

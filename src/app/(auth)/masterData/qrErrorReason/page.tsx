@@ -144,6 +144,7 @@ export default function QrErrorReason() {
       if(confirmApprove) {
         setAddCode("");
         setAddQRErrorReason("");
+        if(isSearch === true) setIsSearch(false);
       }
     }
     else{
@@ -153,7 +154,7 @@ export default function QrErrorReason() {
         true, "danger"
       );
     }
-    isSearch === true ? await search() : await tableData();
+    await tableData();
   };
 
   const search = async () => {

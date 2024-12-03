@@ -5,18 +5,20 @@ import { Box, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
 
 interface CheckListStatusProps {
-    status: any
+    status: any;
+    normal: any[];
+    abnormal: any[];
 }
 
 export function CheckListStatus({
-  status,
+  status, normal, abnormal
 }: CheckListStatusProps) {
 
    const [statusDesc, setStatusDesc] = useState("");
    const [statusColor, setStatusColor] = useState("transparent");
 
-   const abnormal = ["ไม่เพียงพอ", "พบ", "ไม่เรียบร้อย"];
-   const normal = ["เพียงพอ", "ไม่พบ", "เรียบร้อย"];
+  //  const abnormal = ["ไม่เพียงพอ", "พบ", "ไม่เรียบร้อย"];
+  //  const normal = ["เพียงพอ", "ไม่พบ", "เรียบร้อย"];
 
   useEffect(() => {
     if (normal.includes(status)) {

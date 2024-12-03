@@ -471,6 +471,7 @@ const ContractForm = ({
     //#endregion
 
     //attachmentList
+    setIsLoading(true);
     console.log("selectedContract =", selectedContract);
     const filesName = selectedContract.attachments?.map((file) => {
       const split = file.split(";;");
@@ -481,30 +482,6 @@ const ContractForm = ({
     });
     console.log("filesName =", filesName);
     setAttachmentList(filesName);
-
-    //Mapped area
-    const mappedAreaList: AreaListType[] = await Promise.all(
-      areas.map(async (area: AreaData) => {
-        const roundList = await roundManagement(area.id, selectedContract.id);
-        return {
-          areaId: area.id, // Mapping `id` from AreaData
-          areaName: area.name, // Mapping `name` from AreaData
-          totalChkPt: area.totalChkPt, // Mapping `totalChkPt` from AreaData
-          roundList,
-          roundIdList: area.roundIds,
-          latestRoundID: 0,
-          areaStatus: "existed",
-        };
-      })
-    );
-    mappedAreaList.map(
-      (a) =>
-        (a.latestRoundID = a.roundList.reduce(
-          (max, round) => (round.id > max ? round.id : max),
-          0
-        ))
-    );
-    setAreaList(mappedAreaList);
 
     // Shift list
     const shiftsOfContract = await getShiftsOfContract(selectedContract.id);
@@ -526,6 +503,31 @@ const ContractForm = ({
       email: a.email,
     }));
     setAsmAlertNames(asmAlertNameList);
+
+    //Mapped area
+    const mappedAreaList: AreaListType[] = await Promise.all(
+      areas.map(async (area: AreaData) => {
+        const roundList = await roundManagement(area.id, selectedContract.id, patrolAlertToOfContract);
+        return {
+          areaId: area.id, // Mapping `id` from AreaData
+          areaName: area.name, // Mapping `name` from AreaData
+          totalChkPt: area.totalChkPt, // Mapping `totalChkPt` from AreaData
+          roundList,
+          roundIdList: area.roundIds,
+          latestRoundID: 0,
+          areaStatus: "existed",
+        };
+      })
+    );
+    mappedAreaList.map(
+      (a) =>
+        (a.latestRoundID = a.roundList.reduce(
+          (max, round) => (round.id > max ? round.id : max),
+          0
+        ))
+    );
+    setAreaList(mappedAreaList);
+    setIsLoading(false);
   };
 
   async function getShiftsOfContract(contractId: string) {
@@ -567,10 +569,10 @@ const ContractForm = ({
     return mappedAlertList;
   }
 
-  async function getAreaAndRound() {
+  async function getAreaAndRound(alertList=alertToList) {
     const mappedAreaList: AreaListType[] = await Promise.all(
       areas.map(async (area: AreaData) => {
-        const roundList = await roundManagement(area.id, selectedContract.id);
+        const roundList = await roundManagement(area.id, selectedContract.id, alertList);
         return {
           areaId: area.id, // Mapping `id` from AreaData
           areaName: area.name, // Mapping `name` from AreaData
@@ -1540,6 +1542,8 @@ const ContractForm = ({
             selectedContract.id
           );
           setAlertToList(updatedLaertTolist);
+          const updatedRound = await getAreaAndRound(updatedLaertTolist);
+          setAreaList(updatedRound);
           setIsAddOrUpdateSuccess(true);
         } else {
           const confirmApprove = await confirmDialog(
@@ -1693,7 +1697,7 @@ const ContractForm = ({
         }
       }
 
-      // Update Manpower Position
+      // Update Round
       const updateRounds = roundChangesInArea.flatMap((area) =>
         area.roundList.filter((round) => round.status === "edit")
       );
@@ -1990,7 +1994,7 @@ const ContractForm = ({
     return confirmApprove;
   }
 
-  async function roundManagement(areaId: any, contractId: any) {
+  async function roundManagement(areaId: any, contractId: any, alertList = alertToList) {
     const roundOfAreaAndContract = await getMasterRoundData([
       { field: "areaId", value: areaId },
       { field: "contractId", value: contractId },
@@ -2016,10 +2020,10 @@ const ContractForm = ({
           .getMinutes()
           .toString()
           .padStart(2, "0"),
-        totalTimeMin: calMinFromDate(round.startTime, round.endTime),
+        totalTimeMin: calMinFromData(round.startTime, round.endTime, round.isSameDay),
         isSameDay: round.isSameDay === true ? 1 : 2,
         shift: round.shiftId,
-        alertTo: round.alertTo,
+        alertTo: round.alertTo?.filter((alert: string) => alertList.map(alert => alert.id).includes(alert)),
         isNeed: round.isNeedto,
         isStrictOrder: round.isStrictOrder,
         status: "existed",
@@ -2029,21 +2033,33 @@ const ContractForm = ({
     return roundDataArray;
   }
 
-  function calMinFromDate(start: any, finish: any) {
+  function calMinFromData(start: any, finish: any, isSameDay: any) {
     const finishHr = new Date(finish).getUTCHours();
     const startHr = new Date(start).getUTCHours();
-    console.log("finishHr =", finishHr);
-    console.log("startHr =", startHr);
-    const hoursToMins =
-      Math.abs(
-        (finishHr === 0 ? 24 : finishHr) - (startHr === 0 ? 24 : startHr)
-      ) * 60;
-    console.log("hoursToMins = ", hoursToMins);
-    const sumMins =
-      hoursToMins +
-      (new Date(finish).getMinutes() - new Date(start).getMinutes());
-    console.log("sumMins = ", sumMins);
-    return sumMins;
+    const startMin = new Date(start).getUTCMinutes();
+    const finishMin = new Date(finish).getUTCMinutes();
+    const startTotalMins = startHr * 60 + startMin;
+    let finishTotalMins = finishHr * 60 + finishMin;
+    let mins = 0;
+    if (isSameDay === true) {
+      if (startHr <= finishHr) {
+        mins = finishTotalMins - startTotalMins;
+        console.log("mins = ", mins);
+      } else mins = 0;
+    }
+    else {
+      finishTotalMins += 24 * 60;
+      mins = finishTotalMins - startTotalMins;
+    }
+    mins = mins < 0 ? 0 : mins;
+    // const hoursToMins =
+    //   Math.abs(
+    //     (finishHr === 0 ? 24 : finishHr) - (startHr === 0 ? 24 : startHr)
+    //   ) * 60;
+    // let sumMins =
+    //   hoursToMins +
+    //   (new Date(finish).getMinutes() - new Date(start).getMinutes());
+    return mins
   }
 
   async function handleCloseContractForm() {
