@@ -278,14 +278,14 @@ const RandomPatrolDeatilView = ({
                       zoom={16}
                       longlat={[{
                         center: randomPatrolCheckpoint.longLat.length === 2 ?
-                                [randomPatrolCheckpoint.longLat[0] < 0 ? 0 : randomPatrolCheckpoint.longLat[0], randomPatrolCheckpoint.longLat[1] < 0 ? 0 : randomPatrolCheckpoint.longLat[1]]
+                                [randomPatrolCheckpoint.longLat[1] < 0 ? 0 : randomPatrolCheckpoint.longLat[1], randomPatrolCheckpoint.longLat[0] < 0 ? 0 : randomPatrolCheckpoint.longLat[0]]
                                 : [0,0],
                         checkpoint: randomPatrolCheckpoint.checkPointName,
                         patroller: randomPatrolCheckpoint.patroller,
                         time: `${formatTime(randomPatrolCheckpoint?.startDateTime)} - ${formatTime(randomPatrolCheckpoint?.endDateTime)}`,
                         status: randomPatrolCheckpoint.endDateTime === null ? "Not Finish" : "Finished",
                         longlat: randomPatrolCheckpoint.longLat.length === 2 ?
-                                [randomPatrolCheckpoint.longLat[0] < 0 ? 0 : randomPatrolCheckpoint.longLat[0], randomPatrolCheckpoint.longLat[1] < 0 ? 0 : randomPatrolCheckpoint.longLat[1]]
+                                [randomPatrolCheckpoint.longLat[1] < 0 ? 0 : randomPatrolCheckpoint.longLat[1], randomPatrolCheckpoint.longLat[0] < 0 ? 0 : randomPatrolCheckpoint.longLat[0]]
                                 : [0,0],
                       }]}/>
                   </Box>
@@ -544,15 +544,15 @@ const RandomPatrolDeatilView = ({
                     zoom={16}
                     longlat={[{
                       center: randomPatrolCheckpoint.longLat.length === 2 ?
-                              [randomPatrolCheckpoint.longLat[0] < 0 ? 0 : randomPatrolCheckpoint.longLat[0], randomPatrolCheckpoint.longLat[1] < 0 ? 0 : randomPatrolCheckpoint.longLat[1]]
-                              : [0,0],//['100.55826768112321', '13.715759496081468'],
-                      checkpoint: randomPatrolCheckpoint.checkPointName,
-                      patroller: randomPatrolCheckpoint.patroller,
-                      time: `${formatTime(randomPatrolCheckpoint?.startDateTime)} - ${formatTime(randomPatrolCheckpoint?.endDateTime)}`,
-                      status: randomPatrolCheckpoint.endDateTime === null ? "Not Finish" : "Finished",
-                      longlat: randomPatrolCheckpoint.longLat.length === 2 ?
-                               [randomPatrolCheckpoint.longLat[0] < 0 ? 0 : randomPatrolCheckpoint.longLat[0], randomPatrolCheckpoint.longLat[1] < 0 ? 0 : randomPatrolCheckpoint.longLat[1]]
-                               : [0,0],
+                                [randomPatrolCheckpoint.longLat[1] < 0 ? 0 : randomPatrolCheckpoint.longLat[1], randomPatrolCheckpoint.longLat[0] < 0 ? 0 : randomPatrolCheckpoint.longLat[0]]
+                                : [0,0],
+                        checkpoint: randomPatrolCheckpoint.checkPointName,
+                        patroller: randomPatrolCheckpoint.patroller,
+                        time: `${formatTime(randomPatrolCheckpoint?.startDateTime)} - ${formatTime(randomPatrolCheckpoint?.endDateTime)}`,
+                        status: randomPatrolCheckpoint.endDateTime === null ? "Not Finish" : "Finished",
+                        longlat: randomPatrolCheckpoint.longLat.length === 2 ?
+                                [randomPatrolCheckpoint.longLat[1] < 0 ? 0 : randomPatrolCheckpoint.longLat[1], randomPatrolCheckpoint.longLat[0] < 0 ? 0 : randomPatrolCheckpoint.longLat[0]]
+                                : [0,0],
                     }]}/>
                     {/* [["100.55826768112321", "13.715759496081468"],["100.55857312480582", "13.715866960484869"]] */}
                 </div>
