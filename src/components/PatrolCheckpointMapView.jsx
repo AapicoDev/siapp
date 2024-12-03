@@ -44,13 +44,13 @@ const PatrolCheckpointMapComponent = ({ longlat, zoom }) => {
             </p>
             <p style="color: #2C5079; font-family:${kanit.style.fontFamily};">
               <strong>
-                Status: 
-              </strong> ${coord.status}
+                Time: 
+              </strong> ${coord.time}
             </p>
             <p style="color: #2C5079; font-family:${kanit.style.fontFamily};">
               <strong>
-                Time: 
-              </strong> ${coord.time}
+                Status: 
+              </strong> ${coord.status}
             </p>
           `);
 

@@ -1543,7 +1543,7 @@ export async function getPatrolCheckpointData(offset, limit) {
     const response = await fetchDataList(
       databaseId,
       patrolCheckpointTableId,
-      [Query.limit(limit), Query.offset(offset), Query.orderDesc("EndTime")]
+      [Query.orderDesc("EndTime")]//[Query.limit(limit), Query.offset(offset), Query.orderDesc("EndTime")]
     );
     return response;
   } catch (error) {
@@ -2148,6 +2148,14 @@ export async function deleteAuthUser(dataToSubmit) {
   const result = await response.json();
   console.log('Delete Result:', result.results);
   return {result: result};
+}
+export async function isUserLogin(){
+  try{
+      const session = await account.get();
+      if(session) return true;
+  }catch(error){
+      return false;
+  }
 }
 //#endregion Auth User
 

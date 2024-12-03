@@ -90,10 +90,12 @@ const PatrolDeatilView = ({
   const [checkList, setCheckList] = useState<any[]>();
   const [roundTime, setRoundTime] = useState<any>();
   const [openMapDetailView, setOpenMapDetailView] = useState<boolean>(false);
+  const [openImage, setOpenImage] = useState<boolean>(false);
   const [normalWords, setNormalWords] = useState<any>([]);
   const [abnormalWords, setAbnormalWords] = useState<any>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [longLat, setLongLat] = useState<any>([]);
+  const [image, setImage] = useState<any>();
 
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
@@ -146,18 +148,20 @@ const PatrolDeatilView = ({
       const centerCheckpoint = filterPatrolCheckpoints?.documents.find(p => p.$id === checkpoint.checkpointId)?.masterCheckpointID;
       const masterCheckpointLongLat = filterPatrolCheckpoints?.documents?.map(doc => 
         {
+        const long = filterMasterCheckpoints?.documents.find(m => m.$id === centerCheckpoint)?.longitude;
+        const lat = filterMasterCheckpoints?.documents.find(m => m.$id === centerCheckpoint)?.latitude;
         return{
           center: [
-            filterMasterCheckpoints?.documents.find(m => m.$id === centerCheckpoint)?.longitude,
-            filterMasterCheckpoints?.documents.find(m => m.$id === centerCheckpoint)?.latitude
+            long === "" ? "0" : long,
+            lat === "" ? "0" : lat,
           ],
           checkpoint: doc.CheckpointName,
           patroller: doc.Patroller,
           time: `${formatTime(doc?.StartTime)} - ${formatTime(doc?.EndTime)}`,
           status: doc.Status,
           longlat: [
-            filterMasterCheckpoints?.documents.find(m => m.$id === doc.masterCheckpointID)?.longitude,
-            filterMasterCheckpoints?.documents.find(m => m.$id === doc.masterCheckpointID)?.latitude
+            long === "" ? "0" : long,
+            lat === "" ? "0" : lat,
           ]
         }
       }
@@ -180,7 +184,7 @@ const PatrolDeatilView = ({
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 flex flex-col items-center justify-center z-40">
       {/* Header */}
-      {!openMapDetailView && (
+      {(!openMapDetailView && !openImage)  && (
         <>
           <Box
             sx={{
@@ -467,7 +471,8 @@ const PatrolDeatilView = ({
                             {row.Image.length > 0
                               ? row.Image.map(
                                   (i: string | undefined, index: any) => (
-                                    <Box key={index} sx={{ maxHeight: "100px",display: "flex", justifyContent: "center", mb: 1 }}>
+                                    <Box key={index} sx={{ maxHeight: "100px",display: "flex", justifyContent: "center", mb: 1, cursor:"pointer" }}
+                                         onClick={(e) => {setOpenImage(true); setImage(i)}}>
                                       <img
                                         src={i}
                                         alt="Checklist Img"
@@ -517,7 +522,9 @@ const PatrolDeatilView = ({
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "center",
+                                cursor: "pointer"
                               }}
+                              onClick={(e) => {setOpenImage(true); setImage(img)}}
                             >
                               <img
                                 src={img}
@@ -665,6 +672,69 @@ const PatrolDeatilView = ({
           </div>
         </>
       )}
+
+      {openImage && (
+        <>
+          {/* Header */}
+          <Box
+            sx={{
+              display: "flex",
+              width: "450px",
+              backgroundColor: "#D9F0EC",
+              paddingY: "5px",
+              borderRadius: "8px 8px 0px 0px", // Adjust rounded corners as needed
+              justifyContent: "center",
+            }}
+          >
+            <Box
+              sx={{ width: "100%", display: "flex", justifyContent: "left" }}
+            >
+              <Button2
+                sx={{
+                  color: "#1D7A9B",
+                  backgroundColor: "white",
+                  width: "20%",
+                  border: "1px solid #1D7A9B",
+                  fontWeight: 700,
+                  ml: 1,
+                }}
+                onClick={() => setOpenImage(false)}
+              >
+                Back
+              </Button2>
+              <Typography
+                sx={{
+                  width: "fit-content",
+                  fontSize: "1.125rem", // text-lg equivalent
+                  fontWeight: "bold",
+                  color: "#1D7A9B",
+                  marginTop: "0.25rem",
+                  marginLeft: "20%",
+                }}
+              >
+              </Typography>
+            </Box>
+          </Box>
+
+          <div className="bg-white rounded-b-lg shadow-lg max-h-[700px] w-[450px]">
+            {/* Body */}
+            <div className="max-h-[700px] overflow-auto p-2">
+              <div className="flex w-full rounded-lg border-[#2C5079] border-[1px] bg-slate-200 p-1 justify-center align-middle">
+                <img
+                  src={image}
+                  alt="Checklist Img"
+                  style={{
+                    maxWidth: "100%",
+                    borderRadius: "10px",
+                    maxHeight: "100%",
+                   }}
+                />
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
       {isLoading && <div className="fixed inset-0 bg-white bg-opacity-40 flex flex-col items-center justify-center z-50">
         <Box sx={{ display: "flex" }}>
           <CircularProgress />

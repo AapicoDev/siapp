@@ -40,6 +40,7 @@ import PatrolDeatilView from "@/components/siapp/PatrolDetailView";
 import {
   getPatrolRoundData,
   getPatrolCheckpointData,
+  filterPatrolCheckpointData,
 } from "../../../lib/api";
 
 type RowData = {
@@ -234,7 +235,7 @@ export default function Patrol() {
 
   useEffect(() => {
     tableData();
-  }, [page, rowsPerPage]);
+  }, [isCheckpointPage]);//page, rowsPerPage
 
   const formatDate = (dateString: string, isUTC7: boolean=false) => {
     const date = new Date(dateString);
@@ -272,8 +273,8 @@ export default function Patrol() {
       return new Date(b.EndTime).getTime() - new Date(a.EndTime).getTime();
     });
     console.log("reOrderData =", reOrderData);
-    const tableData: RowData[] =
-      allPatrolCheckpointData?.documents.map((chkPt) => {
+    const tableData: RowData[] = await Promise.all(
+      allPatrolCheckpointData?.documents.map(async (chkPt) => {
         return {
           dateTime: formatDate(chkPt.EndTime),
           startDateTime: formatDate(chkPt.StartTime),
@@ -298,11 +299,12 @@ export default function Patrol() {
           checkPointName: chkPt.CheckpointName,
           patroller: chkPt.Patroller,
           status: chkPt.Status,
-          allCheckpoints: allPatrolRoundData?.documents.find(p => p.$id === chkPt.PatrolRoundId)?.PatrolCheckPointId,
+          allCheckpoints: allPatrolCheckpointData?.documents.filter(p => p.PatrolRoundId === chkPt.PatrolRoundId)?.map(chkpt => chkpt.$id),
           remark: chkPt.Remark,
           image: chkPt.Image,
         };
-      }) || rowData;
+      }) || rowData
+    );
     console.log("tableData", tableData);
     setRowData(tableData);
     setTotalRows(allPatrolCheckpointData?.total || 0);
@@ -470,7 +472,8 @@ export default function Patrol() {
 
                   {/* Allow the TableBody to grow and fill vertical space */}
                   <TableBody sx={{ flexGrow: 1 }}>
-                    {rowData.map((row, index) => (
+                    {rowData.slice(page * rowsPerPage, rowsPerPage + (page * rowsPerPage))
+                      .map((row, index) => (
                       <TableRow
                         onClick={() => handleRowClick(row)} // Row click handler
                         key={index}

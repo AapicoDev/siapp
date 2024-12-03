@@ -30,6 +30,7 @@ type RandomRowData = {
   reasonIds: string[];
   reasons: string[];
   image: any[];
+  longLat: any[];
   latestEdit: string;
 };
 type selectedCheckBox = {
@@ -121,6 +122,7 @@ export function TablePatrolRandom({ }: TableContractProps) {
           image: random.images,
           reasonIds: random.resons_ID,
           reasons: random.reasons,
+          longLat: random.Location,
           latestEdit: random.$updatedAt,
         };
       }) || patrolRandomCheckpoints;
